@@ -30,7 +30,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 
 		public ThriftServer(Server server) {
 				this.server = server;
-				this.running = true;
+				this.running = false;
 		}
 
 		/**
