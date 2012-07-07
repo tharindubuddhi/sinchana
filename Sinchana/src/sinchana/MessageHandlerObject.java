@@ -20,7 +20,7 @@ import sinchana.util.messagequeue.MessageQueue;
 public class MessageHandlerObject implements MessageHandler {
 
 		private Server server;
-		private static final int MESSAGE_BUFFER_SIZE = 2048;
+		private static final int MESSAGE_BUFFER_SIZE = 4096;
 		private MessageQueue messageQueue;
 		private MessageQueue messageQueueUnstable;
 		private Semaphore stablePriorty = new Semaphore(0);
@@ -115,7 +115,7 @@ public class MessageHandlerObject implements MessageHandler {
 												returnMessage.setTargetKey(message.targetKey);
 										}
 										if (returnMessage != null) {
-												this.server.getPortHandler().send(returnMessage, message.source.address, message.source.portId);
+												this.server.getPortHandler().send(returnMessage, message.source);
 										}
 								} else {
 										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 3,
@@ -123,7 +123,7 @@ public class MessageHandlerObject implements MessageHandler {
 										if (this.server.getSinchanaTestInterface() != null) {
 												this.server.getSinchanaTestInterface().setStatus("routed: " + message.message);
 										}
-										this.server.getPortHandler().send(message, nextHop.address, nextHop.portId);
+										this.server.getPortHandler().send(message, nextHop);
 								}
 								break;
 						case JOIN:
@@ -149,19 +149,19 @@ public class MessageHandlerObject implements MessageHandler {
 										if (prevStationId != predecessor.serverId || prevStationId == message.source.serverId) {
 												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 4,
 														"Sending message to successor " + successor.serverId);
-												server.getPortHandler().send(message, predecessor.address, predecessor.portId);
+												server.getPortHandler().send(message, predecessor);
 										}
 										if (prevStationId != successor.serverId || prevStationId == message.source.serverId) {
 												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 4,
 														"Sending message to predecessor " + this.server.getRoutingHandler().getPredecessor().serverId);
-												server.getPortHandler().send(message, successor.address, successor.portId);
+												server.getPortHandler().send(message, successor);
 										}
 								}
 								break;
 						case DISCOVER_NEIGHBOURS:
 								if (message.source.serverId != this.server.serverId) {
 										message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
-										this.server.getPortHandler().send(message, message.source.address, message.source.portId);
+										this.server.getPortHandler().send(message, message.source);
 								} else {
 										this.server.getRoutingHandler().setNeighbourSet(message.neighbourSet);
 								}
@@ -171,9 +171,9 @@ public class MessageHandlerObject implements MessageHandler {
 										Node newPredecessor = this.server.getRoutingHandler().getOptimalSuccessor(message.source.serverId, message.getStartOfRange());
 										if (newPredecessor.serverId == this.server.serverId) {
 												message.setSuccessor(this.server.deepCopy());
-												this.server.getPortHandler().send(message, message.source.address, message.source.portId);
+												this.server.getPortHandler().send(message, message.source);
 										} else {
-												this.server.getPortHandler().send(message, newPredecessor.address, newPredecessor.portId);
+												this.server.getPortHandler().send(message, newPredecessor);
 										}
 
 								} else {
@@ -187,8 +187,7 @@ public class MessageHandlerObject implements MessageHandler {
 										System.out.println("Ring test completed - length: " + (message.message.split(" > ").length - 1) + " :: " + message.message);
 								} else {
 										message.message += " > " + this.server.serverId;
-										this.server.getPortHandler().send(message,
-												successor.address, successor.portId);
+										this.server.getPortHandler().send(message, successor);
 								}
 								break;
 						case ACCEPT:

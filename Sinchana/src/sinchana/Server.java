@@ -41,7 +41,7 @@ public class Server extends Node {
 		public Server(int serverId, int portId, String address, Node anotherNode) {
 				this.init(serverId, portId, address);
 				Message msg = new Message(this, MessageType.JOIN, MESSAGE_LIFETIME);
-				this.portHandler.send(msg, anotherNode.address, anotherNode.portId);
+				this.portHandler.send(msg, anotherNode);
 		}
 
 		private void init(int serverId, int portId, String address) {
