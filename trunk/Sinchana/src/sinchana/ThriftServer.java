@@ -18,6 +18,8 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
+import sinchana.connection.ConnectionPool;
+import sinchana.thrift.Node;
 
 /**
  *
@@ -28,9 +30,11 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private Server server;
 		private TServer tServer;
 		private boolean running;
+		private ConnectionPool connectionPool;
 
 		public ThriftServer(Server server) {
 				this.server = server;
+				this.connectionPool = new ConnectionPool(server);
 				this.running = false;
 		}
 
@@ -85,7 +89,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		}
 
 		@Override
-		public synchronized int send(Message message, String address, int portId) {
+		public synchronized int send(Message message, Node destination) {
 				message.lifetime--;
 				if (message.lifetime < 0) {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
@@ -93,41 +97,41 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						return 0;
 				}
 				message.station = this.server;
-				TTransport transport = new TSocket(address, portId);
+
+
+
+				TTransport transport = connectionPool.getConnection(destination.serverId, destination.address, destination.portId);
 				try {
-						transport.open();
 						TProtocol protocol = new TBinaryProtocol(transport);
 						DHTServer.Client client = new DHTServer.Client(protocol);
-						if(client.transfer(message)){
-                                                    return 1;
-                                                }else{
-                                                return 2;//retry count and queue
-                                                }
-                                                
+						if (client.transfer(message)) {
+								return 1;
+						} else {
+								return 2;//retry count and queue
+						}
+
 				} catch (TTransportException ex) {
-						  if(ex.toString().split(":")[1].trim().equals("java.net.ConnectException")){
-                                                    return 3;
-                                                }else if(ex.toString().split(":")[1].trim().equals("java.net.SocketException")){
-                                                Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 4,
-								"Falied to connect " +ex.toString()+ address + ":" + portId + " " + ex.getMessage() + " :: " + message);                                                                                      
-                                                }
+						if (ex.toString().split(":")[1].trim().equals("java.net.ConnectException")) {
+								return 3;
+						} else if (ex.toString().split(":")[1].trim().equals("java.net.SocketException")) {
+								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 4,
+										"Falied to connect " + ex.toString() + destination.address + ":" + destination.portId + " " + ex.getMessage() + " :: " + message);
+						}
 						return 4;
 				} catch (TException ex) {
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
-								"Falied to connect 1 " + address + ":" + portId);
+								"Falied to connect 1 " + destination.address + ":" + destination.portId);
 						return 4;
 				} catch (Exception ex) {
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 6,
-								"Falied to connect 2 " + address + ":" + portId);
+								"Falied to connect 2 " + destination.address + ":" + destination.portId);
 						ex.printStackTrace();
 						return 5;
-				} finally {
-						transport.close();
 				}
 
 		}
-                
-                public  synchronized int faultHandler(){
-                return 1;
-                }
+
+		public synchronized int faultHandler() {
+				return 1;
+		}
 }

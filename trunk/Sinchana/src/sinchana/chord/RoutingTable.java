@@ -90,7 +90,7 @@ public class RoutingTable implements RoutingHandler {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 3,
 						"Importing neighbour set from " + neighbour.serverId);
 				Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBOURS, 256);
-				this.server.getPortHandler().send(msg, neighbour.address, neighbour.portId);
+				this.server.getPortHandler().send(msg, neighbour);
 		}
 
 		private void optimizeFingerTable() {
@@ -101,7 +101,7 @@ public class RoutingTable implements RoutingHandler {
 								msg = new Message(this.server, MessageType.FIND_SUCCESSOR, 256);
 								msg.setStartOfRange(fingerTableEntry.getStart());
 								msg.setEndOfRange(fingerTableEntry.getEnd());
-								ph.send(msg, fingerTableEntry.getSuccessor().address, fingerTableEntry.getSuccessor().portId);
+								ph.send(msg, fingerTableEntry.getSuccessor());
 						}
 				}
 		}
