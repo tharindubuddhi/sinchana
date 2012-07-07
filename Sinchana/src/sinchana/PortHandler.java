@@ -16,5 +16,5 @@ public interface PortHandler {
 
 		public abstract void stopServer();
 
-		public abstract boolean send(Message message, String address, int portId);
+		public abstract int send(Message message, String address, int portId);
 }
