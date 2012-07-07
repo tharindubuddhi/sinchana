@@ -37,6 +37,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		private int[] realKeySpace;
 
 		public Tester(int serverId, Node anotherNode, TesterController tc) {
+				
 				if (anotherNode == null) {
 						server = new Server(
 								serverId, serverId + TesterController.LOCAL_PORT_ID_RANGE,

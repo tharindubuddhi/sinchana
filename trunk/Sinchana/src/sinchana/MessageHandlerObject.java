@@ -4,28 +4,26 @@
  */
 package sinchana;
 
+import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
-import java.util.concurrent.Semaphore;
 import sinchana.util.logging.Logger;
+import sinchana.util.messagequeue.MessageEventHandler;
+import sinchana.util.messagequeue.MessageQueue;
 
 /**
  *
  * @author Hiru
  */
-public class MessageHandlerObject implements MessageHandler, Runnable {
+public class MessageHandlerObject implements MessageHandler {
 
 		private Server server;
-		private static final int MESSAGE_BUFFER_SIZE = 3072;
-		private int head = 0;
-		private int tail = 0;
-		private Message[] messageQueue = new Message[MESSAGE_BUFFER_SIZE];
-		private Semaphore messagesAvailable = new Semaphore(0);
-		private static final int JOIN_MESSAGE_BUFFER_SIZE = 192;
-		private int jHead = 0;
-		private int jTail = 0;
-		private Message[] jMessageQueue = new Message[JOIN_MESSAGE_BUFFER_SIZE];
+		private static final int MESSAGE_BUFFER_SIZE = 2048;
+		private MessageQueue messageQueue;
+		private MessageQueue messageQueueUnstable;
+		private Semaphore stablePriorty = new Semaphore(0);
 
 		MessageHandlerObject(Server node) {
 				this.server = node;
@@ -33,9 +31,56 @@ public class MessageHandlerObject implements MessageHandler, Runnable {
 
 		@Override
 		public long init() {
-				Thread thread = new Thread(this);
-				thread.start();
-				return thread.getId();
+				this.server.getRoutingHandler().updateTable(this.server);
+				messageQueueUnstable = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
+
+						@Override
+						public void process(Message message) {
+								processMessage(message);
+								if (messageQueueUnstable.isEmpty()) {
+										System.out.println(server.serverId + ": releasing...");
+										stablePriorty.release();
+								}
+						}
+				});
+				messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
+
+						@Override
+						public void process(Message message) {
+								if (!messageQueueUnstable.isEmpty() && server.getRoutingHandler().isStable()) {
+										messageQueueUnstable.start();
+										System.out.println(server.serverId + ": waiting.......");
+										try {
+												stablePriorty.acquire();
+										} catch (InterruptedException ex) {
+												java.util.logging.Logger.getLogger(MessageHandlerObject.class.getName()).log(Level.SEVERE, null, ex);
+										}
+								}
+								if (!server.getRoutingHandler().isStable()
+										&& (message.type != MessageType.JOIN || message.source.serverId != server.serverId)) {
+										Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 1,
+												"Queued until the server is stable: " + message.type + " - " + message);
+										boolean acceptedUnstable = messageQueueUnstable.queueMessage(message);
+										if (!acceptedUnstable) {
+												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 8,
+														"Message is unacceptable 'cos unstable buffer is full! " + message);
+										}
+								} else {
+										processMessage(message);
+								}
+						}
+				});
+				return messageQueue.start();
+		}
+
+		@Override
+		public boolean queueMessage(Message message) {
+				boolean accepted = messageQueue.queueMessage(message);
+				if (!accepted) {
+						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 8,
+								"Message is unacceptable 'cos buffer is full! " + message);
+				}
+				return accepted;
 		}
 
 		public void processMessage(Message message) {
@@ -43,14 +88,6 @@ public class MessageHandlerObject implements MessageHandler, Runnable {
 						"Processing: " + message);
 				Node predecessor = this.server.getRoutingHandler().getPredecessor();
 				Node successor = this.server.getRoutingHandler().getSuccessor();
-
-				if (!this.server.getRoutingHandler().isStable()
-						&& (message.type != MessageType.JOIN || message.source.serverId != this.server.serverId)) {
-						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 1,
-								"Queued until server is stable: " + message.type + " - " + message);
-						queueJoinMessage(message);
-						return;
-				}
 
 //				this.server.getRoutingHandler().updateTable(message.source);
 //				if (message.source.serverId != message.station.serverId) {
@@ -140,7 +177,7 @@ public class MessageHandlerObject implements MessageHandler, Runnable {
 										}
 
 								} else {
-										this.server.getRoutingHandler().setOptimalSuccessor(message.getStartOfRange(), message.getSuccessor());
+										this.server.getRoutingHandler().updateTable(message.getSuccessor());
 								}
 								break;
 						case TEST_RING:
@@ -160,57 +197,6 @@ public class MessageHandlerObject implements MessageHandler, Runnable {
 										this.server.getSinchanaInterface().transfer(message.deepCopy());
 								}
 								break;
-				}
-		}
-
-		@Override
-		public synchronized boolean queueMessage(Message message) {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 7,
-						"Queued " + message);
-				if ((tail + MESSAGE_BUFFER_SIZE - head) % MESSAGE_BUFFER_SIZE == 1) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 8,
-								"Message is unacceptable 'cos buffer is full! " + message);
-						return false;
-//						System.exit(1);
-				}
-				messageQueue[head] = message;
-				head = (head + 1) % MESSAGE_BUFFER_SIZE;
-				messagesAvailable.release();
-				return true;
-		}
-
-		private synchronized boolean queueJoinMessage(Message message) {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 9,
-						"Queued to join " + message);
-				if ((jTail + JOIN_MESSAGE_BUFFER_SIZE - jHead) % JOIN_MESSAGE_BUFFER_SIZE == 1) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 10,
-								"Join message is unacceptable 'cos buffer is full! " + message);
-//						System.exit(1);
-						return false;
-				}
-				jMessageQueue[jHead] = message;
-				jHead = (jHead + 1) % JOIN_MESSAGE_BUFFER_SIZE;
-				return true;
-		}
-
-		@Override
-		public void run() {
-				this.server.getRoutingHandler().updateTable(this.server);
-				while (true) {
-						try {
-								if (jHead > jTail && this.server.getRoutingHandler().isStable()) {
-										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER_OBJECT, 11,
-												"Processing from queue " + jMessageQueue[jTail]);
-										processMessage(jMessageQueue[jTail]);
-										jTail = (jTail + 1) % JOIN_MESSAGE_BUFFER_SIZE;
-								} else {
-										messagesAvailable.acquire();
-										processMessage(messageQueue[tail]);
-										tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
-								}
-						} catch (InterruptedException ex) {
-								ex.printStackTrace();
-						}
 				}
 		}
 }
