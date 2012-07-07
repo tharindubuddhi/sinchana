@@ -31,7 +31,7 @@ public class TesterController {
 		public static final int REMOTE_SERVER_PORT_ID_RANGE = 8000;
 		public static int NUM_OF_TESTING_NODES = 32;
 		public static int NUM_OF_AUTO_TESTING_NODES = 3;
-		public static final boolean GUI_ON = true;
+		public static final boolean GUI_ON = false;
 		public static final int AUTO_TEST_TIMEOUT = 1000;
 		private Tester[] testServers;
 		private ControllerUI cui;

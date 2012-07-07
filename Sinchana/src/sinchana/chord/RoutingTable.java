@@ -137,22 +137,22 @@ public class RoutingTable implements RoutingHandler {
 				return this.server;
 		}
 
-		@Override
-		public void setOptimalSuccessor(int startOfRange, Node successor) {
-				for (FingerTableEntry fingerTableEntry : fingerTable) {
-						if (fingerTableEntry.getStart() == startOfRange
-								&& fingerTableEntry.getSuccessor().serverId != successor.serverId) {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 6,
-										"FT entry " + fingerTableEntry.getSuccessor().serverId
-										+ " in " + fingerTableEntry.getStart() + "-" + fingerTableEntry.getEnd()
-										+ " is replaced with " + successor.serverId);
-								fingerTableEntry.setSuccessor(successor.deepCopy());
-								if (this.server.getSinchanaTestInterface() != null) {
-										this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
-								}
-						}
-				}
-		}
+//		@Override
+//		public void setOptimalSuccessor(int startOfRange, Node successor) {
+//				for (FingerTableEntry fingerTableEntry : fingerTable) {
+//						if (fingerTableEntry.getStart() == startOfRange
+//								&& fingerTableEntry.getSuccessor().serverId != successor.serverId) {
+//								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 6,
+//										"FT entry " + fingerTableEntry.getSuccessor().serverId
+//										+ " in " + fingerTableEntry.getStart() + "-" + fingerTableEntry.getEnd()
+//										+ " is replaced with " + successor.serverId);
+//								fingerTableEntry.setSuccessor(successor.deepCopy());
+//								if (this.server.getSinchanaTestInterface() != null) {
+//										this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
+//								}
+//						}
+//				}
+//		}
 
 		@Override
 		public Node getOptimalSuccessor(int rServerId, int startOfRange) {

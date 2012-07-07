@@ -43,6 +43,10 @@ public final class Logger {
 						return;
 //				System.out.println(nl.toString());
 				switch (type) {
+						case LEVEL_FINE:
+								java.util.logging.Logger.getLogger(Logger.class.getName()).logp(Level.FINE,
+										Logger.class.getName(), "Server " + nodeId, logData);
+								break;
 						case LEVEL_INFO:
 								java.util.logging.Logger.getLogger(Logger.class.getName()).logp(Level.INFO,
 										Logger.class.getName(), "Server " + nodeId, logData);
