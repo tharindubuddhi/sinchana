@@ -4,6 +4,7 @@
  */
 package sinchana;
 
+import java.net.ConnectException;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
@@ -84,12 +85,12 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		}
 
 		@Override
-		public synchronized boolean send(Message message, String address, int portId) {
+		public synchronized int send(Message message, String address, int portId) {
 				message.lifetime--;
 				if (message.lifetime < 0) {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 								"Messaage " + message + " is terminated as lifetime expired!");
-						return false;
+						return 0;
 				}
 				message.station = this.server;
 				TTransport transport = new TSocket(address, portId);
@@ -97,23 +98,36 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						transport.open();
 						TProtocol protocol = new TBinaryProtocol(transport);
 						DHTServer.Client client = new DHTServer.Client(protocol);
-						return client.transfer(message);
+						if(client.transfer(message)){
+                                                    return 1;
+                                                }else{
+                                                return 2;//retry count and queue
+                                                }
+                                                
 				} catch (TTransportException ex) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 4,
-								"Falied to connect " + address + ":" + portId + " " + ex.getMessage() + " :: " + message);
-						return false;
+						  if(ex.toString().split(":")[1].trim().equals("java.net.ConnectException")){
+                                                    return 3;
+                                                }else if(ex.toString().split(":")[1].trim().equals("java.net.SocketException")){
+                                                Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 4,
+								"Falied to connect " +ex.toString()+ address + ":" + portId + " " + ex.getMessage() + " :: " + message);                                                                                      
+                                                }
+						return 4;
 				} catch (TException ex) {
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
 								"Falied to connect 1 " + address + ":" + portId);
-						return false;
+						return 4;
 				} catch (Exception ex) {
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 6,
 								"Falied to connect 2 " + address + ":" + portId);
 						ex.printStackTrace();
-						return false;
+						return 5;
 				} finally {
 						transport.close();
 				}
 
 		}
+                
+                public  synchronized int faultHandler(){
+                return 1;
+                }
 }
