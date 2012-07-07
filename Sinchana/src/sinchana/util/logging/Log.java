@@ -48,6 +48,9 @@ public class Log {
 						case Logger.CLASS_THRIFT_SERVER:
 								sb.append("\tTHRIFT_SERVER");
 								break;
+						case Logger.CLASS_CONNECTION_POOL:
+								sb.append("\tCONNECTION_POOL");
+								break;
 				}
 				sb.append("\t").append(locId);
 				sb.append("\n\t").append(logData);

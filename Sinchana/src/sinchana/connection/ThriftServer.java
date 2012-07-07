@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package sinchana;
+package sinchana.connection;
 
 import java.net.ConnectException;
 import sinchana.thrift.Message;
@@ -18,6 +18,8 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
+import sinchana.PortHandler;
+import sinchana.Server;
 import sinchana.connection.ConnectionPool;
 import sinchana.thrift.Node;
 

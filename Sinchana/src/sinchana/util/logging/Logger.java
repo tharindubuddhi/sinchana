@@ -20,11 +20,15 @@ public final class Logger {
 		public static final int LEVEL_INFO = 1;
 		public static final int LEVEL_WARNING = 2;
 		public static final int LEVEL_SEVERE = 3;
+		
 		public static final int CLASS_MESSAGE_HANDLER_OBJECT = 0;
 		public static final int CLASS_ROUTING_TABLE = 1;
 		public static final int CLASS_TESTER = 2;
 		public static final int CLASS_THRIFT_SERVER = 3;
-		
+		public static final int CLASS_CONNECTION_POOL = 4;
+//		public static final int CLASS_THRIFT_SERVER = 5;
+//		public static final int CLASS_THRIFT_SERVER = 6;
+	
 		public static final int CURRENT_LOG_LEVEL = 2;
 		
 

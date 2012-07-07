@@ -20,7 +20,8 @@ import sinchana.util.messagequeue.MessageQueue;
 public class MessageHandlerObject implements MessageHandler {
 
 		private Server server;
-		private static final int MESSAGE_BUFFER_SIZE = 4096;
+		private static final int MESSAGE_BUFFER_SIZE = 8192;
+		private static final int MESSAGE_UNSTABLE_BUFFER_SIZE = 256;
 		private MessageQueue messageQueue;
 		private MessageQueue messageQueueUnstable;
 		private Semaphore stablePriorty = new Semaphore(0);
@@ -32,7 +33,7 @@ public class MessageHandlerObject implements MessageHandler {
 		@Override
 		public long init() {
 				this.server.getRoutingHandler().updateTable(this.server);
-				messageQueueUnstable = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
+				messageQueueUnstable = new MessageQueue(MESSAGE_UNSTABLE_BUFFER_SIZE, new MessageEventHandler() {
 
 						@Override
 						public void process(Message message) {

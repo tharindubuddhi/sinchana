@@ -4,6 +4,7 @@
  */
 package sinchana;
 
+import sinchana.connection.ThriftServer;
 import sinchana.chord.RoutingTable;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
