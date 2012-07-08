@@ -36,8 +36,8 @@ public class Log {
 
 				}
 				switch (classId) {
-						case Logger.CLASS_MESSAGE_HANDLER_OBJECT:
-								sb.append("\tMESSAGE_HANDLER_OBJECT");
+						case Logger.CLASS_MESSAGE_HANDLER:
+								sb.append("\tMESSAGE_HANDLER");
 								break;
 						case Logger.CLASS_ROUTING_TABLE:
 								sb.append("\tROUTING_TABLE");

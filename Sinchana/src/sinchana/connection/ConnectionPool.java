@@ -25,7 +25,7 @@ public class ConnectionPool {
 
 		private Map<Integer, TTransport> pool = new HashMap<Integer, TTransport>();
 		private Server server;
-		private static final int NUM_OF_MAX_CONNECTIONS = 10;
+		private static final int NUM_OF_MAX_CONNECTIONS = 12;
 
 		public ConnectionPool(Server s) {
 				this.server = s;
@@ -63,11 +63,13 @@ public class ConnectionPool {
 						transport.open();
 				} catch (TTransportException ex) {
 						java.util.logging.Logger.getLogger(ConnectionPool.class.getName()).log(Level.SEVERE, null, ex);
+						return null;
 				}
 				pool.put(serverId, transport);
 				if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
-								"Maximum number of connections opened reached!");
+								"Maximum number of connections opened exceeded! ("
+								+ pool.size() + "/" + NUM_OF_MAX_CONNECTIONS + " are opened)");
 				}
 				return transport;
 		}
@@ -95,6 +97,4 @@ public class ConnectionPool {
 				}
 				pool.clear();
 		}
-		
-		
 }
