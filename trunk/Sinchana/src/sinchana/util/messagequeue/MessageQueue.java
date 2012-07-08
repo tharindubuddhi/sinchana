@@ -33,7 +33,7 @@ public class MessageQueue implements Runnable {
 						thread.start();
 				}
 				return thread.getId();
-		}
+		}		
 
 		public synchronized boolean queueMessage(Message message) {
 				if ((tail + MESSAGE_BUFFER_SIZE - head) % MESSAGE_BUFFER_SIZE == 1) {

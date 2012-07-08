@@ -168,7 +168,7 @@ public class TesterController {
 						tCount++;
 						cui.setStatus("   " + tCount);
 						for (Tester tester : testServers) {
-								if (timeNow - tester.getEndTime().getTimeInMillis() < 5 * AUTO_TEST_TIMEOUT) {
+								if (timeNow - tester.getEndTime().getTimeInMillis() < 2 * AUTO_TEST_TIMEOUT) {
 										running = true;
 										break;
 								}
