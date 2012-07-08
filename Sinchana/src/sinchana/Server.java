@@ -18,7 +18,7 @@ public class Server extends Node {
 
 		private PortHandler portHandler = new ThriftServer(this);
 		private RoutingHandler routingHandler = new RoutingTable(this);
-		private MessageHandler messageHandler = new MessageHandlerObject(this);
+		private MessageHandler messageHandler = new MessageHandler(this);
 		private SinchanaInterface sinchanaInterface = null;
 		private SinchanaTestInterface sinchanaTestInterface = null;
 		public static final int MESSAGE_LIFETIME = 1024;
