@@ -147,6 +147,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
                             t.sleep(connectionTimewait);
                             connectionSuccess = client.transfer(msg);
                             connectionTimewait += 10000;
+                            connectionTryout++;
                         } catch (Exception ex) {
                             
                         }                                            
