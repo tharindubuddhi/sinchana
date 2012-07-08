@@ -1,4 +1,4 @@
-namespace java dhtserverclient.thrift
+namespace java sinchana.thrift
 
 struct Node {
   1: i32 serverId,
@@ -21,7 +21,7 @@ struct Message {
     2: required Node source,
     3: required MessageType type,
     4: required i32 lifetime,
-    5: optional Node target,
+    5: optional Node destination,
     6: optional Node station,
     7: optional string message,
     8: optional Node predecessor,
@@ -29,9 +29,11 @@ struct Message {
     10: optional i32 startOfRange,
     11: optional i32 endOfRange,
     12: optional set<Node> neighbourSet,
-    13: optional i32 targetKey
+    13: optional i32 targetKey,
+    14: optional i32 retryCount,
+    15: optional i64 timeStamp
 }
 
 service DHTServer {
-    bool transfer(1: Message message)
+    i32 transfer(1: Message message)
 }

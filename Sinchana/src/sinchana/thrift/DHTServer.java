@@ -31,7 +31,7 @@ public class DHTServer {
 
   public interface Iface {
 
-    public boolean transfer(Message message) throws org.apache.thrift.TException;
+    public int transfer(Message message) throws org.apache.thrift.TException;
 
   }
 
@@ -61,7 +61,7 @@ public class DHTServer {
       super(iprot, oprot);
     }
 
-    public boolean transfer(Message message) throws org.apache.thrift.TException
+    public int transfer(Message message) throws org.apache.thrift.TException
     {
       send_transfer(message);
       return recv_transfer();
@@ -74,7 +74,7 @@ public class DHTServer {
       sendBase("transfer", args);
     }
 
-    public boolean recv_transfer() throws org.apache.thrift.TException
+    public int recv_transfer() throws org.apache.thrift.TException
     {
       transfer_result result = new transfer_result();
       receiveBase(result, "transfer");
@@ -124,7 +124,7 @@ public class DHTServer {
         prot.writeMessageEnd();
       }
 
-      public boolean getResult() throws org.apache.thrift.TException {
+      public int getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -528,7 +528,7 @@ public class DHTServer {
   public static class transfer_result implements org.apache.thrift.TBase<transfer_result, transfer_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("transfer_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.I32, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -536,7 +536,7 @@ public class DHTServer {
       schemes.put(TupleScheme.class, new transfer_resultTupleSchemeFactory());
     }
 
-    public boolean success; // required
+    public int success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -603,7 +603,7 @@ public class DHTServer {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(transfer_result.class, metaDataMap);
     }
@@ -612,7 +612,7 @@ public class DHTServer {
     }
 
     public transfer_result(
-      boolean success)
+      int success)
     {
       this();
       this.success = success;
@@ -635,14 +635,14 @@ public class DHTServer {
     @Override
     public void clear() {
       setSuccessIsSet(false);
-      this.success = false;
+      this.success = 0;
     }
 
-    public boolean isSuccess() {
+    public int getSuccess() {
       return this.success;
     }
 
-    public transfer_result setSuccess(boolean success) {
+    public transfer_result setSuccess(int success) {
       this.success = success;
       setSuccessIsSet(true);
       return this;
@@ -667,7 +667,7 @@ public class DHTServer {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Boolean)value);
+          setSuccess((Integer)value);
         }
         break;
 
@@ -677,7 +677,7 @@ public class DHTServer {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case SUCCESS:
-        return Boolean.valueOf(isSuccess());
+        return Integer.valueOf(getSuccess());
 
       }
       throw new IllegalStateException();
@@ -810,8 +810,8 @@ public class DHTServer {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
-                struct.success = iprot.readBool();
+              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+                struct.success = iprot.readI32();
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -833,7 +833,7 @@ public class DHTServer {
 
         oprot.writeStructBegin(STRUCT_DESC);
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-        oprot.writeBool(struct.success);
+        oprot.writeI32(struct.success);
         oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
@@ -858,7 +858,7 @@ public class DHTServer {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBool(struct.success);
+          oprot.writeI32(struct.success);
         }
       }
 
@@ -867,7 +867,7 @@ public class DHTServer {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBool();
+          struct.success = iprot.readI32();
           struct.setSuccessIsSet(true);
         }
       }

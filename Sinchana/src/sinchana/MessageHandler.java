@@ -21,8 +21,8 @@ import sinchana.util.messagequeue.MessageQueue;
 public class MessageHandler {
 
 		private Server server;
-		private static final int MESSAGE_BUFFER_SIZE = 8192;
-		private static final int MESSAGE_UNSTABLE_BUFFER_SIZE = 256;
+		private static final int MESSAGE_BUFFER_SIZE = 1536;
+		private static final int MESSAGE_UNSTABLE_BUFFER_SIZE = 128;
 		private MessageQueue messageQueue;
 		private MessageQueue messageQueueUnstable;
 		private Semaphore stablePriorty = new Semaphore(0);
@@ -66,7 +66,7 @@ public class MessageHandler {
 										boolean acceptedUnstable = messageQueueUnstable.queueMessage(message);
 										if (!acceptedUnstable) {
 												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 8,
-														"Message is unacceptable 'cos unstable buffer is full! " + message);
+														"Message is unacceptable 'cos unstable unstable buffer is full! " + message);
 										}
 								} else {
 										processMessage(message);
@@ -214,11 +214,11 @@ public class MessageHandler {
 										Node newPredecessor = this.server.getRoutingHandler().getOptimalSuccessor(message.source.serverId, message.getStartOfRange());
 										if (newPredecessor.serverId == this.server.serverId) {
 												if (message.station.serverId != message.source.serverId) {
-														System.out.println(this.server.serverId + ": Valid response for "
-																+ message.targetKey
-																+ " in " + message.startOfRange + "-" + message.endOfRange
-																+ " is found as " + newPredecessor.serverId + " where source is "
-																+ message.source.serverId + " & prevstation is " + message.station.serverId);
+//														System.out.println(this.server.serverId + ": Valid response for "
+//																+ message.targetKey
+//																+ " in " + message.startOfRange + "-" + message.endOfRange
+//																+ " is found as " + newPredecessor.serverId + " where source is "
+//																+ message.source.serverId + " & prevstation is " + message.station.serverId);
 														message.setSuccessor(this.server.deepCopy());
 														this.server.getPortHandler().send(message, message.source);
 												}

@@ -20,7 +20,7 @@ import java.util.Set;
  *
  * @author Hiru
  */
-public class RoutingTable implements RoutingHandler, Runnable{
+public class RoutingTable implements RoutingHandler, Runnable {
 
 		private Server server;
 		private Node successor = null;
@@ -222,13 +222,14 @@ public class RoutingTable implements RoutingHandler, Runnable{
 
 		@Override
 		public void run() {
-				while(true){
+				while (true) {
 						this.optimizeFingerTable();
 						try {
 								Thread.sleep(5000);
 						} catch (InterruptedException ex) {
 								java.util.logging.Logger.getLogger(RoutingTable.class.getName()).log(Level.SEVERE, null, ex);
 						}
+						break;
 				}
 		}
 }

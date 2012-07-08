@@ -20,7 +20,6 @@ public final class Logger {
 		public static final int LEVEL_INFO = 1;
 		public static final int LEVEL_WARNING = 2;
 		public static final int LEVEL_SEVERE = 3;
-		
 		public static final int CLASS_MESSAGE_HANDLER = 0;
 		public static final int CLASS_ROUTING_TABLE = 1;
 		public static final int CLASS_TESTER = 2;
@@ -28,9 +27,7 @@ public final class Logger {
 		public static final int CLASS_CONNECTION_POOL = 4;
 //		public static final int CLASS_THRIFT_SERVER = 5;
 //		public static final int CLASS_THRIFT_SERVER = 6;
-	
 		public static final int CURRENT_LOG_LEVEL = 2;
-		
 
 		private Logger() {
 		}
@@ -43,27 +40,52 @@ public final class Logger {
 				nl.locId = (byte) locId;
 				nl.logData = logData;
 				logDB.add(nl);
-				if(CURRENT_LOG_LEVEL > type)
+				if (CURRENT_LOG_LEVEL > type) {
 						return;
+				}
 //				System.out.println(nl.toString());
+				Level logLevel;
 				switch (type) {
 						case LEVEL_FINE:
-								java.util.logging.Logger.getLogger(Logger.class.getName()).logp(Level.FINE,
-										Logger.class.getName(), "Server " + nodeId, logData);
+								logLevel = Level.FINE;
 								break;
 						case LEVEL_INFO:
-								java.util.logging.Logger.getLogger(Logger.class.getName()).logp(Level.INFO,
-										Logger.class.getName(), "Server " + nodeId, logData);
+								logLevel = Level.INFO;
 								break;
 						case LEVEL_WARNING:
-								java.util.logging.Logger.getLogger(Logger.class.getName()).logp(Level.WARNING,
-										Logger.class.getName(), "Server " + nodeId, logData);
+								logLevel = Level.WARNING;
 								break;
 						case LEVEL_SEVERE:
-								java.util.logging.Logger.getLogger(Logger.class.getName()).logp(Level.SEVERE,
-										Logger.class.getName(), "Server " + nodeId, logData);
+								logLevel = Level.SEVERE;
+								break;
+						default:
+								logLevel = Level.SEVERE;
 								break;
 				}
+				String className;
+				switch (classId) {
+						case CLASS_MESSAGE_HANDLER:
+								className = "MESSAGE_HANDLER";
+								break;
+						case CLASS_ROUTING_TABLE:
+								className = "ROUTING_TABLE";
+								break;
+						case CLASS_TESTER:
+								className = "TESTER";
+								break;
+						case CLASS_THRIFT_SERVER:
+								className = "THRIFT_SERVER";
+								break;
+						case CLASS_CONNECTION_POOL:
+								className = "CONNECTION_POOL";
+								break;
+						default:
+								className = "LOGGER";
+								break;
+				}
+				java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
+						className, "Server " + nodeId, logData);
+
 
 		}
 
