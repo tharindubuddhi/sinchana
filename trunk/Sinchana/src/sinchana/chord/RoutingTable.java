@@ -232,4 +232,9 @@ public class RoutingTable implements RoutingHandler, Runnable {
 						break;
 				}
 		}
+
+		@Override
+		public void removeNode(Node node) {
+				throw new UnsupportedOperationException("Not supported yet.");
+		}
 }

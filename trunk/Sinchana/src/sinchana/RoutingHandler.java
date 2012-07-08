@@ -30,7 +30,7 @@ public interface RoutingHandler {
 		
 		public abstract Node getOptimalSuccessor(int rServerId, int startOfRange);
 		
-//		public abstract void setOptimalSuccessor(int startOfRange, Node successor);
+		public abstract void removeNode(Node node);
 		
 		public abstract void updateTable(Node node);
 		
