@@ -34,6 +34,8 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
                 private Thread t;
                 private boolean connectionSuccess;
                 private int connectionStatus;
+                private int connectionTryout = 0;
+                private int connectionTimewait = 5000;
 		public ThriftServer(Server server) {
 				this.server = server;
 				this.connectionPool = new ConnectionPool(server);
@@ -142,11 +144,13 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
                 public void run() {
                     do{
                         try {
+                            t.sleep(connectionTimewait);
                             connectionSuccess = client.transfer(msg);
-                        } catch (TException ex) {
+                            connectionTimewait += 10000;
+                        } catch (Exception ex) {
                             
                         }                                            
-                    }while(connectionSuccess);
+                    }while(!connectionSuccess && connectionTryout < 5);
                 }
             });
                         t.start();
