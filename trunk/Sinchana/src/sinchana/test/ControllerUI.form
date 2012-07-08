@@ -253,7 +253,6 @@
         <Component class="javax.swing.JTextField" name="logNodeID">
           <Properties>
             <Property name="horizontalAlignment" type="int" value="11"/>
-            <Property name="text" type="java.lang.String" value="0"/>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[48, 20]"/>
             </Property>
@@ -288,6 +287,7 @@
         <Component class="javax.swing.JTextField" name="logClass">
           <Properties>
             <Property name="horizontalAlignment" type="int" value="11"/>
+            <Property name="text" type="java.lang.String" value="0"/>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[48, 20]"/>
             </Property>
@@ -305,6 +305,7 @@
         <Component class="javax.swing.JTextField" name="logLocation">
           <Properties>
             <Property name="horizontalAlignment" type="int" value="11"/>
+            <Property name="text" type="java.lang.String" value="4"/>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[48, 20]"/>
             </Property>
