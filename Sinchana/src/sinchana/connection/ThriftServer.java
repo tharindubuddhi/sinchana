@@ -4,7 +4,6 @@
  */
 package sinchana.connection;
 
-import java.net.ConnectException;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
@@ -15,12 +14,10 @@ import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
-import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.PortHandler;
 import sinchana.Server;
-import sinchana.connection.ConnectionPool;
 import sinchana.thrift.Node;
 
 /**
@@ -132,8 +129,6 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				}
 
 		}
-
-		public synchronized int faultHandler() {
-				return 1;
-		}
+                
+                
 }
