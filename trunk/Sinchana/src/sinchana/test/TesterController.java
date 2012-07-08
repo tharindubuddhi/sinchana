@@ -249,7 +249,7 @@ public class TesterController {
 
 		public synchronized void incrementCompletedCount(int id) {
 				completedCount++;
-				System.out.println(completedCount + " of " + NUM_OF_TESTING_NODES + " are stable... \t\t" + id);
+//				System.out.println(completedCount + " of " + NUM_OF_TESTING_NODES + " are stable... \t\t" + id);
 				cui.setStatus(completedCount + " of " + NUM_OF_TESTING_NODES + " are stable...");
 				if (completedCount == NUM_OF_TESTING_NODES) {
 						startLock.release();

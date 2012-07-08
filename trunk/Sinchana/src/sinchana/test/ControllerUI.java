@@ -132,7 +132,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 autoTestButtonPanel.add(startNodeSetButton);
 
                 numOfTesters.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-                numOfTesters.setText("12");
+                numOfTesters.setText("120");
                 numOfTesters.setToolTipText("No of Testing Nodes");
                 numOfTesters.setPreferredSize(new java.awt.Dimension(32, 24));
                 autoTestButtonPanel.add(numOfTesters);

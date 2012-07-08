@@ -4,6 +4,7 @@
  */
 package sinchana.chord;
 
+import java.util.logging.Level;
 import sinchana.PortHandler;
 import sinchana.RoutingHandler;
 import sinchana.Server;
@@ -19,7 +20,7 @@ import java.util.Set;
  *
  * @author Hiru
  */
-public class RoutingTable implements RoutingHandler {
+public class RoutingTable implements RoutingHandler, Runnable{
 
 		private Server server;
 		private Node successor = null;
@@ -52,10 +53,6 @@ public class RoutingTable implements RoutingHandler {
 		}
 
 		private synchronized void updateTableWithNode(Node node) {
-//				if (Thread.currentThread().getId() != this.server.threadId) {
-//						throw new RuntimeException("Invalid thread access! "
-//								+ Thread.currentThread().getId() + ": " + Thread.currentThread().getName());
-//				}
 
 				int start, successorId, tempNodeId;
 				boolean tableChanged = false;
@@ -101,6 +98,7 @@ public class RoutingTable implements RoutingHandler {
 								msg = new Message(this.server, MessageType.FIND_SUCCESSOR, 256);
 								msg.setStartOfRange(fingerTableEntry.getStart());
 								msg.setEndOfRange(fingerTableEntry.getEnd());
+								msg.setTargetKey(fingerTableEntry.getSuccessor().serverId);
 								ph.send(msg, fingerTableEntry.getSuccessor());
 						}
 				}
@@ -136,23 +134,6 @@ public class RoutingTable implements RoutingHandler {
 						"Next hop for the destination " + destination + " is this server");
 				return this.server;
 		}
-
-//		@Override
-//		public void setOptimalSuccessor(int startOfRange, Node successor) {
-//				for (FingerTableEntry fingerTableEntry : fingerTable) {
-//						if (fingerTableEntry.getStart() == startOfRange
-//								&& fingerTableEntry.getSuccessor().serverId != successor.serverId) {
-//								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 6,
-//										"FT entry " + fingerTableEntry.getSuccessor().serverId
-//										+ " in " + fingerTableEntry.getStart() + "-" + fingerTableEntry.getEnd()
-//										+ " is replaced with " + successor.serverId);
-//								fingerTableEntry.setSuccessor(successor.deepCopy());
-//								if (this.server.getSinchanaTestInterface() != null) {
-//										this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
-//								}
-//						}
-//				}
-//		}
 
 		@Override
 		public Node getOptimalSuccessor(int rServerId, int startOfRange) {
@@ -192,12 +173,8 @@ public class RoutingTable implements RoutingHandler {
 				for (; it.hasNext();) {
 						updateTable(it.next());
 				}
-				optimizeFingerTable();
-				if (this.server.getSinchanaTestInterface() != null) {
-						this.server.getSinchanaTestInterface().setPredecessor(predecessor);
-						this.server.getSinchanaTestInterface().setSuccessor(successor);
-						this.server.getSinchanaTestInterface().setStable(true);
-				}
+				new Thread(this).start();
+//				optimizeFingerTable();
 		}
 
 		@Override
@@ -241,5 +218,17 @@ public class RoutingTable implements RoutingHandler {
 		@Override
 		public void setStable(boolean isStable) {
 				this.stable = isStable;
+		}
+
+		@Override
+		public void run() {
+				while(true){
+						this.optimizeFingerTable();
+						try {
+								Thread.sleep(5000);
+						} catch (InterruptedException ex) {
+								java.util.logging.Logger.getLogger(RoutingTable.class.getName()).log(Level.SEVERE, null, ex);
+						}
+				}
 		}
 }

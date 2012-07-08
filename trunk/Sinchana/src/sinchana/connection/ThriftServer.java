@@ -31,11 +31,12 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private TServer tServer;
 		private boolean running;
 		private ConnectionPool connectionPool;
-                private Thread t;
-                private boolean connectionSuccess;
-                private int connectionStatus;
-                private int connectionTryout = 0;
-                private int connectionTimewait = 5000;
+		private Thread t;
+		private boolean connectionSuccess;
+		private int connectionStatus;
+		private int connectionTryout = 0;
+		private int connectionTimewait = 5000;
+
 		public ThriftServer(Server server) {
 				this.server = server;
 				this.connectionPool = new ConnectionPool(server);
@@ -90,6 +91,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				if (this.running && this.tServer != null) {
 						tServer.stop();
 				}
+				this.connectionPool.closeAllConnections();
 		}
 
 		@Override
@@ -100,16 +102,16 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 								"Messaage " + message + " is terminated as lifetime expired!");
 						return 0;
 				}
-				message.station = this.server;                                
+				message.station = this.server;
 				TTransport transport = connectionPool.getConnection(destination.serverId, destination.address, destination.portId);
-				
-                                try {
+
+				try {
 						TProtocol protocol = new TBinaryProtocol(transport);
 						DHTServer.Client client = new DHTServer.Client(protocol);
 						if (client.transfer(message)) {
 								connectionStatus = 1;
 						} else {
-                                                    reconnect(client,message);
+								reconnect(client, message);
 								return 2;//retry count and queue
 						}
 
@@ -131,31 +133,29 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						ex.printStackTrace();
 						return 5;
 				}
-                                return connectionStatus;
+				return connectionStatus;
 
 		}
-                
-                public synchronized void reconnect(final DHTServer.Client client, final Message msg){
-                    
-                    if(t!=null ){
-                        t = new Thread(new Runnable() {
 
-                @Override
-                public void run() {
-                    do{
-                        try {
-                            t.sleep(connectionTimewait);
-                            connectionSuccess = client.transfer(msg);
-                            connectionTimewait += 10000;
-                            connectionTryout++;
-                        } catch (Exception ex) {
-                            
-                        }                                            
-                    }while(!connectionSuccess && connectionTryout < 5);
-                }
-            });
-                        t.start();
-                    }
-                }
-                
+		public synchronized void reconnect(final DHTServer.Client client, final Message msg) {
+
+				if (t != null) {
+						t = new Thread(new Runnable() {
+
+								@Override
+								public void run() {
+										do {
+												try {
+														t.sleep(connectionTimewait);
+														connectionSuccess = client.transfer(msg);
+														connectionTimewait += 10000;
+														connectionTryout++;
+												} catch (Exception ex) {
+												}
+										} while (!connectionSuccess && connectionTryout < 5);
+								}
+						});
+						t.start();
+				}
+		}
 }
