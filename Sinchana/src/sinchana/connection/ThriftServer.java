@@ -4,6 +4,7 @@
  */
 package sinchana.connection;
 
+import java.util.logging.Level;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
@@ -30,7 +31,9 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private TServer tServer;
 		private boolean running;
 		private ConnectionPool connectionPool;
-
+                private Thread t;
+                private boolean connectionSuccess;
+                private int connectionStatus;
 		public ThriftServer(Server server) {
 				this.server = server;
 				this.connectionPool = new ConnectionPool(server);
@@ -95,17 +98,16 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 								"Messaage " + message + " is terminated as lifetime expired!");
 						return 0;
 				}
-				message.station = this.server;
-
-
-
+				message.station = this.server;                                
 				TTransport transport = connectionPool.getConnection(destination.serverId, destination.address, destination.portId);
-				try {
+				
+                                try {
 						TProtocol protocol = new TBinaryProtocol(transport);
 						DHTServer.Client client = new DHTServer.Client(protocol);
 						if (client.transfer(message)) {
-								return 1;
+								connectionStatus = 1;
 						} else {
+                                                    reconnect(client,message);
 								return 2;//retry count and queue
 						}
 
@@ -127,8 +129,28 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						ex.printStackTrace();
 						return 5;
 				}
+                                return connectionStatus;
 
 		}
                 
+                public synchronized void reconnect(final DHTServer.Client client, final Message msg){
+                    
+                    if(t!=null ){
+                        t = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    do{
+                        try {
+                            connectionSuccess = client.transfer(msg);
+                        } catch (TException ex) {
+                            
+                        }                                            
+                    }while(connectionSuccess);
+                }
+            });
+                        t.start();
+                    }
+                }
                 
 }
