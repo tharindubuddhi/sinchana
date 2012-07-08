@@ -41,7 +41,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private MessageQueue messageQueue;
 		private static final int MESSAGE_QUEUE_SIZE = 4096;
 		private static final int NUM_OF_MAX_RETRIES = 3;
-		
+
 		public ThriftServer(Server s) {
 				this.server = s;
 				this.connectionPool = new ConnectionPool(s);
@@ -53,11 +53,14 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 								int result = send(message);
 								switch (result) {
 										case PortHandler.ACCEPT_ERROR:
+										case PortHandler.LOCAL_SERVER_ERROR:
 												message.retryCount++;
 												if (message.retryCount > NUM_OF_MAX_RETRIES) {
 														Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-																"Messaage " + message + " is terminated as lifetime expired!");
+																"Messaage " + message + " is terminated as maximum number of retries exceede!");
 												} else {
+														Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
+																"Messaage " + message + " is added back to the queue");
 														queueMessage(message);
 												}
 												break;
@@ -66,8 +69,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 														"Messaage " + message + " is terminated as lifetime expired!");
 												break;
 										case PortHandler.REMOTE_SERVER_ERROR:
-												break;
-										case PortHandler.LOCAL_SERVER_ERROR:
+												server.getRoutingHandler().removeNode(message.destination);
 												break;
 								}
 						}
