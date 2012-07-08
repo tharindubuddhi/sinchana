@@ -21,7 +21,7 @@ import sinchana.util.messagequeue.MessageQueue;
 public class MessageHandler {
 
 		private Server server;
-		private static final int MESSAGE_BUFFER_SIZE = 4096;
+		private static final int MESSAGE_BUFFER_SIZE = 8192;
 		private static final int MESSAGE_UNSTABLE_BUFFER_SIZE = 256;
 		private MessageQueue messageQueue;
 		private MessageQueue messageQueueUnstable;
