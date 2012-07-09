@@ -7,8 +7,9 @@
     Description:
         Purpose of the document follows.
 -->
-<project  xmlns:ivy="antlib:org.apache.ivy.ant" name="Sinchana" default="default" basedir=".">
+<project   name="Sinchana" default="default" basedir=".">
     <description>Builds, tests, and runs the project Sinchana.</description>
+
     <property name="lib.dir" value="lib" />
     <property name="src.dir"     value="src"/>
     <property name="build.dir"   value="build"/>
@@ -18,29 +19,10 @@
     <property name="main-class"  value="sinchana.test.TesterController"/>
 
     <!-- paths used for compilation and run  -->
-    <path id="lib.path.id">
-        <fileset dir="${lib.dir}" />
-	</path>
-    <path id="run.path.id">
-        <path refid="lib.path.id" />
-        <path location="${build.dir}" />
-    </path>
-
+    
     <path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
     </path>
-
-     <target name="resolve" description="--> retrieve dependencies with ivy">
-        <ivy:retrieve />
-    </target>
-
-    <target name="report" depends="resolve" description="--> generates a report of dependencies">
-        <ivy:report todir="${build.dir}"/>
-    </target>
-
-    <target name="clean-cache" description="--> clean the ivy cache">
-		<ivy:cleancache />
-	</target>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
@@ -51,7 +33,7 @@
         <javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath" includeantruntime="false"/>
     </target>
 
-    <target name="jar" depends="report,resolve,compile">
+    <target name="jar" depends="compile">
         <mkdir dir="${jar.dir}"/>
         <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
             <manifest>
@@ -72,5 +54,5 @@
 
     <target name="clean-build" depends="clean,jar"/>
 
-    <target name="main" depends="clean,resolve,run"/>
+    <target name="main" depends="clean,run"/>
 </project>
