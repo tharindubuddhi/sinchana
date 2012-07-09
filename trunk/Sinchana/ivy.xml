@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : ivy.xml
+    Created on : July 8, 2012, 11:35 PM
+    Author     : DELLL
+    Description:
+        Purpose of the document follows.
+-->
+
+<ivy-module version="2.0">
+    <info organisation="org.apache" module="Sinchana"/>
+    <dependencies>
+        <dependency org="org.apache.thrift" name="libthrift" rev="0.8.0" transitive="false"/>
+        
+    </dependencies>
+</ivy-module>
