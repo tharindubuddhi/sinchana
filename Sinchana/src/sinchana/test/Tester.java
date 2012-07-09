@@ -58,6 +58,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 
 		public void startServer() {
 				Thread thread = new Thread(this);
+				startTime = Calendar.getInstance();
 				thread.start();
 		}
 
@@ -120,7 +121,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 								this.gui.setServerId(serverId);
 								this.gui.setVisible(true);
 						}
-						startTime = Calendar.getInstance();
+//						startTime = Calendar.getInstance();
 						server.startServer();
 						while (true) {
 								threadLock.acquire();

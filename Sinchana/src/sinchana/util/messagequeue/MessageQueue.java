@@ -19,7 +19,8 @@ public class MessageQueue implements Runnable {
 		private Message[] messageQueue;
 		private Semaphore messagesAvailable = new Semaphore(0);
 		private MessageEventHandler messageEventHandler;
-		private Thread thread;
+		private Thread thread = null;
+		private boolean alive = true;
 
 		public MessageQueue(int sizeOfQueue, MessageEventHandler meh) {
 				this.messageEventHandler = meh;
@@ -28,12 +29,23 @@ public class MessageQueue implements Runnable {
 		}
 
 		public long start() {
+				this.alive = true;
 				if (thread == null) {
 						thread = new Thread(this);
 						thread.start();
 				}
 				return thread.getId();
-		}		
+		}
+
+		public void reset() {
+				alive = false;
+				head = 0;
+				tail = 0;
+				if (thread != null) {
+						thread.interrupt();
+				}
+				thread = null;
+		}
 
 		public synchronized boolean queueMessage(Message message) {
 				if ((tail + MESSAGE_BUFFER_SIZE - head) % MESSAGE_BUFFER_SIZE == 1) {
@@ -51,15 +63,18 @@ public class MessageQueue implements Runnable {
 
 		@Override
 		public void run() {
-				while (true) {
+				while (alive) {
 						try {
 								messagesAvailable.acquire();
-								Message message = messageQueue[tail];
-								tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
-								this.messageEventHandler.process(message);
+								if (alive) {
+										Message message = messageQueue[tail];
+										tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
+										this.messageEventHandler.process(message);
+								}
 						} catch (InterruptedException ex) {
-								ex.printStackTrace();
+//								ex.printStackTrace();
 						}
 				}
+				System.out.println("MessageHandler thread is terminating...");
 		}
 }

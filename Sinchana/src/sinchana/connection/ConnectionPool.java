@@ -87,7 +87,7 @@ public class ConnectionPool {
 		}
 
 		public void closeAllConnections() {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_CONNECTION_POOL, 3,
+				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 3,
 						"Clossing all the connections.");
 				Collection<TTransport> values = pool.values();
 				for (TTransport tTransport : values) {

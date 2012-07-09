@@ -23,13 +23,18 @@ public class Server extends Node {
 		private SinchanaTestInterface sinchanaTestInterface = null;
 		public static final int MESSAGE_LIFETIME = 1024;
 		public long threadId;
+		private Node anotherNode;
 
 		/**
 		 * Start a new node with the given server ID. Next hop is not available.
 		 * @param id Server ID. Currently it is assigned by the node controller.
 		 */
 		public Server(int serverId, int portId, String address) {
-				this.init(serverId, portId, address);
+				this.serverId = serverId;
+				this.portId = portId;
+				this.address = address;
+				this.anotherNode = null;
+				this.startServer();
 				this.routingHandler.setStable(true);
 		}
 
@@ -40,26 +45,27 @@ public class Server extends Node {
 		 * node first communicate with this node to discover the rest of the network.
 		 */
 		public Server(int serverId, int portId, String address, Node anotherNode) {
-				this.init(serverId, portId, address);
-				Message msg = new Message(this, MessageType.JOIN, MESSAGE_LIFETIME);
-				this.portHandler.send(msg, anotherNode);
-		}
-
-		private void init(int serverId, int portId, String address) {
 				this.serverId = serverId;
 				this.portId = portId;
 				this.address = address;
-				this.routingHandler.init();
-				this.threadId = this.messageHandler.init();
+				this.anotherNode = anotherNode;
 				this.startServer();
 		}
 
-		public void startServer() {
+		public final void startServer() {
 				this.portHandler.startServer();
+				this.threadId = Thread.currentThread().getId();
+				this.routingHandler.init();
+				this.threadId = this.messageHandler.init();
+				if (this.anotherNode != null) {
+						Message msg = new Message(this, MessageType.JOIN, MESSAGE_LIFETIME);
+						this.portHandler.send(msg, this.anotherNode);
+				}
 		}
 
 		public void stopServer() {
 				portHandler.stopServer();
+				messageHandler.terminate();
 		}
 
 		public void registerSinchanaInterface(SinchanaInterface sinchanaInterface) {

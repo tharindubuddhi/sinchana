@@ -36,8 +36,9 @@ public class RoutingTable implements RoutingHandler, Runnable {
 
 		@Override
 		public void init() {
-				this.serverId = server.getServerId();
+				this.serverId = this.server.getServerId();
 				this.initFingerTable();
+				this.updateTable(this.server);
 		}
 
 		private void initFingerTable() {
@@ -173,8 +174,8 @@ public class RoutingTable implements RoutingHandler, Runnable {
 				for (; it.hasNext();) {
 						updateTable(it.next());
 				}
-				new Thread(this).start();
-//				optimizeFingerTable();
+//				new Thread(this).start();
+				optimizeFingerTable();
 		}
 
 		@Override
@@ -232,24 +233,25 @@ public class RoutingTable implements RoutingHandler, Runnable {
 						break;
 				}
 		}
-                
-                //remove the node from the routing table, temporary update the table and message to the nodes in the routing table
-                //get the optimal neighbours
-                public void faultUpdateTable(Node node){
-                    removeNode(node);
-                    optimizeFingerTable();
-                    
-                }
 
-    @Override
-    public void removeNode(Node node) {
-        int i =0; boolean b = false;
-        for(; i< fingerTable.length-1;i++){
-            if(b||fingerTable[i].getSuccessor().serverId==node.serverId){
-                fingerTable[i].setSuccessor(fingerTable[i+1].getSuccessor());
-                b = true;
-            }
-        }
-        fingerTable[i+1].setSuccessor(this.predecessor);        
-    }
+		//remove the node from the routing table, temporary update the table and message to the nodes in the routing table
+		//get the optimal neighbours
+		public void faultUpdateTable(Node node) {
+				removeNode(node);
+				optimizeFingerTable();
+
+		}
+
+		@Override
+		public void removeNode(Node node) {
+				int i = 0;
+				boolean b = false;
+				for (; i < fingerTable.length - 1; i++) {
+						if (b || fingerTable[i].getSuccessor().serverId == node.serverId) {
+								fingerTable[i].setSuccessor(fingerTable[i + 1].getSuccessor());
+								b = true;
+						}
+				}
+				fingerTable[i + 1].setSuccessor(this.predecessor);
+		}
 }

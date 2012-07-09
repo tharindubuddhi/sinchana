@@ -5,8 +5,6 @@
 package sinchana;
 
 import java.util.Set;
-import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -22,58 +20,32 @@ public class MessageHandler {
 
 		private Server server;
 		private static final int MESSAGE_BUFFER_SIZE = 1536;
-		private static final int MESSAGE_UNSTABLE_BUFFER_SIZE = 128;
-		private MessageQueue messageQueue;
-		private MessageQueue messageQueueUnstable;
-		private Semaphore stablePriorty = new Semaphore(0);
+		
+		private MessageQueue messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
+
+				@Override
+				public void process(Message message) {
+						if (!server.getRoutingHandler().isStable()
+								&& (message.type != MessageType.JOIN || message.source.serverId != server.serverId)) {
+								Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 0,
+										"Queued back until the server is stable: " + message.type + " - " + message);
+								queueMessage(message);
+						} else {
+								processMessage(message);
+						}
+				}
+		});
 
 		MessageHandler(Server node) {
 				this.server = node;
 		}
 
 		public long init() {
-				this.server.getRoutingHandler().updateTable(this.server);
-				messageQueueUnstable = new MessageQueue(MESSAGE_UNSTABLE_BUFFER_SIZE, new MessageEventHandler() {
-
-						@Override
-						public void process(Message message) {
-								processMessage(message);
-								if (messageQueueUnstable.isEmpty()) {
-										Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 0,
-												"Releasing thread " + Thread.currentThread().getId());
-										stablePriorty.release();
-								}
-						}
-				});
-				messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
-
-						@Override
-						public void process(Message message) {
-								if (!messageQueueUnstable.isEmpty() && server.getRoutingHandler().isStable()) {
-										messageQueueUnstable.start();
-										Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 0,
-												"Waiting thread " + Thread.currentThread().getId());
-										try {
-												stablePriorty.acquire();
-										} catch (InterruptedException ex) {
-												java.util.logging.Logger.getLogger(MessageHandler.class.getName()).log(Level.SEVERE, null, ex);
-										}
-								}
-								if (!server.getRoutingHandler().isStable()
-										&& (message.type != MessageType.JOIN || message.source.serverId != server.serverId)) {
-										Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 1,
-												"Queued until the server is stable: " + message.type + " - " + message);
-										boolean acceptedUnstable = messageQueueUnstable.queueMessage(message);
-										if (!acceptedUnstable) {
-												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 8,
-														"Message is unacceptable 'cos unstable unstable buffer is full! " + message);
-										}
-								} else {
-										processMessage(message);
-								}
-						}
-				});
 				return messageQueue.start();
+		}
+		
+		public void terminate(){
+				messageQueue.reset();
 		}
 
 		public boolean queueMessage(Message message) {
@@ -214,11 +186,12 @@ public class MessageHandler {
 										Node newPredecessor = this.server.getRoutingHandler().getOptimalSuccessor(message.source.serverId, message.getStartOfRange());
 										if (newPredecessor.serverId == this.server.serverId) {
 												if (message.station.serverId != message.source.serverId) {
-//														System.out.println(this.server.serverId + ": Valid response for "
-//																+ message.targetKey
-//																+ " in " + message.startOfRange + "-" + message.endOfRange
-//																+ " is found as " + newPredecessor.serverId + " where source is "
-//																+ message.source.serverId + " & prevstation is " + message.station.serverId);
+														Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 6,
+																"Valid response for " + message.targetKey
+																+ " in " + message.startOfRange + "-" + message.endOfRange
+																+ " is found as " + newPredecessor.serverId
+																+ " where source is " + message.source.serverId
+																+ " & prevstation is " + message.station.serverId);
 														message.setSuccessor(this.server.deepCopy());
 														this.server.getPortHandler().send(message, message.source);
 												}
@@ -232,11 +205,11 @@ public class MessageHandler {
 						case TEST_RING:
 								if (message.source.serverId == this.server.serverId) {
 										if (message.message.length() != 0) {
-												Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_MESSAGE_HANDLER, 6,
+												Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_MESSAGE_HANDLER, 7,
 														"Ring test completed - length: " + (message.message.split(" > ").length) + " :: " + message.message);
 												System.out.println("Ring test completed - length: " + (message.message.split(" > ").length) + " :: " + message.message);
 										} else {
-												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 6,
+												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 7,
 														"Start of Test Ring. Sending to " + predecessor.serverId + " & " + successor.serverId);
 												message.message += "" + this.server.serverId;
 												this.server.getPortHandler().send(message, predecessor);
@@ -244,17 +217,17 @@ public class MessageHandler {
 										}
 								} else {
 										if (message.station.serverId == predecessor.serverId) {
-												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 6,
+												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 7,
 														"Forwarding Ring Test to successor " + successor.serverId);
 												message.message += " > " + this.server.serverId;
 												this.server.getPortHandler().send(message, successor);
 										} else if (message.station.serverId == successor.serverId) {
-												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 6,
+												Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 7,
 														"Forwarding Ring Test to predecessor " + predecessor.serverId);
 												message.message += " > " + this.server.serverId;
 												this.server.getPortHandler().send(message, predecessor);
 										} else {
-												Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 6,
+												Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 7,
 														"Message Terminated! Received from " + message.station.serverId
 														+ " which is neither predecessor or successor.");
 										}
