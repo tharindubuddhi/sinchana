@@ -39,7 +39,15 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		public void init() {
 				this.serverId = this.server.getServerId();
 				this.initFingerTable();
-				this.updateTable(this.server);
+				this.neighboursImported = false;
+				this.predecessor = this.server.deepCopy();
+				this.successor = this.server.deepCopy();
+//				this.updateTable(this.server);
+				if (this.server.getSinchanaTestInterface() != null) {
+						this.server.getSinchanaTestInterface().setPredecessor(predecessor);
+						this.server.getSinchanaTestInterface().setSuccessor(successor);
+						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
+				}
 		}
 
 		private void initFingerTable() {
@@ -47,10 +55,7 @@ public class RoutingTable implements RoutingHandler, Runnable {
 						fingerTable[i] = new FingerTableEntry();
 						fingerTable[i].setStart((this.serverId + (int) Math.pow(2, i)) % GRID_SIZE);
 						fingerTable[i].setEnd((this.serverId + (int) Math.pow(2, i + 1) - 1) % GRID_SIZE);
-						fingerTable[i].setSuccessor(null);
-				}
-				if (this.server.getSinchanaTestInterface() != null) {
-						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
+						fingerTable[i].setSuccessor(this.server.deepCopy());
 				}
 		}
 

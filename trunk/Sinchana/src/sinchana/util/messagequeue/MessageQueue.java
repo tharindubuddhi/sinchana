@@ -37,6 +37,10 @@ public class MessageQueue implements Runnable {
 				return thread.getId();
 		}
 
+		public boolean isAlive() {
+				return this.alive;
+		}
+
 		public void reset() {
 				alive = false;
 				head = 0;
@@ -75,6 +79,6 @@ public class MessageQueue implements Runnable {
 //								ex.printStackTrace();
 						}
 				}
-				System.out.println("MessageHandler thread is terminating...");
+//				System.out.println("MessageHandler thread is terminating...");
 		}
 }

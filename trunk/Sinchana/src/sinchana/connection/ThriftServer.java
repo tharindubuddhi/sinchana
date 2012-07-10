@@ -33,44 +33,42 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private boolean running;
 		private boolean runningLocal;
 		private ConnectionPool connectionPool;
-		private MessageQueue messageQueue;
 		private static final int MESSAGE_QUEUE_SIZE = 4096;
 		private static final int NUM_OF_MAX_RETRIES = 3;
+		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageEventHandler() {
 
-		public ThriftServer(Server s) {
-				this.server = s;
-				this.connectionPool = new ConnectionPool(s);
+				@Override
+				public void process(Message message) {
+						int result = send(message.deepCopy());
+						switch (result) {
+								case PortHandler.ACCEPT_ERROR:
+								case PortHandler.LOCAL_SERVER_ERROR:
+										message.retryCount++;
+										if (message.retryCount > NUM_OF_MAX_RETRIES) {
+												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+														"Messaage is terminated as maximum number of retries exceede! :: " + message);
+										} else {
+												Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
+														"Messaage is added back to the queue :: " + message);
+												queueMessage(message);
+										}
+										break;
+								case PortHandler.MESSAGE_LIFE_TIME_EXPIRED:
+										Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+												"Messaage is terminated as lifetime expired! :: " + message);
+										break;
+								case PortHandler.REMOTE_SERVER_ERROR:
+										server.getRoutingHandler().removeNode(message.destination);
+										break;
+						}
+				}
+		});
+
+		public ThriftServer(Server svr) {
+				this.server = svr;
+				this.connectionPool = new ConnectionPool(svr);
 				this.running = false;
 				this.runningLocal = false;
-				messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageEventHandler() {
-
-						@Override
-						public void process(Message message) {
-								int result = send(message);
-								switch (result) {
-										case PortHandler.ACCEPT_ERROR:
-										case PortHandler.LOCAL_SERVER_ERROR:
-												message.retryCount++;
-												if (message.retryCount > NUM_OF_MAX_RETRIES) {
-														Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-																"Messaage is terminated as maximum number of retries exceede! :: " + message);
-												} else {
-														Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
-																"Messaage is added back to the queue :: " + message);
-														queueMessage(message);
-												}
-												break;
-										case PortHandler.MESSAGE_LIFE_TIME_EXPIRED:
-												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-														"Messaage is terminated as lifetime expired! :: " + message);
-												break;
-										case PortHandler.REMOTE_SERVER_ERROR:
-												server.getRoutingHandler().removeNode(server);
-												break;
-								}
-						}
-				});
-				messageQueue.start();
 		}
 
 		/**
@@ -118,6 +116,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						new Thread(this).start();
 				}
 				this.runningLocal = true;
+				messageQueue.start();
 				if (this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setServerIsRunning(true);
 				}
@@ -125,11 +124,14 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 
 		@Override
 		public void stopServer() {
-				if (this.running && this.tServer != null) {
+//				if (this.running && this.tServer != null) {
 //						tServer.stop();
-				}
+//				}
+				messageQueue.reset();
 				this.runningLocal = false;
 				this.connectionPool.closeAllConnections();
+				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
+						"Server is shutting down...");
 				if (this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setServerIsRunning(false);
 				}

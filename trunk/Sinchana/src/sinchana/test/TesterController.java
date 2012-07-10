@@ -31,8 +31,8 @@ public class TesterController {
 		public static final int REMOTE_SERVER_PORT_ID_RANGE = 8000;
 		public static int NUM_OF_TESTING_NODES = 32;
 		public static int NUM_OF_AUTO_TESTING_NODES = 3;
-		public static final boolean GUI_ON = true;
-		public static final int AUTO_TEST_TIMEOUT = 1000;
+		public static final boolean GUI_ON = false;
+		public static final int AUTO_TEST_TIMEOUT = 2;
 		private Tester[] testServers;
 		private ControllerUI cui;
 		private int completedCount = 0;
@@ -121,16 +121,16 @@ public class TesterController {
 						Object[][] tableData = new Object[NUM_OF_TESTING_NODES][4];
 						for (int i = 0; i < testServers.length; i++) {
 								tableData[i][0] = testServers[i].getServerId();
-								tableData[i][1] = testServers[i].getStartTime().get(Calendar.HOUR_OF_DAY)
-										+ ":" + testServers[i].getStartTime().get(Calendar.MINUTE)
-										+ ":" + testServers[i].getStartTime().get(Calendar.SECOND)
-										+ ":" + testServers[i].getStartTime().get(Calendar.MILLISECOND);
-								tableData[i][2] = testServers[i].getEndTime().get(Calendar.HOUR_OF_DAY)
-										+ ":" + testServers[i].getEndTime().get(Calendar.MINUTE)
-										+ ":" + testServers[i].getEndTime().get(Calendar.SECOND)
-										+ ":" + testServers[i].getEndTime().get(Calendar.MILLISECOND);
-								tableData[i][3] = testServers[i].getEndTime().getTimeInMillis()
-										- testServers[i].getStartTime().getTimeInMillis();
+//								tableData[i][1] = testServers[i].getStartTime().get(Calendar.HOUR_OF_DAY)
+//										+ ":" + testServers[i].getStartTime().get(Calendar.MINUTE)
+//										+ ":" + testServers[i].getStartTime().get(Calendar.SECOND)
+//										+ ":" + testServers[i].getStartTime().get(Calendar.MILLISECOND);
+//								tableData[i][2] = testServers[i].getEndTime().get(Calendar.HOUR_OF_DAY)
+//										+ ":" + testServers[i].getEndTime().get(Calendar.MINUTE)
+//										+ ":" + testServers[i].getEndTime().get(Calendar.SECOND)
+//										+ ":" + testServers[i].getEndTime().get(Calendar.MILLISECOND);
+//								tableData[i][3] = testServers[i].getEndTime().getTimeInMillis()
+//										- testServers[i].getStartTime().getTimeInMillis();
 						}
 						String[] coloms = {"Node ID", "Start", "End", "Duration"};
 						cui.setTableInfo(tableData, coloms);
@@ -159,7 +159,7 @@ public class TesterController {
 				while (running) {
 //						setAutoTestTableInfo();
 						try {
-								Thread.sleep(AUTO_TEST_TIMEOUT);
+								Thread.sleep(1000);
 						} catch (InterruptedException ex) {
 								Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 						}
@@ -168,7 +168,7 @@ public class TesterController {
 						tCount++;
 						cui.setStatus("   " + tCount);
 						for (Tester tester : testServers) {
-								if (timeNow - tester.getEndTime().getTimeInMillis() < 2 * AUTO_TEST_TIMEOUT) {
+								if (timeNow - tester.getEndTime().getTimeInMillis() < AUTO_TEST_TIMEOUT * 1000) {
 										running = true;
 										break;
 								}
