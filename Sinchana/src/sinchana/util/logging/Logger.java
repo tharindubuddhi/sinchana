@@ -27,7 +27,7 @@ public final class Logger {
 		public static final int CLASS_CONNECTION_POOL = 4;
 //		public static final int CLASS_THRIFT_SERVER = 5;
 //		public static final int CLASS_THRIFT_SERVER = 6;
-		public static final int CURRENT_LOG_LEVEL = 1;
+		public static final int CURRENT_LOG_LEVEL = 2;
 
 		private Logger() {
 		}

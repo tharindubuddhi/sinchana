@@ -37,7 +37,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		private int[] realKeySpace;
 
 		public Tester(int serverId, Node anotherNode, TesterController tc) {
-				
+
 				if (anotherNode == null) {
 						server = new Server(
 								serverId, serverId + TesterController.LOCAL_PORT_ID_RANGE,
@@ -90,24 +90,26 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				switch (message.type) {
 						case ACCEPT:
 								if (realKeySpace[message.targetKey] != message.source.serverId) {
-										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_TESTER, 1,
+										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 1,
 												"Resolving error : " + message);
+								} else {
+										resolvedCount++;
 								}
-								resolvedCount++;
 								keySpace[message.getTargetKey()] = message.source.serverId;
 								break;
 						case ERROR:
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_TESTER, 2,
+								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 2,
 										"Recieved error message : " + message);
 								break;
 						case GET:
 								if (realKeySpace[message.targetKey] != this.serverId) {
-										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_TESTER, 3,
+										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
 												"Receiving error : " + message);
+								} else {
+										recievedCount++;
+										response = new Message(this.server, MessageType.ACCEPT, 1);
+										response.setTargetKey(message.getTargetKey());
 								}
-								recievedCount++;
-								response = new Message(this.server, MessageType.ACCEPT, 1);
-								response.setTargetKey(message.getTargetKey());
 								break;
 				}
 				endTime = Calendar.getInstance();
@@ -144,7 +146,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		@Override
 		public void setStable(boolean isStable) {
 				if (isStable) {
-						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_TESTER, 4,
+						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
 								this.server.serverId + " is now stable!");
 						if (this.gui != null) {
 								this.gui.setMessage("stabilized!");
@@ -157,14 +159,14 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		@Override
 		public void setPredecessor(Node predecessor) {
 				if (this.gui != null) {
-						this.gui.setPredecessorId(predecessor.serverId);
+						this.gui.setPredecessorId(predecessor != null ? predecessor.serverId : -1);
 				}
 		}
 
 		@Override
 		public void setSuccessor(Node successor) {
 				if (this.gui != null) {
-						this.gui.setSuccessorId(successor.serverId);
+						this.gui.setSuccessorId(successor != null ? successor.serverId : -1);
 				}
 		}
 
