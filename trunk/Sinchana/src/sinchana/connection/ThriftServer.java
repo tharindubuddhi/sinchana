@@ -65,7 +65,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 														"Messaage is terminated as lifetime expired! :: " + message);
 												break;
 										case PortHandler.REMOTE_SERVER_ERROR:
-												server.getRoutingHandler().removeNode(message.destination);
+												server.getRoutingHandler().removeNode(server);
 												break;
 								}
 						}

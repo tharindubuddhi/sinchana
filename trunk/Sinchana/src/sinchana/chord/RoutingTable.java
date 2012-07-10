@@ -15,6 +15,7 @@ import sinchana.util.logging.Logger;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Vector;
 
 /**
  *
@@ -236,22 +237,29 @@ public class RoutingTable implements RoutingHandler, Runnable {
 
 		//remove the node from the routing table, temporary update the table and message to the nodes in the routing table
 		//get the optimal neighbours
-		public void faultUpdateTable(Node node) {
-				removeNode(node);
-				optimizeFingerTable();
-
-		}
+		
 
 		@Override
 		public void removeNode(Node node) {
 				int i = 0;
 				boolean b = false;
-				for (; i < fingerTable.length - 1; i++) {
-						if (b || fingerTable[i].getSuccessor().serverId == node.serverId) {
-								fingerTable[i].setSuccessor(fingerTable[i + 1].getSuccessor());
-								b = true;
-						}
+                                Vector<Node> v = new Vector<Node>(TABLE_SIZE);
+                                Node n =  null;
+				for (; i < TABLE_SIZE - 1; ) {
+						if (fingerTable[i].getSuccessor().serverId == node.serverId) {
+								//fingerTable[i].setSuccessor(fingerTable[i + 1].getSuccessor());
+								//b = true;
+                                                   fingerTable[i].setSuccessor(null);
+                                                   n = fingerTable[i+1].getSuccessor();
+                                                                v.add(fingerTable[i].getSuccessor());
+                                                                 
+						}else{
+                                                    
+                                                }
+                                                i++;
 				}
-				fingerTable[i + 1].setSuccessor(this.predecessor);
+				fingerTable[i].setSuccessor(this.predecessor);
+                                
+                                optimizeFingerTable();
 		}
 }
