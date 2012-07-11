@@ -4,6 +4,7 @@
  */
 package sinchana.connection;
 
+import java.util.concurrent.Semaphore;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
@@ -17,7 +18,9 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.PortHandler;
+import sinchana.RoutingHandler;
 import sinchana.Server;
+import sinchana.test.TesterController;
 import sinchana.thrift.Node;
 import sinchana.util.messagequeue.MessageEventHandler;
 import sinchana.util.messagequeue.MessageQueue;
@@ -33,7 +36,8 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private boolean running;
 		private boolean runningLocal;
 		private ConnectionPool connectionPool;
-		private static final int MESSAGE_QUEUE_SIZE = 4096;
+		private Semaphore serverRun = new Semaphore(0);
+		private static final int MESSAGE_QUEUE_SIZE = 4 * RoutingHandler.GRID_SIZE;
 		private static final int NUM_OF_MAX_RETRIES = 3;
 		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageEventHandler() {
 
@@ -46,7 +50,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 										message.retryCount++;
 										if (message.retryCount > NUM_OF_MAX_RETRIES) {
 												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-														"Messaage is terminated as maximum number of retries exceede! :: " + message);
+														"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
 										} else {
 												Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
 														"Messaage is added back to the queue :: " + message);
@@ -59,11 +63,16 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 										break;
 								case PortHandler.REMOTE_SERVER_ERROR:
 										server.getRoutingHandler().removeNode(message.destination);
+										server.getRoutingHandler().optimize();
 										break;
 						}
 				}
 		});
 
+		/**
+		 * 
+		 * @param svr
+		 */
 		public ThriftServer(Server svr) {
 				this.server = svr;
 				this.connectionPool = new ConnectionPool(svr);
@@ -75,10 +84,18 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		 * This method will be called when a message is received and the message 
 		 * will be passed as the argument. 
 		 * @param message Message transfered to the this node.
+		 * @return 
 		 * @throws TException
 		 */
 		@Override
 		public int transfer(Message message) throws TException {
+				if (TesterController.ROUND_TIP_TIME != 0) {
+						try {
+								Thread.sleep(TesterController.ROUND_TIP_TIME);
+						} catch (InterruptedException ex) {
+								ex.printStackTrace();
+						}
+				}
 				if (!runningLocal) {
 						return PortHandler.REMOTE_SERVER_ERROR;
 				}
@@ -101,6 +118,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 0,
 								"Starting the server on port " + this.server.getPortId());
 						this.running = true;
+						serverRun.release();
 						tServer.serve();
 						this.running = false;
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
@@ -110,11 +128,20 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				}
 		}
 
+		/**
+		 * 
+		 */
 		@Override
 		public void startServer() {
 				if (!this.running) {
 						new Thread(this).start();
 				}
+				try {
+						serverRun.acquire();
+				} catch (InterruptedException ex) {
+						ex.printStackTrace();
+				}
+
 				this.runningLocal = true;
 				messageQueue.start();
 				if (this.server.getSinchanaTestInterface() != null) {
@@ -122,6 +149,9 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				}
 		}
 
+		/**
+		 * 
+		 */
 		@Override
 		public void stopServer() {
 //				if (this.running && this.tServer != null) {
@@ -135,14 +165,21 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				if (this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setServerIsRunning(false);
 				}
+				serverRun.release();
 		}
 
+		/**
+		 * 
+		 * @param message
+		 * @param destination
+		 */
 		@Override
-		public synchronized void send(Message message, Node destination) {
-				message.setDestination(destination);
-				message.setRetryCount(0);
+		public void send(Message message, Node destination) {
+				Message msg = message.deepCopy();
+				msg.setDestination(destination);
+				msg.setRetryCount(0);
 //				this.send(message);
-				this.queueMessage(message);
+				this.queueMessage(msg);
 		}
 
 		private void queueMessage(Message message) {
@@ -150,6 +187,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
 								"Message is unacceptable 'cos transport buffer is full! " + message);
 				}
+//				TesterController.testBufferSize(messageQueue.size());
 		}
 
 		private int send(Message message) {

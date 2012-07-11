@@ -12,6 +12,16 @@ import sinchana.thrift.Message;
  */
 public interface SinchanaInterface {
 		
-		public abstract Message transfer(Message message);
+		/**
+		 * Receive messages where the destination is this server. They can be either
+		 * <p>
+		 * MessageType.GET - Resource request, <p>
+		 * MessageType.ACCEPT - Responses to resource request or <p>
+		 * MessageType.ERROR - Error response to resource requests.
+		 * 
+		 * @param message		Message.
+		 * @return				Return message to send back to the sender. Return null if no messages need to be sent back
+		 */
+		public abstract Message receive(Message message);
 		
 }

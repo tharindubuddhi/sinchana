@@ -36,6 +36,12 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		private int[] keySpace = new int[RoutingTable.GRID_SIZE];
 		private int[] realKeySpace;
 
+		/**
+		 * 
+		 * @param serverId
+		 * @param anotherNode
+		 * @param tc
+		 */
 		public Tester(int serverId, Node anotherNode, TesterController tc) {
 
 				if (anotherNode == null) {
@@ -56,26 +62,41 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				}
 		}
 
+		/**
+		 * 
+		 */
 		public void startServer() {
 				Thread thread = new Thread(this);
 				startTime = Calendar.getInstance();
 				thread.start();
 		}
 
+		/**
+		 * 
+		 */
 		public void stopServer() {
 				server.stopServer();
 		}
 
+		/**
+		 * 
+		 */
 		public void startTest() {
 				threadLock.release();
 		}
 
+		/**
+		 * 
+		 */
 		public void startRingTest() {
 				Message msg = new Message(this.server, MessageType.TEST_RING, Server.MESSAGE_LIFETIME);
 				msg.setMessage("");
-				this.server.transferMessage(msg);
+				this.server.send(msg);
 		}
 
+		/**
+		 * 
+		 */
 		public void resetTester() {
 				recievedCount = 0;
 				resolvedCount = 0;
@@ -83,7 +104,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		}
 
 		@Override
-		public Message transfer(Message message) {
+		public Message receive(Message message) {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_TESTER, 0,
 						"Recieved " + message);
 				Message response = null;
@@ -131,10 +152,10 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 								resolvedCount = 0;
 								ringCount = 0;
 								while (ringCount < RoutingTable.GRID_SIZE) {
-										Message msg = new Message(this.server, MessageType.GET, RoutingTable.TABLE_SIZE);
+										Message msg = new Message(this.server, MessageType.GET, 2 * RoutingTable.TABLE_SIZE);
 										msg.setTargetKey(ringCount);
-//								msg.setMessage("Who has " + ringCount + "?");
-										this.server.transferMessage(msg);
+										msg.setMessage("");
+										this.server.send(msg);
 										ringCount++;
 								}
 						}
@@ -143,6 +164,10 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				}
 		}
 
+		/**
+		 * 
+		 * @param isStable
+		 */
 		@Override
 		public void setStable(boolean isStable) {
 				if (isStable) {
@@ -156,6 +181,10 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				}
 		}
 
+		/**
+		 * 
+		 * @param predecessor
+		 */
 		@Override
 		public void setPredecessor(Node predecessor) {
 				if (this.gui != null) {
@@ -163,6 +192,10 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				}
 		}
 
+		/**
+		 * 
+		 * @param successor
+		 */
 		@Override
 		public void setSuccessor(Node successor) {
 				if (this.gui != null) {
@@ -170,6 +203,10 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				}
 		}
 
+		/**
+		 * 
+		 * @param fingerTableEntrys
+		 */
 		@Override
 		public void setRoutingTable(FingerTableEntry[] fingerTableEntrys) {
 				if (this.gui != null) {
@@ -177,6 +214,10 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				}
 		}
 
+		/**
+		 * 
+		 * @param status
+		 */
 		@Override
 		public void setStatus(String status) {
 				if (this.gui != null) {
@@ -184,46 +225,90 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				}
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public int getExpectedCount() {
 				return expectedCount;
 		}
 
+		/**
+		 * 
+		 * @param expectedCount
+		 */
 		public void setExpectedCount(int expectedCount) {
 				this.expectedCount = expectedCount;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public Calendar getEndTime() {
 				return endTime;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public int getRecievedCount() {
 				return recievedCount;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public int getServerId() {
 				return serverId;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public Calendar getStartTime() {
 				return startTime;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public int getResolvedCount() {
 				return resolvedCount;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public int[] getKeySpace() {
 				return keySpace;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public Server getServer() {
 				return server;
 		}
 
+		/**
+		 * 
+		 * @param realKeySpace
+		 */
 		public void setRealKeySpace(int[] realKeySpace) {
 				this.realKeySpace = realKeySpace;
 		}
 
+		/**
+		 * 
+		 * @param isRunning
+		 */
 		@Override
 		public void setServerIsRunning(boolean isRunning) {
 				if (this.gui != null) {

@@ -8,7 +8,8 @@ import java.util.concurrent.Semaphore;
 import sinchana.thrift.Message;
 
 /**
- *
+ * This class implements a message queue. The messages are stored in a circular 
+ * buffer (array) and served in FIFS manner by a thread dedicated to the queue.  
  * @author Hiru
  */
 public class MessageQueue implements Runnable {
@@ -20,37 +21,54 @@ public class MessageQueue implements Runnable {
 		private Semaphore messagesAvailable = new Semaphore(0);
 		private MessageEventHandler messageEventHandler;
 		private Thread thread = null;
-		private boolean alive = true;
+		private boolean started = false;
 
-		public MessageQueue(int sizeOfQueue, MessageEventHandler meh) {
+		/**
+		 * Initialize a message queue.
+		 * @param size	Size of the message queue.
+		 * @param meh	MessageEventHandler instance which is used to callback 
+		 * when messages are received.
+		 */
+		public MessageQueue(int size, MessageEventHandler meh) {
 				this.messageEventHandler = meh;
-				MESSAGE_BUFFER_SIZE = sizeOfQueue;
+				MESSAGE_BUFFER_SIZE = size;
 				this.messageQueue = new Message[MESSAGE_BUFFER_SIZE];
+				thread = new Thread(this);
 		}
 
-		public long start() {
-				this.alive = true;
-				if (thread == null) {
-						thread = new Thread(this);
+		/**
+		 * Returns the message queue thread id.
+		 * @return id of the message queue thread.
+		 */
+		public long getThreadId() {
+				return this.thread.getId();
+		}
+
+		/**
+		 * Start serving the message queue. A new thread will start and serve when messages are received.
+		 * @return		Id of the thread which is dedicated to the queue.
+		 */
+		public void start() {
+				if (!started && !thread.isAlive()) {
+						started = true;
 						thread.start();
 				}
-				return thread.getId();
 		}
 
-		public boolean isAlive() {
-				return this.alive;
-		}
-
+		/**
+		 * Reset the message queue.
+		 */
 		public void reset() {
-				alive = false;
+				messagesAvailable.drainPermits();
 				head = 0;
 				tail = 0;
-				if (thread != null) {
-						thread.interrupt();
-				}
-				thread = null;
 		}
 
+		/**
+		 * Queue a message to the message queue. This method is synchronized.
+		 * @param message		Message to add in to the queue
+		 * @return				True if message is added to the queue. False if the queue is full.
+		 */
 		public synchronized boolean queueMessage(Message message) {
 				if ((tail + MESSAGE_BUFFER_SIZE - head) % MESSAGE_BUFFER_SIZE == 1) {
 						return false;
@@ -61,24 +79,33 @@ public class MessageQueue implements Runnable {
 				return true;
 		}
 
+		/**
+		 * Returns whether the message queue is empty or not.
+		 * @return		True if the queue is empty. Otherwise, false.
+		 */
 		public boolean isEmpty() {
 				return tail == head;
 		}
 
+		/**
+		 * Returns the size of the message queue. This returns the number of un-served message in the queue.
+		 * @return		Number of unserved messages in the queue.
+		 */
+		public int size() {
+				return (head + MESSAGE_BUFFER_SIZE - tail) % MESSAGE_BUFFER_SIZE;
+		}
+
 		@Override
 		public void run() {
-				while (alive) {
+				while (true) {
 						try {
 								messagesAvailable.acquire();
-								if (alive) {
-										Message message = messageQueue[tail];
-										tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
-										this.messageEventHandler.process(message);
-								}
+								Message message = messageQueue[tail];
+								tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
+								this.messageEventHandler.process(message);
 						} catch (InterruptedException ex) {
-//								ex.printStackTrace();
+								throw new RuntimeException(ex);
 						}
 				}
-//				System.out.println("MessageHandler thread is terminating...");
 		}
 }

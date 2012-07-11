@@ -5,7 +5,6 @@
 package sinchana;
 
 import java.util.Set;
-import java.util.concurrent.Semaphore;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -20,11 +19,29 @@ import sinchana.util.messagequeue.MessageQueue;
 public class MessageHandler {
 
 		private Server server;
-		private static final int MESSAGE_BUFFER_SIZE = 1536;
+		/**
+		 * Size of the message buffer.
+		 */
+		private static final int MESSAGE_BUFFER_SIZE = 2 * RoutingHandler.GRID_SIZE;
+		/**
+		 * Message queue to buffer incoming messages. The size of the queue is 
+		 * determined by MESSAGE_BUFFER_SIZE.
+		 */
 		private MessageQueue messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
 
 				@Override
 				public void process(Message message) {
+						/**
+						 * A node's join is considered completed if and only if 
+						 * it's predecessor and successor are set. Typically, 
+						 * receiving at least 1 of 2 MessageType.JOIN messages it 
+						 * sends at the beginning is enough to identify and to set 
+						 * predecessor and successor. Until the node receives 1 of 
+						 * those 2 messages, all the other messages are added back 
+						 * to the queue to process later.
+						 * Once the node receives it's JOIN message, the joining is 
+						 * completed and all the messages are processed with no restriction.
+						 */
 						if (!server.getRoutingHandler().isStable()
 								&& (message.type != MessageType.JOIN || message.source.serverId != server.serverId)) {
 								Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 0,
@@ -36,35 +53,55 @@ public class MessageHandler {
 				}
 		});
 
-		MessageHandler(Server node) {
-				this.server = node;
+		/**
+		 * Constructor of the class. The server instance is passed as an argument.
+		 * @param server Server instance. 
+		 */
+		MessageHandler(Server server) {
+				this.server = server;
 		}
 
+		/**
+		 * Initializes message handler.
+		 * @return thread id of the message queue.
+		 */
 		public long init() {
-				if (this.server.serverId == 0) {
-						messageQueue.start();
-				}
-				return 0;
+				return messageQueue.getThreadId();
 		}
 
+		/**
+		 * 
+		 */
 		public void terminate() {
 				messageQueue.reset();
 		}
 
+		/**
+		 * 
+		 * @param message
+		 * @return
+		 */
 		public boolean queueMessage(Message message) {
-				if (!this.server.getRoutingHandler().isStable()
+				if (this.server.getRoutingHandler().isStable()
+						|| (!this.server.getRoutingHandler().isStable()
 						&& message.type == MessageType.JOIN
-						&& message.source.serverId == this.server.serverId) {
+						&& message.source.serverId == this.server.serverId)) {
 						messageQueue.start();
 				}
-				boolean accepted = messageQueue.queueMessage(message);
-				if (!accepted) {
+
+				if (messageQueue.queueMessage(message)) {
+						return true;
+				} else {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 1,
 								"Message is unacceptable 'cos buffer is full! " + message);
+						return false;
 				}
-				return accepted;
 		}
 
+		/**
+		 * 
+		 * @param message
+		 */
 		public synchronized void processMessage(Message message) {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 2,
 						"Processing: " + message);
@@ -98,7 +135,7 @@ public class MessageHandler {
 						case ACCEPT:
 						case ERROR:
 								if (this.server.getSinchanaInterface() != null) {
-										this.server.getSinchanaInterface().transfer(message.deepCopy());
+										this.server.getSinchanaInterface().receive(message.deepCopy());
 								}
 								break;
 				}
@@ -124,14 +161,22 @@ public class MessageHandler {
 						&& message.successor.serverId != message.station.serverId) {
 						this.server.getRoutingHandler().updateTable(message.successor);
 				}
+				if (message.isSetNeighbourSet()) {
+						Set<Node> neighbourSet = message.getNeighbourSet();
+						for (Node node : neighbourSet) {
+								if (node.serverId != this.server.serverId) {
+										this.server.getRoutingHandler().updateTable(node);
+								}
+						}
+				}
 		}
 
 		private void processGet(Message message) {
 				Node predecessor = this.server.getRoutingHandler().getPredecessor();
 				Node nextHop = this.server.getRoutingHandler().getNextNode(message.targetKey);
-				int targetKeyOffset = (message.targetKey + RoutingHandler.GRID_SIZE - this.server.serverId) % RoutingHandler.GRID_SIZE;
-				int predecessorOffset = (predecessor.serverId + RoutingHandler.GRID_SIZE - this.server.serverId) % RoutingHandler.GRID_SIZE;
-				int prevStationOffset = (message.station.serverId + RoutingHandler.GRID_SIZE - this.server.serverId) % RoutingHandler.GRID_SIZE;
+				int targetKeyOffset = getOffset(message.targetKey);
+				int predecessorOffset = getOffset(predecessor.serverId);
+				int prevStationOffset = getOffset(message.station.serverId);
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
 						"Routing analyze NH:" + nextHop.serverId + " PD:" + predecessor.serverId + " MSG:" + message);
 
@@ -141,7 +186,7 @@ public class MessageHandler {
 								this.server.getSinchanaTestInterface().setStatus("received: " + message.message);
 						}
 						if (this.server.getSinchanaInterface() != null) {
-								returnMessage = this.server.getSinchanaInterface().transfer(message.deepCopy());
+								returnMessage = this.server.getSinchanaInterface().receive(message.deepCopy());
 						} else {
 								returnMessage = new Message(this.server, MessageType.ERROR, 1);
 								returnMessage.setTargetKey(message.targetKey);
@@ -151,6 +196,7 @@ public class MessageHandler {
 								this.server.getPortHandler().send(returnMessage, message.source);
 						}
 				} else {
+						message.message += " " + this.server.serverId;
 						if (prevStationOffset != 0 && prevStationOffset < targetKeyOffset) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 										"This should be an errornous receive of " + message.targetKey
@@ -174,21 +220,16 @@ public class MessageHandler {
 				if (message.source.serverId == this.server.serverId) {
 						this.server.getRoutingHandler().setStable(true);
 				} else {
-						int newServerIdOffset = (message.source.serverId + RoutingHandler.GRID_SIZE - this.server.serverId)
-								% RoutingHandler.GRID_SIZE;
-						int prevStationIdOffset = (message.station.serverId + RoutingHandler.GRID_SIZE - this.server.serverId)
-								% RoutingHandler.GRID_SIZE;
+						int newServerIdOffset = getOffset(message.source.serverId);
+						int prevStationIdOffset = getOffset(message.station.serverId);
 						int tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
 						Node nextSuccessor = message.source;
 						Node nextPredecessor = message.source;
 						Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 						for (Node node : neighbourSet) {
-								tempNodeOffset = (node.serverId + RoutingHandler.GRID_SIZE - this.server.serverId)
-										% RoutingHandler.GRID_SIZE;
-								nextPredecessorOffset = (nextPredecessor.serverId + RoutingHandler.GRID_SIZE - this.server.serverId)
-										% RoutingHandler.GRID_SIZE;
-								nextSuccessorOffset = (nextSuccessor.serverId + RoutingHandler.GRID_SIZE - this.server.serverId)
-										% RoutingHandler.GRID_SIZE;
+								tempNodeOffset = getOffset(node.serverId);
+								nextPredecessorOffset = getOffset(nextPredecessor.serverId);
+								nextSuccessorOffset = getOffset(nextSuccessor.serverId);
 
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
 										"NewNode:" + message.source.serverId
@@ -239,7 +280,7 @@ public class MessageHandler {
 						message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 						this.server.getPortHandler().send(message, message.source);
 				} else {
-						this.server.getRoutingHandler().setNeighbourSet(message.neighbourSet);
+						this.server.getRoutingHandler().optimize();
 						if (this.server.getSinchanaTestInterface() != null) {
 								this.server.getSinchanaTestInterface().setStable(true);
 						}
@@ -248,7 +289,7 @@ public class MessageHandler {
 
 		private void processFindSuccessors(Message message) {
 				if (message.source.serverId != this.server.serverId) {
-						Node newPredecessor = this.server.getRoutingHandler().getOptimalSuccessor(message.source.serverId, message.getStartOfRange());
+						Node newPredecessor = this.server.getRoutingHandler().getOptimalSuccessor(message.getStartOfRange());
 						if (newPredecessor.serverId == this.server.serverId) {
 								if (message.station.serverId != message.source.serverId) {
 										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 6,
@@ -298,5 +339,15 @@ public class MessageHandler {
 										+ " which is neither predecessor or successor.");
 						}
 				}
+		}
+
+		/**
+		 * Returns the offset of the id relative to the this server.
+		 * <code>(id + RoutingHandler.GRID_SIZE - this.server.serverId) % RoutingHandler.GRID_SIZE;</code>
+		 * @param id	Id to calculate the offset.
+		 * @return		Offset of the id relative to this server.
+		 */
+		private int getOffset(int id) {
+				return (id + RoutingHandler.GRID_SIZE - this.server.serverId) % RoutingHandler.GRID_SIZE;
 		}
 }

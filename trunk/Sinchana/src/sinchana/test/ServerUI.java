@@ -29,28 +29,52 @@ public class ServerUI extends javax.swing.JFrame {
 				initComponents();
 		}
 
+		/**
+		 * 
+		 * @param t
+		 */
 		public ServerUI(Tester t) {
 				this();
 				tester = t;
 
 		}
 
+		/**
+		 * 
+		 * @param id
+		 */
 		public void setServerId(int id) {
 				this.idLabel.setText("Server " + id);
 		}
 
+		/**
+		 * 
+		 * @param id
+		 */
 		public void setSuccessorId(int id) {
 				this.next.setText("Next: " + id);
 		}
 
+		/**
+		 * 
+		 * @param id
+		 */
 		public void setPredecessorId(int id) {
 				this.prev.setText("Prev: " + id);
 		}
 
+		/**
+		 * 
+		 * @param msg
+		 */
 		public void setMessage(String msg) {
 				this.message.setText(msg);
 		}
 
+		/**
+		 * 
+		 * @param isRunning
+		 */
 		public void setServerRunning(boolean isRunning) {
 				this.serverRunning = isRunning;
 				if (isRunning) {
@@ -62,6 +86,10 @@ public class ServerUI extends javax.swing.JFrame {
 				}
 		}
 
+		/**
+		 * 
+		 * @param fingerTableEntrys
+		 */
 		public void setTableInfo(FingerTableEntry[] fingerTableEntrys) {
 				sb = new StringBuffer();
 				for (int i = 0; i < fingerTableEntrys.length; i++) {
