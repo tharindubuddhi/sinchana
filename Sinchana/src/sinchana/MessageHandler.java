@@ -27,7 +27,7 @@ public class MessageHandler {
 		 * Message queue to buffer incoming messages. The size of the queue is 
 		 * determined by MESSAGE_BUFFER_SIZE.
 		 */
-		private MessageQueue messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
+		private final MessageQueue messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
 
 				@Override
 				public void process(Message message) {
@@ -82,10 +82,11 @@ public class MessageHandler {
 		 * @return
 		 */
 		public boolean queueMessage(Message message) {
-				if (this.server.getRoutingHandler().isStable()
+				if (!messageQueue.isStarted()
+						&& (this.server.getRoutingHandler().isStable()
 						|| (!this.server.getRoutingHandler().isStable()
 						&& message.type == MessageType.JOIN
-						&& message.source.serverId == this.server.serverId)) {
+						&& message.source.serverId == this.server.serverId))) {
 						messageQueue.start();
 				}
 
