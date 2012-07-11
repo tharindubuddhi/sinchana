@@ -21,7 +21,7 @@ public class MessageQueue implements Runnable {
 		private Semaphore messagesAvailable = new Semaphore(0);
 		private MessageEventHandler messageEventHandler;
 		private Thread thread = null;
-		private boolean started = false;
+		private boolean started;
 
 		/**
 		 * Initialize a message queue.
@@ -34,6 +34,7 @@ public class MessageQueue implements Runnable {
 				MESSAGE_BUFFER_SIZE = size;
 				this.messageQueue = new Message[MESSAGE_BUFFER_SIZE];
 				thread = new Thread(this);
+				started = false;
 		}
 
 		/**
@@ -48,9 +49,9 @@ public class MessageQueue implements Runnable {
 		 * Start serving the message queue. A new thread will start and serve when messages are received.
 		 * @return		Id of the thread which is dedicated to the queue.
 		 */
-		public void start() {
-				if (!started && !thread.isAlive()) {
-						started = true;
+		public synchronized void start() {
+				started = true;
+				if (!thread.isAlive()) {
 						thread.start();
 				}
 		}
@@ -86,6 +87,14 @@ public class MessageQueue implements Runnable {
 		public boolean isEmpty() {
 				return tail == head;
 		}
+
+		/**
+		 * Returns whether the message queue has started or not;
+		 * @return true if the queue is serving, false otherwise.
+		 */
+		public boolean isStarted() {
+				return started;
+		}		
 
 		/**
 		 * Returns the size of the message queue. This returns the number of un-served message in the queue.

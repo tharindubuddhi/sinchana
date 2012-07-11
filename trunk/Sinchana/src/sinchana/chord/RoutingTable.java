@@ -44,8 +44,10 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		@Override
 		public void init() {
 				this.serverId = this.server.getServerId();
-				this.initFingerTable();
-				this.neighboursImported = false;
+				synchronized (this) {
+						this.initFingerTable();
+						this.neighboursImported = false;
+				}
 		}
 
 		/**
@@ -53,28 +55,26 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		 * predecessor, successor and as all the successor entries in the finger table.
 		 */
 		private void initFingerTable() {
-				synchronized (this) {
-						for (int i = 0; i < fingerTable.length; i++) {
-								/**
-								 * calculates start and end of the finger table entries in 2's power.
-								 * initializes the table by setting this server as the successors for
-								 * all the table entries.
-								 */
-								fingerTable[i] = new FingerTableEntry();
-								fingerTable[i].setStart((this.serverId + (int) Math.pow(2, i)) % GRID_SIZE);
-								fingerTable[i].setEnd((this.serverId + (int) Math.pow(2, i + 1) - 1) % GRID_SIZE);
-								fingerTable[i].setSuccessor(this.server.deepCopy());
-						}
+				for (int i = 0; i < fingerTable.length; i++) {
 						/**
-						 * initializes by setting this server it self as the predecessor and successor.
+						 * calculates start and end of the finger table entries in 2's power.
+						 * initializes the table by setting this server as the successors for
+						 * all the table entries.
 						 */
-						this.predecessor = this.server.deepCopy();
-						this.successor = this.server.deepCopy();
-						if (this.server.getSinchanaTestInterface() != null) {
-								this.server.getSinchanaTestInterface().setPredecessor(predecessor);
-								this.server.getSinchanaTestInterface().setSuccessor(successor);
-								this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
-						}
+						fingerTable[i] = new FingerTableEntry();
+						fingerTable[i].setStart((this.serverId + (int) Math.pow(2, i)) % GRID_SIZE);
+						fingerTable[i].setEnd((this.serverId + (int) Math.pow(2, i + 1) - 1) % GRID_SIZE);
+						fingerTable[i].setSuccessor(this.server.deepCopy());
+				}
+				/**
+				 * initializes by setting this server it self as the predecessor and successor.
+				 */
+				this.predecessor = this.server.deepCopy();
+				this.successor = this.server.deepCopy();
+				if (this.server.getSinchanaTestInterface() != null) {
+						this.server.getSinchanaTestInterface().setPredecessor(predecessor);
+						this.server.getSinchanaTestInterface().setSuccessor(successor);
+						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
 				}
 		}
 
@@ -329,8 +329,8 @@ public class RoutingTable implements RoutingHandler, Runnable {
 				//gets the known node set.
 				Set<Node> neighbourSet = getNeighbourSet();
 				//reset the predecessor, successor and finger table entries.
-				initFingerTable();
 				synchronized (this) {
+						initFingerTable();
 						for (Node node : neighbourSet) {
 								/**
 								 * updates predecessor, successor and finger table entries
