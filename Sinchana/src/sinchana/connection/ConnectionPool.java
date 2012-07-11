@@ -18,7 +18,7 @@ import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 
 /**
- *
+ * This class implements 
  * @author Hiru
  */
 public class ConnectionPool {
@@ -27,10 +27,21 @@ public class ConnectionPool {
 		private Server server;
 		private static final int NUM_OF_MAX_CONNECTIONS = 12;
 
+		/**
+		 * 
+		 * @param s
+		 */
 		public ConnectionPool(Server s) {
 				this.server = s;
 		}
 
+		/**
+		 * 
+		 * @param serverId
+		 * @param address
+		 * @param portId
+		 * @return
+		 */
 		public TTransport getConnection(int serverId, String address, int portId) {
 				if (pool.containsKey(serverId)) {
 						return pool.get(serverId);
@@ -74,6 +85,10 @@ public class ConnectionPool {
 				return transport;
 		}
 
+		/**
+		 * 
+		 * @param serverId
+		 */
 		public void closeConnection(int serverId) {
 				if (pool.containsKey(serverId)) {
 						TTransport tTransport = pool.get(serverId);
@@ -86,6 +101,9 @@ public class ConnectionPool {
 				}
 		}
 
+		/**
+		 * 
+		 */
 		public void closeAllConnections() {
 				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 3,
 						"Clossing all the connections.");

@@ -48,8 +48,8 @@ public class Server extends Node {
 		/**
 		 * Start a new node with the given server ID and next hop.
 		 * @param serverId		Server ID. Generated using a hash function. 
-		 * @param anotherNode	Server ID of another node is the network. The new 
-		 *	node first communicate with this node to discover the rest of the network.
+		 * @param anotherNode	Another node is the network. New node first
+		 * communicate with this node to discover the rest of the network.
 		 * @param address		URL of the server.
 		 * @param portId		Port Id number where the the server is running.
 		 */
@@ -143,25 +143,28 @@ public class Server extends Node {
 				return sinchanaInterface;
 		}
 
-		void printState() {
-				System.out.print("Server " + this.serverId + " @ " + this.address + ":" + portId);
-				if (this.routingHandler.getPredecessor() != null) {
-						System.out.print(" P:" + this.routingHandler.getPredecessor().serverId);
-				}
-				if (this.routingHandler.getSuccessor() != null) {
-						System.out.print(" S:" + this.routingHandler.getSuccessor().serverId);
-				}
-				System.out.println("");
-		}
-
 		/**
-		 * 
-		 * @param message
+		 * Send a message. If the message type is MessageType.GET, targetKey field should be set.
+		 * @param message		Message to pass to the network.
 		 */
-		public void transferMessage(Message message) {
+		public void send(Message message) {
 				message.setSource(this);
 				message.setStation(this);
 				this.getMessageHandler().queueMessage(message);
 		}
+		
+		/**
+		 * Send a MessageType.GET message.
+		 * @param destination	Destination ID to receive message.
+		 * @param message		Message string.
+		 */
+		public void send(int destination, String message) {
+				Message msg = new Message(this, MessageType.GET, MESSAGE_LIFETIME);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
+		
+		
+		
 		//http://cseanremo.appspot.com/remoteip?local=1236&remote=1236
 }

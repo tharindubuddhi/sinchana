@@ -13,29 +13,84 @@ import java.util.Set;
  */
 public interface RoutingHandler {
 		
+		/**
+		 * Size of the finger table in Chord.
+		 */
 		public static final int TABLE_SIZE = 10;
-		public static final int GRID_SIZE = (int) Math.pow(2, TABLE_SIZE);
+		/**
+		 * Size of the network which is equal to 
+		 * <code>(int) Math.pow(2, RoutingHandler.TABLE_SIZE)</code>
+		 */
+		public static final int GRID_SIZE = (int) Math.pow(2, RoutingHandler.TABLE_SIZE);
 		
+		/**
+		 * Initialize routing table.
+		 */
 		public abstract void init();
 		
+		/**
+		 * Returns the successor.
+		 * @return successor node.
+		 */
 		public abstract Node getSuccessor();
 		
+		/**
+		 * Returns the predecessor.
+		 * @return predecessor node.
+		 */
 		public abstract Node getPredecessor();
 		
+		/**
+		 * Returns the next hop for the destination according to the finger table.
+		 * @param destination Destination id.
+		 * @return NExt hop (node) to reach to the destination.
+		 */
 		public abstract Node getNextNode(int destination);
 		
+		/**
+		 * Returns the set of nodes contains successor, predecessor and all the
+		 * table entries.
+		 * @return Set of neighbor nodes.
+		 */
 		public abstract Set<Node> getNeighbourSet();
 		
-		public abstract void setNeighbourSet(Set<Node> neighbourSet);
+		/**
+		 * Triggers the routing table optimization functions.
+		 */
+		public abstract void optimize();
 		
-		public abstract Node getOptimalSuccessor(int rServerId, int startOfRange);
+		/**
+		 * Returns the most optimal node from the neighbor set which is successor 
+		 * to the start of range.
+		 * @param id Start point.
+		 * @return Node which immediately follows start point.
+		 */
+		public abstract Node getOptimalSuccessor(int id);
 		
+		/**
+		 * Removes the node from the predecessor, successor and routing table entries. 
+		 * Blanked locations will be temporary filled with the matching nodes from 
+		 * the neighbor set.
+		 * @param node Node to remove from the routing table.
+		 */
 		public abstract void removeNode(Node node);
 		
+		/**
+		 * Updates the table, successor and predecessor with the new node.
+		 * @param node Node to be added to the routing table.
+		 */
 		public abstract void updateTable(Node node);
 		
+		/**
+		 * 
+		 * @param isStable
+		 */
 		public abstract void setStable(boolean isStable);
 		
+		/**
+		 * 
+		 * @return
+		 */
 		public abstract boolean isStable();
 		
 }

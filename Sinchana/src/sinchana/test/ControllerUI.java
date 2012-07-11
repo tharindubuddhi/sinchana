@@ -27,19 +27,46 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 		private long startNodeThreadId = 0;
 		private long startAutoTestThreadId = 0;
 
-		/** Creates new form ControllerUI */
+		/** Creates new form ControllerUI
+		 * @param tc 
+		 */
 		public ControllerUI(TesterController tc) {
 				this.testerController = tc;
 				initComponents();
 				setLocationRelativeTo(null);
+				this.numOfTesters.setText("" + TesterController.NUM_OF_TESTING_NODES);
+				this.numOfAutoTesters.setText("" + TesterController.NUM_OF_AUTO_TESTING_NODES);
 		}
 
-		public void setTableInfo(Object[][] data, String[] coloms) {
+		/**
+		 * 
+		 * @param coloms
+		 */
+		public void initTableInfo(String[] coloms) {
 				dtm = new DefaultTableModel();
-				dtm.setDataVector(data, coloms);
+				dtm.setColumnIdentifiers(coloms);
+				dtm.setColumnCount(coloms.length);
 				table.setModel(dtm);
 		}
 
+		/**
+		 * 
+		 * @param data
+		 */
+		public void setTableInfo(Object[][] data) {
+				dtm.setRowCount(data.length);
+				for (int i = 0; i < data.length; i++) {
+						int length = data[i].length;
+						for (int j = 0; j < length; j++) {
+								dtm.setValueAt(data[i][j], i, j);
+						}
+				}
+		}
+
+		/**
+		 * 
+		 * @param status
+		 */
 		public void setStatus(String status) {
 				this.statusField.setText(status);
 		}
@@ -272,8 +299,8 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
 private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
 
-    testerController.send(message.getText(), Integer.parseInt(this.destId.getText()), Integer.parseInt(this.reqId.getText()));
-    
+		testerController.send(message.getText(), Integer.parseInt(this.destId.getText()), Integer.parseInt(this.reqId.getText()));
+
 }//GEN-LAST:event_sendButtonActionPerformed
 
 private void startNodeSetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNodeSetButtonActionPerformed

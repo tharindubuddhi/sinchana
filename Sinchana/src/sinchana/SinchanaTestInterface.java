@@ -13,15 +13,39 @@ import sinchana.thrift.Node;
  */
 public interface SinchanaTestInterface {
 		
+		/**
+		 * 
+		 * @param isStable
+		 */
 		public abstract void setStable(boolean isStable);
 		
+		/**
+		 * 
+		 * @param predecessor
+		 */
 		public abstract void setPredecessor(Node predecessor);
 		
+		/**
+		 * 
+		 * @param successor
+		 */
 		public abstract void setSuccessor(Node successor);
 		
+		/**
+		 * 
+		 * @param fingerTableEntrys
+		 */
 		public abstract void setRoutingTable(FingerTableEntry[] fingerTableEntrys);	
 		
+		/**
+		 * 
+		 * @param status
+		 */
 		public abstract void setStatus(String status);
 		
+		/**
+		 * 
+		 * @param isRunning
+		 */
 		public abstract void setServerIsRunning(boolean isRunning);
 }

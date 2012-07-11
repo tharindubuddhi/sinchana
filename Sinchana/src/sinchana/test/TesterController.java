@@ -24,15 +24,50 @@ import java.util.logging.Logger;
  */
 public class TesterController {
 
+		/**
+		 * 
+		 */
 		public static final String LOCAL_SERVER_ADDRESS = "localhost";
+		/**
+		 * 
+		 */
 		public static final int LOCAL_PORT_ID_RANGE = 8000;
+		/**
+		 * 
+		 */
 		public static final String REMOTE_SERVER_ADDRESS = "localhost";
+		/**
+		 * 
+		 */
 		public static final int REMOTE_SERVER_ID = 0;
+		/**
+		 * 
+		 */
 		public static final int REMOTE_SERVER_PORT_ID_RANGE = 8000;
-		public static int NUM_OF_TESTING_NODES = 32;
-		public static int NUM_OF_AUTO_TESTING_NODES = 3;
+		/**
+		 * 
+		 */
+		public static int NUM_OF_TESTING_NODES = 2;
+		/**
+		 * 
+		 */
+		public static int NUM_OF_AUTO_TESTING_NODES = 1;
+		/**
+		 * 
+		 */
 		public static final boolean GUI_ON = false;
+		/**
+		 * 
+		 */
 		public static final int AUTO_TEST_TIMEOUT = 2;
+		
+		public static final int ROUND_TIP_TIME = 0;
+		
+		/**
+		 * 
+		 */
+		public static int max_buffer_size = 0;
+		
 		private Tester[] testServers;
 		private ControllerUI cui;
 		private int completedCount = 0;
@@ -41,6 +76,10 @@ public class TesterController {
 		private int[] keySpace = new int[RoutingHandler.GRID_SIZE];
 		private int[] testIds;
 
+		/**
+		 * 
+		 * @param args
+		 */
 		public static void main(String[] args) {
 				TesterController testerController = new TesterController();
 		}
@@ -50,6 +89,11 @@ public class TesterController {
 				cui.setVisible(true);
 		}
 
+		/**
+		 * 
+		 * @param id
+		 * @param rid
+		 */
 		public void join(int id, int rid) {
 				Node n = new Node();
 				n.serverId = rid;
@@ -77,7 +121,13 @@ public class TesterController {
 				return testIds;
 		}
 
+		/**
+		 * 
+		 * @param numOfTesters
+		 */
 		public void startNodeSet(int numOfTesters) {
+				String[] coloms = {"Node ID", "Start", "End", "Duration"};
+				cui.initTableInfo(coloms);		
 				try {
 						NUM_OF_TESTING_NODES = numOfTesters;
 
@@ -132,14 +182,20 @@ public class TesterController {
 //								tableData[i][3] = testServers[i].getEndTime().getTimeInMillis()
 //										- testServers[i].getStartTime().getTimeInMillis();
 						}
-						String[] coloms = {"Node ID", "Start", "End", "Duration"};
-						cui.setTableInfo(tableData, coloms);
+						cui.setTableInfo(tableData);
 				} catch (InterruptedException ex) {
 						Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 				}
 		}
 
+		/**
+		 * 
+		 * @param numOfAutoTesters
+		 */
 		public void startAutoTest(int numOfAutoTesters) {
+				String[] coloms = {"Node ID", "Expected", "Recieved", "Precentage", "Resolved", "Precentage"};
+				cui.initTableInfo(coloms);
+				
 				NUM_OF_AUTO_TESTING_NODES = numOfAutoTesters;
 				Arrays.sort(testIds);
 				generateKeySpace(testIds, keySpace);
@@ -157,7 +213,7 @@ public class TesterController {
 				boolean running = true;
 				long timeNow;
 				while (running) {
-//						setAutoTestTableInfo();
+						setAutoTestTableInfo();
 						try {
 								Thread.sleep(1000);
 						} catch (InterruptedException ex) {
@@ -189,8 +245,7 @@ public class TesterController {
 						tableData[i][4] = testServers[i].getResolvedCount();
 						tableData[i][5] = (testServers[i].getResolvedCount() * 100 / RoutingHandler.GRID_SIZE) + "%";
 				}
-				String[] coloms = {"Node ID", "Expected", "Recieved", "Precentage", "Resolved", "Precentage"};
-				cui.setTableInfo(tableData, coloms);
+				cui.setTableInfo(tableData);
 		}
 
 		private void generateKeySpace(int[] tIds, int[] ks) {
@@ -227,10 +282,10 @@ public class TesterController {
 								System.out.println("Tester " + testServers[i].getServerId()
 										+ "'s key space is invalid " + (failCount * 100 / tempKeySpace.length) + "%");
 						}
-						System.out.println("Expected map");
-						printKeySpace(keySpace);
-						System.out.println("Resolved map");
-						printKeySpace(tempKeySpace);
+//						System.out.println("Expected map");
+//						printKeySpace(keySpace);
+//						System.out.println("Resolved map");
+//						printKeySpace(tempKeySpace);
 				}
 		}
 
@@ -243,10 +298,17 @@ public class TesterController {
 
 		}
 
+		/**
+		 * 
+		 */
 		public void startRingTest() {
 				testServers[0].startRingTest();
 		}
 
+		/**
+		 * 
+		 * @param id
+		 */
 		public synchronized void incrementCompletedCount(int id) {
 				completedCount++;
 //				System.out.println(completedCount + " of " + NUM_OF_TESTING_NODES + " are stable... \t\t" + id);
@@ -264,18 +326,31 @@ public class TesterController {
 				System.out.println(sb);
 		}
 
+		/**
+		 * 
+		 * @param text
+		 * @param destination
+		 * @param requester
+		 */
 		public void send(String text, int destination, int requester) {
 				for (Tester tester : testServers) {
 						if (tester.getServerId() == requester) {
 								Message msg = new Message(null, MessageType.GET, 10);
 								msg.setTargetKey(destination);
 								msg.setMessage(text);
-								tester.getServer().transferMessage(msg);
+								tester.getServer().send(msg);
 								break;
 						}
 				}
 		}
 
+		/**
+		 * 
+		 * @param nodeIdsString
+		 * @param typesString
+		 * @param classIdsString
+		 * @param locationsString
+		 */
 		public void printLogs(String nodeIdsString, String typesString, String classIdsString, String locationsString) {
 				String[] temp;
 				int[] nodeIds = null, levels = null, classIds = null, locations = null;
@@ -308,5 +383,16 @@ public class TesterController {
 						}
 				}
 				sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations);
+		}
+		
+		/**
+		 * 
+		 * @param val
+		 */
+		public static void testBufferSize(int val){
+				if (max_buffer_size < val) {
+						max_buffer_size = val;
+						System.out.println(max_buffer_size);
+				}
 		}
 }

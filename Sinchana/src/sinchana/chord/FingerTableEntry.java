@@ -16,30 +16,59 @@ public class FingerTableEntry {
 		private int end;
 		private Node successor;
 
+		/**
+		 * 
+		 * @return
+		 */
 		public int getEnd() {
 				return end;
 		}
 
+		/**
+		 * 
+		 * @param end
+		 */
 		public void setEnd(int end) {
 				this.end = end;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public int getStart() {
 				return start;
 		}
 
+		/**
+		 * 
+		 * @param start
+		 */
 		public void setStart(int start) {
 				this.start = start;
 		}
 
+		/**
+		 * 
+		 * @return
+		 */
 		public Node getSuccessor() {
 				return successor;
 		}
 
+		/**
+		 * 
+		 * @param successor
+		 */
 		public void setSuccessor(Node successor) {
 				this.successor = successor;
 		}
 
+		/**
+		 * 
+		 * @param node
+		 * @return
+		 */
 		public boolean isInTheInterval(Node node) {
 				if (this.start > this.end) {
 						return this.start <= node.serverId || node.serverId >= this.end;
