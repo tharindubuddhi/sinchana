@@ -81,9 +81,6 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         private void initComponents() {
                 java.awt.GridBagConstraints gridBagConstraints;
 
-                jScrollPane1 = new javax.swing.JScrollPane();
-                table = new javax.swing.JTable();
-                statusField = new javax.swing.JLabel();
                 jPanel1 = new javax.swing.JPanel();
                 autoTestButtonPanel = new javax.swing.JPanel();
                 startNodeSetButton = new javax.swing.JButton();
@@ -99,6 +96,13 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 jLabel7 = new javax.swing.JLabel();
                 message = new javax.swing.JTextField();
                 sendButton = new javax.swing.JButton();
+                joinJoinPanel = new javax.swing.JPanel();
+                jLabel8 = new javax.swing.JLabel();
+                nodeIdField = new javax.swing.JTextField();
+                nodeStartButton = new javax.swing.JButton();
+                jScrollPane1 = new javax.swing.JScrollPane();
+                table = new javax.swing.JTable();
+                statusField = new javax.swing.JLabel();
                 loggerControlPanel = new javax.swing.JPanel();
                 jLabel1 = new javax.swing.JLabel();
                 logNodeID = new javax.swing.JTextField();
@@ -113,39 +117,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
                 getContentPane().setLayout(new java.awt.GridBagLayout());
 
-                table.setModel(new javax.swing.table.DefaultTableModel(
-                        new Object [][] {
-                                {null, null, null, null},
-                                {null, null, null, null},
-                                {null, null, null, null},
-                                {null, null, null, null}
-                        },
-                        new String [] {
-                                "Title 1", "Title 2", "Title 3", "Title 4"
-                        }
-                ));
-                jScrollPane1.setViewportView(table);
-
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.gridx = 0;
-                gridBagConstraints.gridy = 1;
-                gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-                gridBagConstraints.weightx = 1.0;
-                gridBagConstraints.weighty = 1.0;
-                gridBagConstraints.insets = new java.awt.Insets(2, 0, 2, 0);
-                getContentPane().add(jScrollPane1, gridBagConstraints);
-
-                statusField.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-                statusField.setText("Status...");
-                statusField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-                gridBagConstraints = new java.awt.GridBagConstraints();
-                gridBagConstraints.gridx = 0;
-                gridBagConstraints.gridy = 2;
-                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-                gridBagConstraints.insets = new java.awt.Insets(2, 0, 2, 0);
-                getContentPane().add(statusField, gridBagConstraints);
-
-                jPanel1.setLayout(new java.awt.GridLayout(2, 1, 0, 4));
+                jPanel1.setLayout(new java.awt.GridLayout(3, 1, 0, 4));
 
                 autoTestButtonPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -235,10 +207,67 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
                 jPanel1.add(sendMessagePanel);
 
+                joinJoinPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+
+                jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+                jLabel8.setText("Node ID");
+                jLabel8.setPreferredSize(new java.awt.Dimension(56, 24));
+                joinJoinPanel.add(jLabel8);
+
+                nodeIdField.setText(" ");
+                nodeIdField.setPreferredSize(new java.awt.Dimension(360, 24));
+                joinJoinPanel.add(nodeIdField);
+
+                nodeStartButton.setText("Start");
+                nodeStartButton.setPreferredSize(new java.awt.Dimension(96, 24));
+                nodeStartButton.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                nodeStartButtonActionPerformed(evt);
+                        }
+                });
+                joinJoinPanel.add(nodeStartButton);
+
+                jPanel1.add(joinJoinPanel);
+
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
                 gridBagConstraints.insets = new java.awt.Insets(2, 0, 2, 0);
                 getContentPane().add(jPanel1, gridBagConstraints);
+
+                jScrollPane1.setPreferredSize(new java.awt.Dimension(452, 180));
+
+                table.setModel(new javax.swing.table.DefaultTableModel(
+                        new Object [][] {
+                                {null, null, null, null},
+                                {null, null, null, null},
+                                {null, null, null, null},
+                                {null, null, null, null}
+                        },
+                        new String [] {
+                                "Title 1", "Title 2", "Title 3", "Title 4"
+                        }
+                ));
+                table.setPreferredSize(new java.awt.Dimension(300, 150));
+                jScrollPane1.setViewportView(table);
+
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 0;
+                gridBagConstraints.gridy = 1;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+                gridBagConstraints.weightx = 1.0;
+                gridBagConstraints.weighty = 1.0;
+                gridBagConstraints.insets = new java.awt.Insets(2, 0, 2, 0);
+                getContentPane().add(jScrollPane1, gridBagConstraints);
+
+                statusField.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+                statusField.setText("Status...");
+                statusField.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 0;
+                gridBagConstraints.gridy = 2;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.insets = new java.awt.Insets(2, 0, 2, 0);
+                getContentPane().add(statusField, gridBagConstraints);
 
                 loggerControlPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -334,6 +363,11 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
 				this.logClass.getText(),
 				this.logLocation.getText());
 }//GEN-LAST:event_printLogButtonActionPerformed
+
+private void nodeStartButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nodeStartButtonActionPerformed
+
+		this.testerController.startNodes(this.nodeIdField.getText());
+}//GEN-LAST:event_nodeStartButtonActionPerformed
 		/**
 		 * @param args the command line arguments
 		 */
@@ -348,14 +382,18 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
         private javax.swing.JLabel jLabel5;
         private javax.swing.JLabel jLabel6;
         private javax.swing.JLabel jLabel7;
+        private javax.swing.JLabel jLabel8;
         private javax.swing.JPanel jPanel1;
         private javax.swing.JScrollPane jScrollPane1;
+        private javax.swing.JPanel joinJoinPanel;
         private javax.swing.JTextField logClass;
         private javax.swing.JTextField logLocation;
         private javax.swing.JTextField logNodeID;
         private javax.swing.JTextField logType;
         private javax.swing.JPanel loggerControlPanel;
         private javax.swing.JTextField message;
+        private javax.swing.JTextField nodeIdField;
+        private javax.swing.JButton nodeStartButton;
         private javax.swing.JTextField numOfAutoTesters;
         private javax.swing.JTextField numOfTesters;
         private javax.swing.JButton printLogButton;

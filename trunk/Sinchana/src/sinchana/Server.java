@@ -68,7 +68,7 @@ public class Server extends Node {
 				this.threadId = Thread.currentThread().getId();
 				this.routingHandler.init();
 				this.threadId = this.messageHandler.init();
-				if (this.anotherNode != null) {
+				if (this.anotherNode != null && this.anotherNode.serverId != this.serverId) {
 						Message msg = new Message(this, MessageType.JOIN, MESSAGE_LIFETIME);
 						this.portHandler.send(msg, this.anotherNode);
 				} else {
@@ -152,7 +152,7 @@ public class Server extends Node {
 				message.setStation(this);
 				this.getMessageHandler().queueMessage(message);
 		}
-		
+
 		/**
 		 * Send a MessageType.GET message.
 		 * @param destination	Destination ID to receive message.
@@ -160,11 +160,9 @@ public class Server extends Node {
 		 */
 		public void send(int destination, String message) {
 				Message msg = new Message(this, MessageType.GET, MESSAGE_LIFETIME);
+				msg.setMessage(message);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		
-		
-		
 		//http://cseanremo.appspot.com/remoteip?local=1236&remote=1236
 }

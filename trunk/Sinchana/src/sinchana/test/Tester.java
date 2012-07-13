@@ -44,15 +44,9 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 */
 		public Tester(int serverId, Node anotherNode, TesterController tc) {
 
-				if (anotherNode == null) {
-						server = new Server(
-								serverId, serverId + TesterController.LOCAL_PORT_ID_RANGE,
-								TesterController.LOCAL_SERVER_ADDRESS);
-				} else {
-						server = new Server(
-								serverId, serverId + TesterController.LOCAL_PORT_ID_RANGE,
-								TesterController.LOCAL_SERVER_ADDRESS, anotherNode);
-				}
+				server = new Server(
+						serverId, serverId + TesterController.LOCAL_PORT_ID_RANGE,
+						TesterController.LOCAL_SERVER_ADDRESS, anotherNode);
 				server.registerSinchanaInterface(this);
 				server.registerSinchanaTestInterface(this);
 				this.serverId = serverId;
@@ -314,5 +308,9 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				if (this.gui != null) {
 						this.gui.setServerRunning(isRunning);
 				}
+		}
+
+		public void send(int dest, String msg) {
+				this.server.send(dest, msg);
 		}
 }
