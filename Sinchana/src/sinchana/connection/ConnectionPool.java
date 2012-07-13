@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
@@ -28,19 +27,22 @@ public class ConnectionPool {
 		private static final int NUM_OF_MAX_CONNECTIONS = 12;
 
 		/**
-		 * 
-		 * @param s
+		 * Class constructor. The server instance where the connection fool is 
+		 * initialized is passed as the argument
+		 * @param s		Server instance.
 		 */
 		public ConnectionPool(Server s) {
 				this.server = s;
 		}
 
 		/**
-		 * 
-		 * @param serverId
-		 * @param address
-		 * @param portId
-		 * @return
+		 * Returns the connection to the given destination. If the connection is
+		 * already opened and in the connection pool, it returns. Otherwise, open 
+		 * the connection to the destination and adds it to the connection pool.
+		 * @param serverId		Server id of the destination.
+		 * @param address		URL of the destination.
+		 * @param portId		Port id of the destination.
+		 * @return				TTransport connection opened to the destination.
 		 */
 		public TTransport getConnection(int serverId, String address, int portId) {
 				if (pool.containsKey(serverId)) {
@@ -73,9 +75,11 @@ public class ConnectionPool {
 								"Opening connection to " + serverId + "........\t# of connections opened: " + pool.size());
 						transport.open();
 				} catch (TTransportException ex) {
-						java.util.logging.Logger.getLogger(ConnectionPool.class.getName()).log(Level.SEVERE, null, ex);
+						System.out.println("msg " + ex.getLocalizedMessage());
+						System.out.println("type is " + ex.getType());
 						return null;
 				}
+
 				pool.put(serverId, transport);
 				if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
@@ -86,8 +90,9 @@ public class ConnectionPool {
 		}
 
 		/**
-		 * 
-		 * @param serverId
+		 * Closes the connection to the given destination, if it is available in 
+		 * the connection pool.  
+		 * @param serverId		Server id to close the connection.
 		 */
 		public void closeConnection(int serverId) {
 				if (pool.containsKey(serverId)) {
@@ -102,7 +107,7 @@ public class ConnectionPool {
 		}
 
 		/**
-		 * 
+		 * Closes all the connections in the connection pool.
 		 */
 		public void closeAllConnections() {
 				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 3,

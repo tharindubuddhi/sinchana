@@ -241,14 +241,13 @@ private void destFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIR
 }//GEN-LAST:event_destFieldActionPerformed
 
 private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
-//		this.server.transferMessage(this.messageField.getText(),
-//				Integer.parseInt(this.destField.getText()));
+		this.tester.send(Integer.parseInt(this.destField.getText()), this.messageField.getText());
 }//GEN-LAST:event_sendButtonActionPerformed
 
 private void downActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downActionPerformed
-		if(serverRunning){
+		if (serverRunning) {
 				tester.stopServer();
-		}else{
+		} else {
 				tester.startServer();
 		}
 }//GEN-LAST:event_downActionPerformed
