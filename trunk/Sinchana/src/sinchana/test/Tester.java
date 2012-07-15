@@ -313,4 +313,14 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		public void send(int dest, String msg) {
 				this.server.send(dest, msg);
 		}
+
+		@Override
+		public boolean equals(Object obj) {
+				return this.serverId == ((Tester) obj).serverId;
+		}
+
+		@Override
+		public int hashCode() {
+				return this.serverId;
+		}
 }
