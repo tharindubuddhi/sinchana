@@ -178,8 +178,8 @@ public class MessageHandler {
 				int targetKeyOffset = getOffset(message.targetKey);
 				int predecessorOffset = getOffset(predecessor.serverId);
 				int prevStationOffset = getOffset(message.station.serverId);
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
-						"Routing analyze NH:" + nextHop.serverId + " PD:" + predecessor.serverId + " MSG:" + message);
+//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
+//						"Routing analyze NH:" + nextHop.serverId + " PD:" + predecessor.serverId + " MSG:" + message);
 
 				if (predecessorOffset < targetKeyOffset || targetKeyOffset == 0) {
 						Message returnMessage;

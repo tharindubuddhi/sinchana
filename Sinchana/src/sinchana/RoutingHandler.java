@@ -16,12 +16,12 @@ public interface RoutingHandler {
 		/**
 		 * Size of the finger table in Chord.
 		 */
-		public static final int TABLE_SIZE = 10;
+		public static final int TABLE_SIZE = 3;
 		/**
 		 * Size of the network which is equal to 
 		 * <code>(int) Math.pow(2, RoutingHandler.TABLE_SIZE)</code>
 		 */
-		public static final int GRID_SIZE = (int) Math.pow(2, RoutingHandler.TABLE_SIZE);
+		public static final int GRID_SIZE = (int) Math.pow(10, RoutingHandler.TABLE_SIZE);
 		
 		/**
 		 * Initialize routing table.

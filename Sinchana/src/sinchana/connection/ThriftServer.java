@@ -37,7 +37,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private boolean runningLocal;
 		private ConnectionPool connectionPool;
 		private Semaphore serverRun = new Semaphore(0);
-		private static final int MESSAGE_QUEUE_SIZE = 4 * RoutingHandler.GRID_SIZE;
+		private static final int MESSAGE_QUEUE_SIZE = 8 * RoutingHandler.GRID_SIZE;
 		private static final int NUM_OF_MAX_RETRIES = 3;
 		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageEventHandler() {
 
