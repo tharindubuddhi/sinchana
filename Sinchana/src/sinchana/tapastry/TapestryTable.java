@@ -19,7 +19,7 @@ import java.util.Set;
  *
  * @author Hiru
  */
-public class TapastryTable implements RoutingHandler, Runnable {
+public class TapestryTable implements RoutingHandler, Runnable {
 
 		private Server server;
 		private Node successor = null;
@@ -33,7 +33,7 @@ public class TapastryTable implements RoutingHandler, Runnable {
 		 * Class constructor with the server instance where the routing table is initialize.
 		 * @param server		Server instance. The routing table will be initialize based on this.
 		 */
-		public TapastryTable(Server server) {
+		public TapestryTable(Server server) {
 				this.server = server;
 		}
 
@@ -328,7 +328,7 @@ public class TapastryTable implements RoutingHandler, Runnable {
 						try {
 								Thread.sleep(5000);
 						} catch (InterruptedException ex) {
-								java.util.logging.Logger.getLogger(TapastryTable.class.getName()).log(Level.SEVERE, null, ex);
+								java.util.logging.Logger.getLogger(TapestryTable.class.getName()).log(Level.SEVERE, null, ex);
 						}
 						break;
 				}
