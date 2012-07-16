@@ -122,6 +122,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 												"Receiving error : " + message);
 								} else {
 										recievedCount++;
+										TesterController.incLifeTimeCounter(message.lifetime);
 										response = new Message(this.server, MessageType.ACCEPT, 1);
 										response.setTargetKey(message.getTargetKey());
 								}
@@ -146,7 +147,8 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 								resolvedCount = 0;
 								ringCount = 0;
 								while (ringCount < RoutingTable.GRID_SIZE) {
-										Message msg = new Message(this.server, MessageType.GET, 2 * RoutingTable.TABLE_SIZE);
+										Message msg = new Message(this.server, MessageType.GET,
+												TesterController.AUTO_TEST_MESSAGE_LIFE_TIME);
 										msg.setTargetKey(ringCount);
 										msg.setMessage("");
 										this.server.send(msg);

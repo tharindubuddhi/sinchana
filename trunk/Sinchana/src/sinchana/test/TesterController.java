@@ -56,22 +56,22 @@ public class TesterController {
 		/**
 		 * 
 		 */
-		public static final boolean GUI_ON = true;
+		public static final boolean GUI_ON = false;
 		/**
 		 * 
 		 */
 		public static final int AUTO_TEST_TIMEOUT = 2;
 		public static final int ROUND_TIP_TIME = 0;
+		public static final int AUTO_TEST_MESSAGE_LIFE_TIME = 120;
 		/**
 		 * 
 		 */
 		public static int max_buffer_size = 0;
-		
 		private Tester[] testServers;
 		private ControllerUI cui;
 		private int completedCount = 0;
 		private Semaphore startLock = new Semaphore(0);
-		private Map<Integer, Integer> expectedCountMap = new HashMap<Integer, Integer>();
+		private Map<Integer, Integer> expectedCountMap = new HashMap<>();
 		private int[] keySpace = new int[RoutingHandler.GRID_SIZE];
 		private int[] testIds;
 
@@ -98,13 +98,13 @@ public class TesterController {
 				n.serverId = REMOTE_SERVER_ID;
 				n.portId = REMOTE_SERVER_PORT_ID;
 				n.address = REMOTE_SERVER_ADDRESS;
-				new Tester(id, n, this);
-//		new Server().startNode(sid, sid + LOCAL_PORT_ID_RANGE, LOCAL_SERVER_ADDRESS, n);
+				Tester tester = new Tester(id, n, this);
+				//		new Server().startNode(sid, sid + LOCAL_PORT_ID_RANGE, LOCAL_SERVER_ADDRESS, n);
 		}
 
 		private int[] generateIds(int numberOfIds) {
 				int temp;
-				List<Integer> nodeIds = new ArrayList<Integer>();
+				List<Integer> nodeIds = new ArrayList<>();
 				nodeIds.add(REMOTE_SERVER_ID);
 				while (nodeIds.size() < numberOfIds) {
 						temp = (int) (Math.random() * RoutingHandler.GRID_SIZE);
@@ -213,6 +213,7 @@ public class TesterController {
 						testServers[i].setRealKeySpace(keySpace);
 						testServers[i].resetTester();
 				}
+				TesterController.lifeTimeCounter = 0;
 				for (int i = 0; i < NUM_OF_AUTO_TESTING_NODES; i++) {
 						testServers[i].startTest();
 				}
@@ -239,6 +240,12 @@ public class TesterController {
 				}
 				setAutoTestTableInfo();
 				testKeySpaces();
+
+				int averageLife = TesterController.lifeTimeCounter
+						/ (TesterController.NUM_OF_AUTO_TESTING_NODES * RoutingHandler.GRID_SIZE);
+				System.out.println("Average life used is "
+						+ (TesterController.AUTO_TEST_MESSAGE_LIFE_TIME - averageLife));
+
 		}
 
 		private void setAutoTestTableInfo() {
@@ -401,5 +408,10 @@ public class TesterController {
 						max_buffer_size = val;
 						System.out.println(max_buffer_size);
 				}
+		}
+		public static int lifeTimeCounter = 0;
+
+		public static synchronized void incLifeTimeCounter(int life) {
+				lifeTimeCounter += life;
 		}
 }

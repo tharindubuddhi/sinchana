@@ -6,6 +6,7 @@ package sinchana;
 
 import sinchana.connection.ThriftServer;
 import sinchana.chord.RoutingTable;
+import sinchana.tapastry.TapastryTable;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -17,7 +18,7 @@ import sinchana.thrift.Node;
 public class Server extends Node {
 
 		private PortHandler portHandler = new ThriftServer(this);
-		private RoutingHandler routingHandler = new RoutingTable(this);
+		private RoutingHandler routingHandler = new TapastryTable(this);
 		private MessageHandler messageHandler = new MessageHandler(this);
 		private SinchanaInterface sinchanaInterface = null;
 		private SinchanaTestInterface sinchanaTestInterface = null;

@@ -24,7 +24,7 @@ public class ConnectionPool {
 
 		private Map<Integer, TTransport> pool = new HashMap<Integer, TTransport>();
 		private Server server;
-		private static final int NUM_OF_MAX_CONNECTIONS = 12;
+		private static final int NUM_OF_MAX_CONNECTIONS = 18;
 
 		/**
 		 * Class constructor. The server instance where the connection fool is 
