@@ -97,9 +97,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 message = new javax.swing.JTextField();
                 sendButton = new javax.swing.JButton();
                 joinJoinPanel = new javax.swing.JPanel();
-                jLabel8 = new javax.swing.JLabel();
-                nodeIdField = new javax.swing.JTextField();
-                nodeStartButton = new javax.swing.JButton();
+                triggerButton = new javax.swing.JButton();
                 jScrollPane1 = new javax.swing.JScrollPane();
                 table = new javax.swing.JTable();
                 statusField = new javax.swing.JLabel();
@@ -112,6 +110,8 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 logClass = new javax.swing.JTextField();
                 jLabel4 = new javax.swing.JLabel();
                 logLocation = new javax.swing.JTextField();
+                jLabel9 = new javax.swing.JLabel();
+                contatain = new javax.swing.JTextField();
                 printLogButton = new javax.swing.JButton();
 
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -209,23 +209,14 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
                 joinJoinPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
-                jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-                jLabel8.setText("Node ID");
-                jLabel8.setPreferredSize(new java.awt.Dimension(56, 24));
-                joinJoinPanel.add(jLabel8);
-
-                nodeIdField.setText(" ");
-                nodeIdField.setPreferredSize(new java.awt.Dimension(360, 24));
-                joinJoinPanel.add(nodeIdField);
-
-                nodeStartButton.setText("Start");
-                nodeStartButton.setPreferredSize(new java.awt.Dimension(96, 24));
-                nodeStartButton.addActionListener(new java.awt.event.ActionListener() {
+                triggerButton.setText("Trigger Optimize");
+                triggerButton.setPreferredSize(new java.awt.Dimension(180, 24));
+                triggerButton.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
-                                nodeStartButtonActionPerformed(evt);
+                                triggerButtonActionPerformed(evt);
                         }
                 });
-                joinJoinPanel.add(nodeStartButton);
+                joinJoinPanel.add(triggerButton);
 
                 jPanel1.add(joinJoinPanel);
 
@@ -277,37 +268,46 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 loggerControlPanel.add(jLabel1);
 
                 logNodeID.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-                logNodeID.setPreferredSize(new java.awt.Dimension(48, 20));
+                logNodeID.setPreferredSize(new java.awt.Dimension(32, 20));
                 loggerControlPanel.add(logNodeID);
 
                 jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
                 jLabel2.setText("Type");
-                jLabel2.setPreferredSize(new java.awt.Dimension(48, 20));
+                jLabel2.setPreferredSize(new java.awt.Dimension(32, 20));
                 loggerControlPanel.add(jLabel2);
 
                 logType.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-                logType.setPreferredSize(new java.awt.Dimension(48, 20));
+                logType.setPreferredSize(new java.awt.Dimension(32, 20));
                 loggerControlPanel.add(logType);
 
                 jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
                 jLabel3.setText("Class");
-                jLabel3.setPreferredSize(new java.awt.Dimension(48, 20));
+                jLabel3.setPreferredSize(new java.awt.Dimension(36, 20));
                 loggerControlPanel.add(jLabel3);
 
                 logClass.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
                 logClass.setText("0");
-                logClass.setPreferredSize(new java.awt.Dimension(48, 20));
+                logClass.setPreferredSize(new java.awt.Dimension(32, 20));
                 loggerControlPanel.add(logClass);
 
                 jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
                 jLabel4.setText("Location");
-                jLabel4.setPreferredSize(new java.awt.Dimension(48, 20));
+                jLabel4.setPreferredSize(new java.awt.Dimension(52, 20));
                 loggerControlPanel.add(jLabel4);
 
                 logLocation.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
                 logLocation.setText("4");
-                logLocation.setPreferredSize(new java.awt.Dimension(48, 20));
+                logLocation.setPreferredSize(new java.awt.Dimension(32, 20));
                 loggerControlPanel.add(logLocation);
+
+                jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+                jLabel9.setText("Contaions");
+                jLabel9.setPreferredSize(new java.awt.Dimension(52, 20));
+                loggerControlPanel.add(jLabel9);
+
+                contatain.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
+                contatain.setPreferredSize(new java.awt.Dimension(64, 20));
+                loggerControlPanel.add(contatain);
 
                 printLogButton.setText("Print");
                 printLogButton.setPreferredSize(new java.awt.Dimension(64, 24));
@@ -328,13 +328,13 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
 private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
 
-		testerController.send(message.getText(), Integer.parseInt(this.destId.getText()), Integer.parseInt(this.reqId.getText()));
+		testerController.send(message.getText(), Long.parseLong(this.destId.getText()), Long.parseLong(this.reqId.getText()));
 
 }//GEN-LAST:event_sendButtonActionPerformed
 
 private void startNodeSetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNodeSetButtonActionPerformed
-		this.startNodeSetButton.setEnabled(false);
-		this.numOfTesters.setEnabled(false);
+//		this.startNodeSetButton.setEnabled(false);
+//		this.numOfTesters.setEnabled(false);
 		Thread thread = new Thread(this);
 		this.startNodeThreadId = thread.getId();
 		thread.start();
@@ -361,19 +361,21 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
 				this.logNodeID.getText(),
 				this.logType.getText(),
 				this.logClass.getText(),
-				this.logLocation.getText());
+				this.logLocation.getText(),
+				this.contatain.getText());
 }//GEN-LAST:event_printLogButtonActionPerformed
 
-private void nodeStartButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nodeStartButtonActionPerformed
+private void triggerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_triggerButtonActionPerformed
 
-		this.testerController.startNodes(this.nodeIdField.getText());
-}//GEN-LAST:event_nodeStartButtonActionPerformed
+		this.testerController.trigger();
+}//GEN-LAST:event_triggerButtonActionPerformed
 		/**
 		 * @param args the command line arguments
 		 */
         // Variables declaration - do not modify//GEN-BEGIN:variables
         private javax.swing.JButton autoTestButton;
         private javax.swing.JPanel autoTestButtonPanel;
+        private javax.swing.JTextField contatain;
         private javax.swing.JTextField destId;
         private javax.swing.JLabel jLabel1;
         private javax.swing.JLabel jLabel2;
@@ -382,7 +384,7 @@ private void nodeStartButtonActionPerformed(java.awt.event.ActionEvent evt) {//G
         private javax.swing.JLabel jLabel5;
         private javax.swing.JLabel jLabel6;
         private javax.swing.JLabel jLabel7;
-        private javax.swing.JLabel jLabel8;
+        private javax.swing.JLabel jLabel9;
         private javax.swing.JPanel jPanel1;
         private javax.swing.JScrollPane jScrollPane1;
         private javax.swing.JPanel joinJoinPanel;
@@ -392,8 +394,6 @@ private void nodeStartButtonActionPerformed(java.awt.event.ActionEvent evt) {//G
         private javax.swing.JTextField logType;
         private javax.swing.JPanel loggerControlPanel;
         private javax.swing.JTextField message;
-        private javax.swing.JTextField nodeIdField;
-        private javax.swing.JButton nodeStartButton;
         private javax.swing.JTextField numOfAutoTesters;
         private javax.swing.JTextField numOfTesters;
         private javax.swing.JButton printLogButton;
@@ -404,14 +404,15 @@ private void nodeStartButtonActionPerformed(java.awt.event.ActionEvent evt) {//G
         private javax.swing.JButton startNodeSetButton;
         private javax.swing.JLabel statusField;
         private javax.swing.JTable table;
+        private javax.swing.JButton triggerButton;
         // End of variables declaration//GEN-END:variables
 
 		@Override
 		public void run() {
 				if (Thread.currentThread().getId() == this.startNodeThreadId) {
-						testerController.startNodeSet(Integer.parseInt(this.numOfTesters.getText()));
+						testerController.startNodeSet(Short.parseShort(this.numOfTesters.getText()));
 				} else if (Thread.currentThread().getId() == this.startAutoTestThreadId) {
-						testerController.startAutoTest(Integer.parseInt(this.numOfAutoTesters.getText()));
+						testerController.startAutoTest(Short.parseShort(this.numOfAutoTesters.getText()));
 						this.autoTestButton.setEnabled(true);
 				}
 		}

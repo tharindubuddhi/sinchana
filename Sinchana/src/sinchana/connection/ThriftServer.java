@@ -18,7 +18,6 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.PortHandler;
-import sinchana.RoutingHandler;
 import sinchana.Server;
 import sinchana.test.TesterController;
 import sinchana.thrift.Node;
@@ -37,7 +36,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private boolean runningLocal;
 		private ConnectionPool connectionPool;
 		private Semaphore serverRun = new Semaphore(0);
-		private static final int MESSAGE_QUEUE_SIZE = 8 * RoutingHandler.GRID_SIZE;
+		private static final int MESSAGE_QUEUE_SIZE = 4196;
 		private static final int NUM_OF_MAX_RETRIES = 3;
 		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageEventHandler() {
 
@@ -176,7 +175,8 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		@Override
 		public void send(Message message, Node destination) {
 				Message msg = message.deepCopy();
-				msg.setDestination(destination);
+				msg.setDestination(destination.deepCopy());
+				msg.setStation(this.server);
 				msg.setRetryCount(0);
 //				this.send(message);
 				this.queueMessage(msg);
@@ -195,7 +195,6 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				if (message.lifetime < 0) {
 						return PortHandler.MESSAGE_LIFE_TIME_EXPIRED;
 				}
-				message.station = this.server;
 				TTransport transport = connectionPool.getConnection(
 						message.destination.serverId, message.destination.address, message.destination.portId);
 				if (transport == null) {

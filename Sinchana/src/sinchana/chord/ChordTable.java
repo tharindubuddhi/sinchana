@@ -19,21 +19,28 @@ import java.util.Set;
  *
  * @author Hiru
  */
-public class RoutingTable implements RoutingHandler, Runnable {
+public class ChordTable implements RoutingHandler, Runnable {
 
+		public static final int TABLE_SIZE = (int) (Math.log(Server.GRID_SIZE) / Math.log(2));
+
+		static {
+				System.out.println("CHORD: \tGrid size: " + Server.GRID_SIZE + " vs Table size: " + TABLE_SIZE);
+				long diff = Server.GRID_SIZE - ((long) Math.pow(2, TABLE_SIZE));
+				if (diff != 0) {
+						throw new RuntimeException("GRID SIZE defined in Server.class is invalid by " + diff);
+				}
+		}
+		private final FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
 		private Server server;
 		private Node successor = null;
 		private Node predecessor = null;
-		private int serverId;
-		private FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
-		private boolean stable = false;
-		private boolean neighboursImported = false;
+		private long serverId;
 
 		/**
 		 * Class constructor with the server instance where the routing table is initialize.
 		 * @param server		Server instance. The routing table will be initialize based on this.
 		 */
-		public RoutingTable(Server server) {
+		public ChordTable(Server server) {
 				this.server = server;
 		}
 
@@ -46,7 +53,6 @@ public class RoutingTable implements RoutingHandler, Runnable {
 				this.serverId = this.server.getServerId();
 				synchronized (this) {
 						this.initFingerTable();
-						this.neighboursImported = false;
 				}
 		}
 
@@ -62,8 +68,8 @@ public class RoutingTable implements RoutingHandler, Runnable {
 						 * all the table entries.
 						 */
 						fingerTable[i] = new FingerTableEntry();
-						fingerTable[i].setStart((this.serverId + (int) Math.pow(2, i)) % GRID_SIZE);
-						fingerTable[i].setEnd((this.serverId + (int) Math.pow(2, i + 1) - 1) % GRID_SIZE);
+						fingerTable[i].setStart((this.serverId + (long) Math.pow(2, i)) % Server.GRID_SIZE);
+						fingerTable[i].setEnd((this.serverId + (long) Math.pow(2, i + 1) - 1) % Server.GRID_SIZE);
 						fingerTable[i].setSuccessor(this.server.deepCopy());
 				}
 				/**
@@ -84,18 +90,10 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		 */
 		@Override
 		public void optimize() {
-				PortHandler ph = this.server.getPortHandler();
-				Message msg;
-				for (FingerTableEntry fingerTableEntry : fingerTable) {
-						if (fingerTableEntry.getSuccessor().serverId != this.serverId
-								&& fingerTableEntry.getSuccessor().serverId != fingerTableEntry.getStart()) {
-								msg = new Message(this.server, MessageType.FIND_SUCCESSOR, RoutingHandler.GRID_SIZE);
-								msg.setStartOfRange(fingerTableEntry.getStart());
-								msg.setEndOfRange(fingerTableEntry.getEnd());
-								msg.setTargetKey(fingerTableEntry.getSuccessor().serverId);
-								ph.send(msg, fingerTableEntry.getSuccessor());
-						}
-				}
+				synchronized(this){
+						this.importNeighbours(this.predecessor);
+						this.importNeighbours(this.successor);
+				}				
 		}
 
 		/**
@@ -120,8 +118,8 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		}
 
 		@Override
-		public Node getNextNode(int destination) {
-				int destinationOffset, startOffset, endOffset;
+		public Node getNextNode(long destination) {
+				long destinationOffset, startOffset, endOffset;
 				//calculates the offset to the destination.
 				destinationOffset = getOffset(destination);
 				//takes finger table entries one by one.
@@ -153,7 +151,7 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		@Override
 		public Set<Node> getNeighbourSet() {
 				//initializes an empty node set.
-				Set<Node> neighbourSet = new HashSet<Node>();
+				Set<Node> neighbourSet = new HashSet<>();
 				for (FingerTableEntry fingerTableEntry : fingerTable) {
 						/**
 						 * add each successor in the finger table to the set if it is
@@ -177,10 +175,10 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		}
 
 		@Override
-		public Node getOptimalSuccessor(int id) {
+		public void getOptimalSuccessor(Message message) {
 				//calculates offset.
-				int idOffset = getOffset(id);
-				int neighBourOffset, mostAdvance = 0;
+				long idOffset = getOffset(message.getStartOfRange());
+				long neighBourOffset, mostAdvance = 0;
 				//initializes to this server.
 				Node optimalSuccessor = this.server;
 				//get the neighbor set (the knows node set of this server)
@@ -198,17 +196,32 @@ public class RoutingTable implements RoutingHandler, Runnable {
 								optimalSuccessor = node;
 						}
 				}
-				//returns the most suitable successor found.
-				return optimalSuccessor.deepCopy();
+
+
+				if (optimalSuccessor.serverId == this.server.serverId) {
+						if (message.station.serverId != message.source.serverId) {
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 6,
+										"Valid response for " + message.targetKey
+										+ " in " + message.startOfRange + "-" + message.endOfRange
+										+ " is found as " + optimalSuccessor.serverId
+										+ " where source is " + message.source.serverId
+										+ " & prevstation is " + message.station.serverId);
+								message.setSuccessor(this.server.deepCopy());
+								this.server.getPortHandler().send(message, message.source);
+						}
+				} else {
+						this.server.getPortHandler().send(message, optimalSuccessor);
+				}
 		}
 
 		@Override
 		public void updateTable(Node node) {
 				//calculates offsets for the ids.
-				int newNodeOffset = getOffset(node.serverId);
+				long newNodeOffset = getOffset(node.serverId);
 				boolean tableChanged = false;
+				boolean updated = false;
 				synchronized (this) {
-						int successorOffset = getOffset(this.successor.serverId);
+						long successorOffset = getOffset(this.successor.serverId);
 						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 7,
 								"Updating table: S:" + this.successor.serverId + " P:" + this.predecessor.serverId
 								+ " N:" + node.serverId);
@@ -224,6 +237,7 @@ public class RoutingTable implements RoutingHandler, Runnable {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 										"Node " + node + " is set as successor overriding " + this.successor);
 								this.successor = node.deepCopy();
+								updated = true;
 								if (this.server.getSinchanaTestInterface() != null) {
 										this.server.getSinchanaTestInterface().setSuccessor(successor);
 								}
@@ -237,17 +251,18 @@ public class RoutingTable implements RoutingHandler, Runnable {
 						 * the new node will be set as the predecessor.
 						 * 0-----existing.predecessor.id------new.server.id-------this.server.id----------End.of.Grid
 						 */
-						int predecessorOffset = getOffset(this.predecessor.serverId);
+						long predecessorOffset = getOffset(this.predecessor.serverId);
 						if (predecessorOffset == 0 || (newNodeOffset != 0 && predecessorOffset < newNodeOffset)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 										"Node " + node + " is set as predecessor overriding " + this.predecessor);
 								this.predecessor = node.deepCopy();
+								updated = true;
 								if (this.server.getSinchanaTestInterface() != null) {
 										this.server.getSinchanaTestInterface().setPredecessor(predecessor);
 								}
 						}
 
-						int startOffset;
+						long startOffset;
 						for (int i = 0; i < fingerTable.length; i++) {
 								startOffset = getOffset(fingerTable[i].getStart());
 								successorOffset = getOffset(fingerTable[i].getSuccessor().serverId);
@@ -266,43 +281,21 @@ public class RoutingTable implements RoutingHandler, Runnable {
 												+ fingerTable[i].getStart() + "-" + fingerTable[i].getEnd()
 												+ " overriding " + fingerTable[i].getSuccessor().serverId);
 										fingerTable[i].setSuccessor(node.deepCopy());
+										updated = true;
 										tableChanged = true;
 								}
 						}
 				}
+				if (updated) {
+						importNeighbours(node);
+				}
+
 				/**
 				 * updates the testing interfaces if the table is altered.
 				 */
 				if (tableChanged && this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
 				}
-
-				/**
-				 * if the neighbor set has not imported, imports it from the predecessor.
-				 * This will happens only once after the node successfully joined to the grid.
-				 */
-				if (!neighboursImported && this.serverId != this.predecessor.serverId) {
-						importNeighbours(this.predecessor);
-						neighboursImported = true;
-				}
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		@Override
-		public boolean isStable() {
-				return this.stable;
-		}
-
-		/**
-		 * 
-		 * @param isStable
-		 */
-		@Override
-		public void setStable(boolean isStable) {
-				this.stable = isStable;
 		}
 
 		@Override
@@ -312,7 +305,7 @@ public class RoutingTable implements RoutingHandler, Runnable {
 						try {
 								Thread.sleep(5000);
 						} catch (InterruptedException ex) {
-								java.util.logging.Logger.getLogger(RoutingTable.class.getName()).log(Level.SEVERE, null, ex);
+								java.util.logging.Logger.getLogger(ChordTable.class.getName()).log(Level.SEVERE, null, ex);
 						}
 						break;
 				}
@@ -350,7 +343,7 @@ public class RoutingTable implements RoutingHandler, Runnable {
 		 * @param id	Id to calculate the offset.
 		 * @return		Offset of the id relative to this server.
 		 */
-		private int getOffset(int id) {
-				return (id + RoutingHandler.GRID_SIZE - this.server.serverId) % RoutingHandler.GRID_SIZE;
+		private long getOffset(long id) {
+				return (id + Server.GRID_SIZE - this.server.serverId) % Server.GRID_SIZE;
 		}
 }

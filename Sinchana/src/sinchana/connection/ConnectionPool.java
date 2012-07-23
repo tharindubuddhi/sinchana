@@ -22,7 +22,7 @@ import sinchana.util.logging.Logger;
  */
 public class ConnectionPool {
 
-		private Map<Integer, TTransport> pool = new HashMap<Integer, TTransport>();
+		private Map<Long, TTransport> pool = new HashMap<>();
 		private Server server;
 		private static final int NUM_OF_MAX_CONNECTIONS = 18;
 
@@ -44,16 +44,16 @@ public class ConnectionPool {
 		 * @param portId		Port id of the destination.
 		 * @return				TTransport connection opened to the destination.
 		 */
-		public TTransport getConnection(int serverId, String address, int portId) {
+		public TTransport getConnection(long serverId, String address, int portId) {
 				if (pool.containsKey(serverId)) {
 						return pool.get(serverId);
 				}
 
 				Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
-				Set<Integer> keySet = pool.keySet();
+				Set<Long> keySet = pool.keySet();
 				boolean terminate;
-				Set<Integer> idsToTerminate = new HashSet<Integer>();
-				for (Integer sid : keySet) {
+				Set<Long> idsToTerminate = new HashSet<>();
+				for (long sid : keySet) {
 						terminate = true;
 						for (Node node : neighbourSet) {
 								if (node.serverId == sid) {
@@ -65,7 +65,7 @@ public class ConnectionPool {
 								idsToTerminate.add(sid);
 						}
 				}
-				for (Integer id : idsToTerminate) {
+				for (Long id : idsToTerminate) {
 						closeConnection(id);
 				}
 
@@ -94,7 +94,7 @@ public class ConnectionPool {
 		 * the connection pool.  
 		 * @param serverId		Server id to close the connection.
 		 */
-		public void closeConnection(int serverId) {
+		public void closeConnection(long serverId) {
 				if (pool.containsKey(serverId)) {
 						TTransport tTransport = pool.get(serverId);
 						if (tTransport.isOpen()) {

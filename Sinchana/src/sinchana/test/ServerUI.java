@@ -43,7 +43,7 @@ public class ServerUI extends javax.swing.JFrame {
 		 * 
 		 * @param id
 		 */
-		public void setServerId(int id) {
+		public void setServerId(long id) {
 				this.idLabel.setText("Server " + id);
 		}
 
@@ -51,7 +51,7 @@ public class ServerUI extends javax.swing.JFrame {
 		 * 
 		 * @param id
 		 */
-		public void setSuccessorId(int id) {
+		public void setSuccessorId(long id) {
 				this.next.setText("Next: " + id);
 		}
 
@@ -59,7 +59,7 @@ public class ServerUI extends javax.swing.JFrame {
 		 * 
 		 * @param id
 		 */
-		public void setPredecessorId(int id) {
+		public void setPredecessorId(long id) {
 				this.prev.setText("Prev: " + id);
 		}
 

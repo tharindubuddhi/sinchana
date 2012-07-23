@@ -4,12 +4,15 @@
  */
 package sinchana;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import sinchana.connection.ThriftServer;
-import sinchana.chord.RoutingTable;
+import sinchana.chord.ChordTable;
 import sinchana.tapastry.TapestryTable;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
+import sinchana.util.tools.Hash;
 
 /**
  *
@@ -17,9 +20,10 @@ import sinchana.thrift.Node;
  */
 public class Server extends Node {
 
-		private PortHandler portHandler = new ThriftServer(this);
-		private RoutingHandler routingHandler = new TapestryTable(this);
-		private MessageHandler messageHandler = new MessageHandler(this);
+		public static final long GRID_SIZE = (long) Math.pow(2, 60);
+		private final PortHandler portHandler = new ThriftServer(this);
+		private final RoutingHandler routingHandler = Server.getRoutingHandler(RoutingHandler.TYPE_CHORD, this);
+		private final MessageHandler messageHandler = new MessageHandler(this);
 		private SinchanaInterface sinchanaInterface = null;
 		private SinchanaTestInterface sinchanaTestInterface = null;
 		/**
@@ -33,17 +37,13 @@ public class Server extends Node {
 		public long threadId;
 		private Node anotherNode;
 
-		/**
-		 * Start a new node with the given server ID. Next hop is not available.
-		 * @param serverId		Server ID. Generated using a hash function. 
-		 * @param portId		Port Id number where the the server is running.
-		 * @param address		URL of the server.
-		 */
-		public Server(int serverId, int portId, String address) {
-				this.serverId = serverId;
-				this.portId = portId;
-				this.address = address;
-				this.anotherNode = null;
+		private static RoutingHandler getRoutingHandler(String type, Server server) {
+				if (type.equalsIgnoreCase(RoutingHandler.TYPE_CHORD)) {
+						return new ChordTable(server);
+				} else if (type.equalsIgnoreCase(RoutingHandler.TYPE_TAPESTRY)) {
+						return new TapestryTable(server);
+				}
+				return null;
 		}
 
 		/**
@@ -54,27 +54,42 @@ public class Server extends Node {
 		 * @param address		URL of the server.
 		 * @param portId		Port Id number where the the server is running.
 		 */
-		public Server(int serverId, int portId, String address, Node anotherNode) {
-				this.serverId = serverId;
-				this.portId = portId;
-				this.address = address;
+		public Server(short portId) {
+				try {
+						InetAddress inetAddress = InetAddress.getLocalHost();
+						this.serverId = Hash.generateId(inetAddress.getAddress(), portId, GRID_SIZE);
+						this.portId = portId;
+						this.address = inetAddress.getHostAddress();
+				} catch (UnknownHostException ex) {
+						throw new RuntimeException("Error getting local host ip.", ex);
+				}
+		}
+
+		public void setAnotherNode(Node anotherNode) {
 				this.anotherNode = anotherNode;
 		}
 
 		/**
 		 * Start the server.
 		 */
-		public final void startServer() {
+		public void startServer() {
 				this.portHandler.startServer();
 				this.threadId = Thread.currentThread().getId();
 				this.routingHandler.init();
 				this.threadId = this.messageHandler.init();
+		}
+
+		public void join() {
 				if (this.anotherNode != null && this.anotherNode.serverId != this.serverId) {
 						Message msg = new Message(this, MessageType.JOIN, MESSAGE_LIFETIME);
 						this.portHandler.send(msg, this.anotherNode);
 				} else {
-						this.routingHandler.setStable(true);
+						this.messageHandler.startAsRootNode();
+						if (this.sinchanaTestInterface != null) {
+								this.sinchanaTestInterface.setStable(true);
+						}
 				}
+
 		}
 
 		/**
@@ -83,7 +98,6 @@ public class Server extends Node {
 		public void stopServer() {
 				portHandler.stopServer();
 				messageHandler.terminate();
-				this.routingHandler.setStable(false);
 		}
 
 		/**
@@ -165,5 +179,8 @@ public class Server extends Node {
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		//http://cseanremo.appspot.com/remoteip?local=1236&remote=1236
+
+		public void trigger() {
+				this.routingHandler.optimize();
+		}
 }

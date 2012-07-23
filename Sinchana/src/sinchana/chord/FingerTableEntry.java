@@ -12,15 +12,15 @@ import sinchana.thrift.Node;
  */
 public class FingerTableEntry {
 
-		private int start;
-		private int end;
+		private long start;
+		private long end;
 		private Node successor;
 
 		/**
 		 * 
 		 * @return
 		 */
-		public int getEnd() {
+		public long getEnd() {
 				return end;
 		}
 
@@ -28,7 +28,7 @@ public class FingerTableEntry {
 		 * 
 		 * @param end
 		 */
-		public void setEnd(int end) {
+		public void setEnd(long end) {
 				this.end = end;
 		}
 
@@ -36,7 +36,7 @@ public class FingerTableEntry {
 		 * 
 		 * @return
 		 */
-		public int getStart() {
+		public long getStart() {
 				return start;
 		}
 
@@ -44,7 +44,7 @@ public class FingerTableEntry {
 		 * 
 		 * @param start
 		 */
-		public void setStart(int start) {
+		public void setStart(long start) {
 				this.start = start;
 		}
 

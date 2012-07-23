@@ -6,6 +6,7 @@ package sinchana;
 
 import sinchana.thrift.Node;
 import java.util.Set;
+import sinchana.thrift.Message;
 
 /**
  *
@@ -16,12 +17,16 @@ public interface RoutingHandler {
 		/**
 		 * Size of the finger table in Chord.
 		 */
-		public static final int TABLE_SIZE = 3;
+//		public static final int TABLE_SIZE = 3;
 		/**
 		 * Size of the network which is equal to 
 		 * <code>(int) Math.pow(2, RoutingHandler.TABLE_SIZE)</code>
 		 */
-		public static final int GRID_SIZE = (int) Math.pow(10, RoutingHandler.TABLE_SIZE);
+//		public static final int GRID_SIZE = (int) Math.pow(10, RoutingHandler.TABLE_SIZE);
+		
+		public static final String TYPE_CHORD = "chord";
+		public static final String TYPE_TAPESTRY = "tapestry";
+		public static final String TYPE_PESTRY = "pestry";
 		
 		/**
 		 * Initialize routing table.
@@ -45,7 +50,7 @@ public interface RoutingHandler {
 		 * @param destination Destination id.
 		 * @return NExt hop (node) to reach to the destination.
 		 */
-		public abstract Node getNextNode(int destination);
+		public abstract Node getNextNode(long destination);
 		
 		/**
 		 * Returns the set of nodes contains successor, predecessor and all the
@@ -62,10 +67,10 @@ public interface RoutingHandler {
 		/**
 		 * Returns the most optimal node from the neighbor set which is successor 
 		 * to the start of range.
-		 * @param id Start point.
+		 * @param message  Request message object.
 		 * @return Node which immediately follows start point.
 		 */
-		public abstract Node getOptimalSuccessor(int id);
+		public abstract void getOptimalSuccessor(Message message);
 		
 		/**
 		 * Removes the node from the predecessor, successor and routing table entries. 
@@ -79,18 +84,5 @@ public interface RoutingHandler {
 		 * Updates the table, successor and predecessor with the new node.
 		 * @param node Node to be added to the routing table.
 		 */
-		public abstract void updateTable(Node node);
-		
-		/**
-		 * 
-		 * @param isStable
-		 */
-		public abstract void setStable(boolean isStable);
-		
-		/**
-		 * 
-		 * @return
-		 */
-		public abstract boolean isStable();
-		
+		public abstract void updateTable(Node node);				
 }
