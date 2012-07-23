@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class Message implements org.apache.thrift.TBase<Message, Message._Fields>, java.io.Serializable, Cloneable {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Message");
 
-  private static final org.apache.thrift.protocol.TField ID_FIELD_DESC = new org.apache.thrift.protocol.TField("id", org.apache.thrift.protocol.TType.I32, (short)1);
+  private static final org.apache.thrift.protocol.TField ID_FIELD_DESC = new org.apache.thrift.protocol.TField("id", org.apache.thrift.protocol.TType.I64, (short)1);
   private static final org.apache.thrift.protocol.TField SOURCE_FIELD_DESC = new org.apache.thrift.protocol.TField("source", org.apache.thrift.protocol.TType.STRUCT, (short)2);
   private static final org.apache.thrift.protocol.TField TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("type", org.apache.thrift.protocol.TType.I32, (short)3);
   private static final org.apache.thrift.protocol.TField LIFETIME_FIELD_DESC = new org.apache.thrift.protocol.TField("lifetime", org.apache.thrift.protocol.TType.I32, (short)4);
@@ -39,10 +39,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("message", org.apache.thrift.protocol.TType.STRING, (short)7);
   private static final org.apache.thrift.protocol.TField PREDECESSOR_FIELD_DESC = new org.apache.thrift.protocol.TField("predecessor", org.apache.thrift.protocol.TType.STRUCT, (short)8);
   private static final org.apache.thrift.protocol.TField SUCCESSOR_FIELD_DESC = new org.apache.thrift.protocol.TField("successor", org.apache.thrift.protocol.TType.STRUCT, (short)9);
-  private static final org.apache.thrift.protocol.TField START_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("startOfRange", org.apache.thrift.protocol.TType.I32, (short)10);
-  private static final org.apache.thrift.protocol.TField END_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("endOfRange", org.apache.thrift.protocol.TType.I32, (short)11);
+  private static final org.apache.thrift.protocol.TField START_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("startOfRange", org.apache.thrift.protocol.TType.I64, (short)10);
+  private static final org.apache.thrift.protocol.TField END_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("endOfRange", org.apache.thrift.protocol.TType.I64, (short)11);
   private static final org.apache.thrift.protocol.TField NEIGHBOUR_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("neighbourSet", org.apache.thrift.protocol.TType.SET, (short)12);
-  private static final org.apache.thrift.protocol.TField TARGET_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("targetKey", org.apache.thrift.protocol.TType.I32, (short)13);
+  private static final org.apache.thrift.protocol.TField TARGET_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("targetKey", org.apache.thrift.protocol.TType.I64, (short)13);
   private static final org.apache.thrift.protocol.TField RETRY_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("retryCount", org.apache.thrift.protocol.TType.I32, (short)14);
   private static final org.apache.thrift.protocol.TField TIME_STAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStamp", org.apache.thrift.protocol.TType.I64, (short)15);
 
@@ -52,7 +52,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     schemes.put(TupleScheme.class, new MessageTupleSchemeFactory());
   }
 
-  public int id; // optional
+  public long id; // optional
   public Node source; // required
   /**
    * 
@@ -65,10 +65,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public String message; // optional
   public Node predecessor; // optional
   public Node successor; // optional
-  public int startOfRange; // optional
-  public int endOfRange; // optional
+  public long startOfRange; // optional
+  public long endOfRange; // optional
   public Set<Node> neighbourSet; // optional
-  public int targetKey; // optional
+  public long targetKey; // optional
   public int retryCount; // optional
   public long timeStamp; // optional
 
@@ -190,7 +190,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.ID, new org.apache.thrift.meta_data.FieldMetaData("id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.SOURCE, new org.apache.thrift.meta_data.FieldMetaData("source", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class)));
     tmpMap.put(_Fields.TYPE, new org.apache.thrift.meta_data.FieldMetaData("type", org.apache.thrift.TFieldRequirementType.REQUIRED, 
@@ -208,14 +208,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     tmpMap.put(_Fields.SUCCESSOR, new org.apache.thrift.meta_data.FieldMetaData("successor", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class)));
     tmpMap.put(_Fields.START_OF_RANGE, new org.apache.thrift.meta_data.FieldMetaData("startOfRange", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.END_OF_RANGE, new org.apache.thrift.meta_data.FieldMetaData("endOfRange", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.NEIGHBOUR_SET, new org.apache.thrift.meta_data.FieldMetaData("neighbourSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
     tmpMap.put(_Fields.TARGET_KEY, new org.apache.thrift.meta_data.FieldMetaData("targetKey", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.RETRY_COUNT, new org.apache.thrift.meta_data.FieldMetaData("retryCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.TIME_STAMP, new org.apache.thrift.meta_data.FieldMetaData("timeStamp", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -312,11 +312,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     this.timeStamp = 0;
   }
 
-  public int getId() {
+  public long getId() {
     return this.id;
   }
 
-  public Message setId(int id) {
+  public Message setId(long id) {
     this.id = id;
     setIdIsSet(true);
     return this;
@@ -534,11 +534,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
-  public int getStartOfRange() {
+  public long getStartOfRange() {
     return this.startOfRange;
   }
 
-  public Message setStartOfRange(int startOfRange) {
+  public Message setStartOfRange(long startOfRange) {
     this.startOfRange = startOfRange;
     setStartOfRangeIsSet(true);
     return this;
@@ -557,11 +557,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     __isset_bit_vector.set(__STARTOFRANGE_ISSET_ID, value);
   }
 
-  public int getEndOfRange() {
+  public long getEndOfRange() {
     return this.endOfRange;
   }
 
-  public Message setEndOfRange(int endOfRange) {
+  public Message setEndOfRange(long endOfRange) {
     this.endOfRange = endOfRange;
     setEndOfRangeIsSet(true);
     return this;
@@ -619,11 +619,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
-  public int getTargetKey() {
+  public long getTargetKey() {
     return this.targetKey;
   }
 
-  public Message setTargetKey(int targetKey) {
+  public Message setTargetKey(long targetKey) {
     this.targetKey = targetKey;
     setTargetKeyIsSet(true);
     return this;
@@ -694,7 +694,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetId();
       } else {
-        setId((Integer)value);
+        setId((Long)value);
       }
       break;
 
@@ -766,7 +766,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetStartOfRange();
       } else {
-        setStartOfRange((Integer)value);
+        setStartOfRange((Long)value);
       }
       break;
 
@@ -774,7 +774,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetEndOfRange();
       } else {
-        setEndOfRange((Integer)value);
+        setEndOfRange((Long)value);
       }
       break;
 
@@ -790,7 +790,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetTargetKey();
       } else {
-        setTargetKey((Integer)value);
+        setTargetKey((Long)value);
       }
       break;
 
@@ -816,7 +816,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case ID:
-      return Integer.valueOf(getId());
+      return Long.valueOf(getId());
 
     case SOURCE:
       return getSource();
@@ -843,16 +843,16 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       return getSuccessor();
 
     case START_OF_RANGE:
-      return Integer.valueOf(getStartOfRange());
+      return Long.valueOf(getStartOfRange());
 
     case END_OF_RANGE:
-      return Integer.valueOf(getEndOfRange());
+      return Long.valueOf(getEndOfRange());
 
     case NEIGHBOUR_SET:
       return getNeighbourSet();
 
     case TARGET_KEY:
-      return Integer.valueOf(getTargetKey());
+      return Long.valueOf(getTargetKey());
 
     case RETRY_COUNT:
       return Integer.valueOf(getRetryCount());
@@ -1406,8 +1406,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         }
         switch (schemeField.id) {
           case 1: // ID
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.id = iprot.readI32();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.id = iprot.readI64();
               struct.setIdIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -1483,16 +1483,16 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
             }
             break;
           case 10: // START_OF_RANGE
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.startOfRange = iprot.readI32();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.startOfRange = iprot.readI64();
               struct.setStartOfRangeIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
           case 11: // END_OF_RANGE
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.endOfRange = iprot.readI32();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.endOfRange = iprot.readI64();
               struct.setEndOfRangeIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -1518,8 +1518,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
             }
             break;
           case 13: // TARGET_KEY
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.targetKey = iprot.readI32();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.targetKey = iprot.readI64();
               struct.setTargetKeyIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -1561,7 +1561,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       oprot.writeStructBegin(STRUCT_DESC);
       if (struct.isSetId()) {
         oprot.writeFieldBegin(ID_FIELD_DESC);
-        oprot.writeI32(struct.id);
+        oprot.writeI64(struct.id);
         oprot.writeFieldEnd();
       }
       if (struct.source != null) {
@@ -1614,12 +1614,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       if (struct.isSetStartOfRange()) {
         oprot.writeFieldBegin(START_OF_RANGE_FIELD_DESC);
-        oprot.writeI32(struct.startOfRange);
+        oprot.writeI64(struct.startOfRange);
         oprot.writeFieldEnd();
       }
       if (struct.isSetEndOfRange()) {
         oprot.writeFieldBegin(END_OF_RANGE_FIELD_DESC);
-        oprot.writeI32(struct.endOfRange);
+        oprot.writeI64(struct.endOfRange);
         oprot.writeFieldEnd();
       }
       if (struct.neighbourSet != null) {
@@ -1638,7 +1638,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       if (struct.isSetTargetKey()) {
         oprot.writeFieldBegin(TARGET_KEY_FIELD_DESC);
-        oprot.writeI32(struct.targetKey);
+        oprot.writeI64(struct.targetKey);
         oprot.writeFieldEnd();
       }
       if (struct.isSetRetryCount()) {
@@ -1710,7 +1710,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       oprot.writeBitSet(optionals, 12);
       if (struct.isSetId()) {
-        oprot.writeI32(struct.id);
+        oprot.writeI64(struct.id);
       }
       if (struct.isSetDestination()) {
         struct.destination.write(oprot);
@@ -1728,10 +1728,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         struct.successor.write(oprot);
       }
       if (struct.isSetStartOfRange()) {
-        oprot.writeI32(struct.startOfRange);
+        oprot.writeI64(struct.startOfRange);
       }
       if (struct.isSetEndOfRange()) {
-        oprot.writeI32(struct.endOfRange);
+        oprot.writeI64(struct.endOfRange);
       }
       if (struct.isSetNeighbourSet()) {
         {
@@ -1743,7 +1743,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         }
       }
       if (struct.isSetTargetKey()) {
-        oprot.writeI32(struct.targetKey);
+        oprot.writeI64(struct.targetKey);
       }
       if (struct.isSetRetryCount()) {
         oprot.writeI32(struct.retryCount);
@@ -1765,7 +1765,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       struct.setLifetimeIsSet(true);
       BitSet incoming = iprot.readBitSet(12);
       if (incoming.get(0)) {
-        struct.id = iprot.readI32();
+        struct.id = iprot.readI64();
         struct.setIdIsSet(true);
       }
       if (incoming.get(1)) {
@@ -1793,11 +1793,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         struct.setSuccessorIsSet(true);
       }
       if (incoming.get(6)) {
-        struct.startOfRange = iprot.readI32();
+        struct.startOfRange = iprot.readI64();
         struct.setStartOfRangeIsSet(true);
       }
       if (incoming.get(7)) {
-        struct.endOfRange = iprot.readI32();
+        struct.endOfRange = iprot.readI64();
         struct.setEndOfRangeIsSet(true);
       }
       if (incoming.get(8)) {
@@ -1815,7 +1815,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         struct.setNeighbourSetIsSet(true);
       }
       if (incoming.get(9)) {
-        struct.targetKey = iprot.readI32();
+        struct.targetKey = iprot.readI64();
         struct.setTargetKeyIsSet(true);
       }
       if (incoming.get(10)) {

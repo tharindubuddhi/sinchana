@@ -22,7 +22,7 @@ public class MessageHandler {
 		/**
 		 * Size of the message buffer.
 		 */
-		private static final int MESSAGE_BUFFER_SIZE = 2 * RoutingHandler.GRID_SIZE;
+		private static final int MESSAGE_BUFFER_SIZE = 2048;
 		/**
 		 * Message queue to buffer incoming messages. The size of the queue is 
 		 * determined by MESSAGE_BUFFER_SIZE.
@@ -42,14 +42,8 @@ public class MessageHandler {
 						 * Once the node receives it's JOIN message, the joining is 
 						 * completed and all the messages are processed with no restriction.
 						 */
-						if (!server.getRoutingHandler().isStable()
-								&& (message.type != MessageType.JOIN || message.source.serverId != server.serverId)) {
-								Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 0,
-										"Queued back until the server is stable: " + message.type + " - " + message);
-								queueMessage(message);
-						} else {
-								processMessage(message);
-						}
+						processMessage(message);
+
 				}
 		});
 
@@ -69,6 +63,10 @@ public class MessageHandler {
 				return messageQueue.getThreadId();
 		}
 
+		public void startAsRootNode() {
+				messageQueue.start();
+		}
+
 		/**
 		 * 
 		 */
@@ -83,17 +81,19 @@ public class MessageHandler {
 		 */
 		public boolean queueMessage(Message message) {
 				if (!messageQueue.isStarted()
-						&& (this.server.getRoutingHandler().isStable()
-						|| (!this.server.getRoutingHandler().isStable()
 						&& message.type == MessageType.JOIN
-						&& message.source.serverId == this.server.serverId))) {
+						&& message.source.serverId == this.server.serverId) {
 						messageQueue.start();
+						if (this.server.getSinchanaTestInterface() != null) {
+								this.server.getSinchanaTestInterface().setStable(true);
+						}
 				}
 
 				if (messageQueue.queueMessage(message)) {
+//						System.out.println(this.server.serverId + ": queued :: " + message);
 						return true;
 				} else {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 1,
+						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 0,
 								"Message is unacceptable 'cos buffer is full! " + message);
 						return false;
 				}
@@ -104,7 +104,7 @@ public class MessageHandler {
 		 * @param message
 		 */
 		public synchronized void processMessage(Message message) {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 2,
+				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 1,
 						"Processing: " + message);
 
 				Node predecessor = this.server.getRoutingHandler().getPredecessor();
@@ -175,11 +175,9 @@ public class MessageHandler {
 		private void processGet(Message message) {
 				Node predecessor = this.server.getRoutingHandler().getPredecessor();
 				Node nextHop = this.server.getRoutingHandler().getNextNode(message.targetKey);
-				int targetKeyOffset = getOffset(message.targetKey);
-				int predecessorOffset = getOffset(predecessor.serverId);
-				int prevStationOffset = getOffset(message.station.serverId);
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
-//						"Routing analyze NH:" + nextHop.serverId + " PD:" + predecessor.serverId + " MSG:" + message);
+				long targetKeyOffset = getOffset(message.targetKey);
+				long predecessorOffset = getOffset(predecessor.serverId);
+				long prevStationOffset = getOffset(message.station.serverId);
 
 				if (predecessorOffset < targetKeyOffset || targetKeyOffset == 0) {
 						Message returnMessage;
@@ -199,13 +197,13 @@ public class MessageHandler {
 				} else {
 						message.message += " " + this.server.serverId;
 						if (prevStationOffset != 0 && prevStationOffset < targetKeyOffset) {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
 										"This should be an errornous receive of " + message.targetKey
 										+ " - sending to the predecessor " + predecessor.serverId);
 								this.server.getPortHandler().send(message, predecessor);
 
 						} else {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
 										"Message is passing to the next node " + nextHop.serverId);
 								if (this.server.getSinchanaTestInterface() != null) {
 										this.server.getSinchanaTestInterface().setStatus("routed: " + message.message);
@@ -216,23 +214,21 @@ public class MessageHandler {
 		}
 
 		private void processJoin(Message message) {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
+				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 						"Join message " + message);
-				if (message.source.serverId == this.server.serverId) {
-						this.server.getRoutingHandler().setStable(true);
-				} else {
-						int newServerIdOffset = getOffset(message.source.serverId);
-						int prevStationIdOffset = getOffset(message.station.serverId);
-						int tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
-						Node nextSuccessor = message.source;
-						Node nextPredecessor = message.source;
+				if (message.source.serverId != this.server.serverId) {
+						long newServerIdOffset = getOffset(message.source.serverId);
+						long prevStationIdOffset = getOffset(message.station.serverId);
+						long tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
+						Node nextSuccessor = this.server;
+						Node nextPredecessor = this.server;
 						Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 						for (Node node : neighbourSet) {
 								tempNodeOffset = getOffset(node.serverId);
 								nextPredecessorOffset = getOffset(nextPredecessor.serverId);
 								nextSuccessorOffset = getOffset(nextSuccessor.serverId);
 
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 										"NewNode:" + message.source.serverId
 										+ "\tPrevStat:" + message.station.serverId
 										+ "\tTempNode:" + node.serverId
@@ -240,39 +236,40 @@ public class MessageHandler {
 										+ "\tnextSCO:" + nextSuccessor.serverId);
 
 								if (newServerIdOffset <= prevStationIdOffset
-										&& 0 < tempNodeOffset
-										&& (nextSuccessorOffset == newServerIdOffset
-										|| nextSuccessorOffset < tempNodeOffset)
+										&& (nextSuccessorOffset < tempNodeOffset
+										|| nextSuccessorOffset == 0)
 										&& tempNodeOffset < newServerIdOffset) {
 										nextSuccessor = node;
 								}
 								if (prevStationIdOffset <= newServerIdOffset
-										&& 0 < tempNodeOffset
-										&& (nextSuccessorOffset == newServerIdOffset
-										|| tempNodeOffset < nextPredecessorOffset)
+										&& (tempNodeOffset < nextPredecessorOffset
+										|| nextPredecessorOffset == 0)
 										&& newServerIdOffset < tempNodeOffset) {
 										nextPredecessor = node;
 								}
 						}
-						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
+						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 								"Analyze of state: \tPD: " + nextPredecessor + "\tSC: " + nextSuccessor);
 
-						if (nextPredecessor.serverId == nextSuccessor.serverId) {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
+						if (nextPredecessor.serverId != this.server.serverId) {
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
+										"Sending message to the predecessor " + nextPredecessor.serverId);
+								server.getPortHandler().send(message, nextPredecessor);
+						} else {
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 										"Sending message to the origin " + message.source.serverId);
 								server.getPortHandler().send(message, message.source);
-						} else {
-								if (nextPredecessor.serverId != message.source.serverId) {
-										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
-												"Sending message to the predecessor " + nextPredecessor.serverId);
-										server.getPortHandler().send(message, nextPredecessor);
-								}
-								if (nextSuccessor.serverId != message.source.serverId) {
-										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
-												"Sending message to the successor " + nextSuccessor.serverId);
-										server.getPortHandler().send(message, nextSuccessor);
-								}
 						}
+						if (nextSuccessor.serverId != this.server.serverId) {
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
+										"Sending message to the successor " + nextSuccessor.serverId);
+								server.getPortHandler().send(message, nextSuccessor);
+						} else {
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
+										"Sending message to the origin " + message.source.serverId);
+								server.getPortHandler().send(message, message.source);
+						}
+
 				}
 		}
 
@@ -281,30 +278,14 @@ public class MessageHandler {
 						message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 						this.server.getPortHandler().send(message, message.source);
 				} else {
-						this.server.getRoutingHandler().optimize();
-						if (this.server.getSinchanaTestInterface() != null) {
-								this.server.getSinchanaTestInterface().setStable(true);
-						}
+						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 6,
+								"Receving NeighbourSet from " + message.station.serverId);
 				}
 		}
 
 		private void processFindSuccessors(Message message) {
 				if (message.source.serverId != this.server.serverId) {
-						Node newPredecessor = this.server.getRoutingHandler().getOptimalSuccessor(message.getStartOfRange());
-						if (newPredecessor.serverId == this.server.serverId) {
-								if (message.station.serverId != message.source.serverId) {
-										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 6,
-												"Valid response for " + message.targetKey
-												+ " in " + message.startOfRange + "-" + message.endOfRange
-												+ " is found as " + newPredecessor.serverId
-												+ " where source is " + message.source.serverId
-												+ " & prevstation is " + message.station.serverId);
-										message.setSuccessor(this.server.deepCopy());
-										this.server.getPortHandler().send(message, message.source);
-								}
-						} else {
-								this.server.getPortHandler().send(message, newPredecessor);
-						}
+						this.server.getRoutingHandler().getOptimalSuccessor(message);
 				}
 		}
 
@@ -313,11 +294,11 @@ public class MessageHandler {
 				Node successor = this.server.getRoutingHandler().getSuccessor();
 				if (message.source.serverId == this.server.serverId) {
 						if (message.message.length() != 0) {
-								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_MESSAGE_HANDLER, 7,
+								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_MESSAGE_HANDLER, 5,
 										"Ring test completed - length: " + (message.message.split(" > ").length) + " :: " + message.message);
 								System.out.println("Ring test completed - length: " + (message.message.split(" > ").length) + " :: " + message.message);
 						} else {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 7,
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
 										"Start of Test Ring. Sending to " + predecessor.serverId + " & " + successor.serverId);
 								message.message += "" + this.server.serverId;
 								this.server.getPortHandler().send(message, predecessor);
@@ -325,17 +306,17 @@ public class MessageHandler {
 						}
 				} else {
 						if (message.station.serverId == predecessor.serverId) {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 7,
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
 										"Forwarding Ring Test to successor " + successor.serverId);
 								message.message += " > " + this.server.serverId;
 								this.server.getPortHandler().send(message, successor);
 						} else if (message.station.serverId == successor.serverId) {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 7,
+								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
 										"Forwarding Ring Test to predecessor " + predecessor.serverId);
 								message.message += " > " + this.server.serverId;
 								this.server.getPortHandler().send(message, predecessor);
 						} else {
-								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 7,
+								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
 										"Message Terminated! Received from " + message.station.serverId
 										+ " which is neither predecessor or successor.");
 						}
@@ -348,7 +329,7 @@ public class MessageHandler {
 		 * @param id	Id to calculate the offset.
 		 * @return		Offset of the id relative to this server.
 		 */
-		private int getOffset(int id) {
-				return (id + RoutingHandler.GRID_SIZE - this.server.serverId) % RoutingHandler.GRID_SIZE;
+		private long getOffset(long id) {
+				return (id + Server.GRID_SIZE - this.server.serverId) % Server.GRID_SIZE;
 		}
 }

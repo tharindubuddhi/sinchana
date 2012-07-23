@@ -1,9 +1,9 @@
 namespace java sinchana.thrift
 
 struct Node {
-  1: i32 serverId,
+  1: i64 serverId,
   2: string address,
-  3: i32 portId
+  3: i16 portId
 }
 
 enum MessageType {
@@ -13,11 +13,12 @@ enum MessageType {
     FIND_SUCCESSOR, 
     ERROR, 
     ACCEPT,
+    VERIFY_RING,
     TEST_RING
 }
 
 struct Message {
-    1: optional i32 id,
+    1: optional i64 id,
     2: required Node source,
     3: required MessageType type,
     4: required i32 lifetime,
@@ -26,10 +27,10 @@ struct Message {
     7: optional string message,
     8: optional Node predecessor,
     9: optional Node successor,
-    10: optional i32 startOfRange,
-    11: optional i32 endOfRange,
+    10: optional i64 startOfRange,
+    11: optional i64 endOfRange,
     12: optional set<Node> neighbourSet,
-    13: optional i32 targetKey,
+    13: optional i64 targetKey,
     14: optional i32 retryCount,
     15: optional i64 timeStamp
 }

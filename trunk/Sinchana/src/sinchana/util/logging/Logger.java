@@ -70,7 +70,7 @@ public final class Logger {
 		 * @param locId
 		 * @param logData
 		 */
-		public static synchronized void log(int nodeId, int type, int classId, int locId, String logData) {
+		public static synchronized void log(long nodeId, int type, int classId, int locId, String logData) {
 				Log nl = new Log();
 				nl.nodeId = nodeId;
 				nl.level = type;
@@ -146,7 +146,8 @@ public final class Logger {
 		 * @param classIds
 		 * @param locations
 		 */
-		public static synchronized void print(int[] nodeIds, int[] levels, int[] classIds, int[] locations) {
+		public static synchronized void print(int[] nodeIds, int[] levels,
+				int[] classIds, int[] locations, String containTextString) {
 				System.out.println("processing quaries...");
 				Iterator<Log> listIterator = logDB.iterator();
 				Log log;
@@ -154,11 +155,15 @@ public final class Logger {
 				boolean filterBylevel = levels != null && levels.length != 0;
 				boolean filterByClass = classIds != null && classIds.length != 0;
 				boolean filterByLocation = locations != null && locations.length != 0;
+				boolean filterByText = containTextString.length() > 0;
 				boolean validToPrint;
 				int recordCount = 0;
 				while (listIterator.hasNext()) {
 						log = listIterator.next();
-						validToPrint = true;
+						validToPrint = !filterByText || log.logData.indexOf(containTextString) != -1;
+						if (!validToPrint) {
+								continue;
+						}
 						if (filterByNodeId) {
 								validToPrint = false;
 								for (int i : nodeIds) {

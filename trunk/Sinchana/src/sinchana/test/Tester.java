@@ -4,16 +4,22 @@
  */
 package sinchana.test;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import sinchana.Server;
 import sinchana.SinchanaInterface;
 import sinchana.SinchanaTestInterface;
 import sinchana.chord.FingerTableEntry;
-import sinchana.chord.RoutingTable;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -23,18 +29,20 @@ import java.util.concurrent.Semaphore;
 public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnable {
 
 		private Server server;
-		private int expectedCount = 0;
-		private int recievedCount = 0;
-		private int resolvedCount = 0;
+		private long expectedCount = 0;
+		private long recievedCount = 0;
+		private long resolvedCount = 0;
+		private int lifeTimeCount = 0;
 		private int ringCount = 0;
-		private int serverId;
+		private short testId;
 		private ServerUI gui = null;
 		private TesterController testerController;
 		private Calendar startTime;
 		private Calendar endTime;
 		private Semaphore threadLock = new Semaphore(0);
-		private int[] keySpace = new int[RoutingTable.GRID_SIZE];
-		private int[] realKeySpace;
+		private Map<Long, Long> keySpace = new HashMap<>();
+		private Map<Long, Long> realKeySpace;
+		private boolean running = false;
 
 		/**
 		 * 
@@ -42,15 +50,18 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * @param anotherNode
 		 * @param tc
 		 */
-		public Tester(int serverId, Node anotherNode, TesterController tc) {
+		public Tester(short testId, TesterController tc) {
 
+				this.testId = testId;
+				this.testerController = tc;
 				server = new Server(
-						serverId, serverId + TesterController.LOCAL_PORT_ID_RANGE,
-						TesterController.LOCAL_SERVER_ADDRESS, anotherNode);
+						(short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
+				Node node = getRemoteNode(server.serverId,
+						server.address, server.portId);
+				server.setAnotherNode(node);
 				server.registerSinchanaInterface(this);
 				server.registerSinchanaTestInterface(this);
-				this.serverId = serverId;
-				this.testerController = tc;
+				server.startServer();
 				if (TesterController.GUI_ON) {
 						this.gui = new ServerUI(this);
 				}
@@ -63,6 +74,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				Thread thread = new Thread(this);
 				startTime = Calendar.getInstance();
 				thread.start();
+				this.running = true;
 		}
 
 		/**
@@ -70,6 +82,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 */
 		public void stopServer() {
 				server.stopServer();
+				this.running = false;
 		}
 
 		/**
@@ -95,6 +108,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				recievedCount = 0;
 				resolvedCount = 0;
 				ringCount = 0;
+				lifeTimeCount = 0;
 		}
 
 		@Override
@@ -104,28 +118,28 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				Message response = null;
 				switch (message.type) {
 						case ACCEPT:
-								if (realKeySpace[message.targetKey] != message.source.serverId) {
-										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 1,
-												"Resolving error : " + message);
-								} else {
-										resolvedCount++;
-								}
-								keySpace[message.getTargetKey()] = message.source.serverId;
+//								if (realKeySpace[message.targetKey] != message.source.serverId) {
+//										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 1,
+//												"Resolving error : " + message);
+//								} else {
+//										resolvedCount++;
+//								}
+//								keySpace[message.getTargetKey()] = message.source.serverId;
 								break;
 						case ERROR:
 								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 2,
 										"Recieved error message : " + message);
 								break;
 						case GET:
-								if (realKeySpace[message.targetKey] != this.serverId) {
-										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
-												"Receiving error : " + message);
-								} else {
-										recievedCount++;
-										TesterController.incLifeTimeCounter(message.lifetime);
-										response = new Message(this.server, MessageType.ACCEPT, 1);
-										response.setTargetKey(message.getTargetKey());
-								}
+//								if (realKeySpace[message.targetKey] != this.server.serverId) {
+//										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
+//												"Receiving error : " + message);
+//								} else {
+//										recievedCount++;
+//										lifeTimeCount += message.lifetime;
+//										response = new Message(this.server, MessageType.ACCEPT, 1);
+//										response.setTargetKey(message.getTargetKey());
+//								}
 								break;
 				}
 				endTime = Calendar.getInstance();
@@ -136,17 +150,15 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		public void run() {
 				try {
 						if (this.gui != null) {
-								this.gui.setServerId(serverId);
+								this.gui.setServerId(server.serverId);
 								this.gui.setVisible(true);
 						}
 //						startTime = Calendar.getInstance();
-						server.startServer();
+						server.join();
 						while (true) {
 								threadLock.acquire();
-								recievedCount = 0;
-								resolvedCount = 0;
-								ringCount = 0;
-								while (ringCount < RoutingTable.GRID_SIZE) {
+								resetTester();
+								while (ringCount < Server.GRID_SIZE) {
 										Message msg = new Message(this.server, MessageType.GET,
 												TesterController.AUTO_TEST_MESSAGE_LIFE_TIME);
 										msg.setTargetKey(ringCount);
@@ -173,7 +185,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 								this.gui.setMessage("stabilized!");
 						}
 						endTime = Calendar.getInstance();
-						testerController.incrementCompletedCount(this.serverId);
+						testerController.incrementCompletedCount(this.testId);
 				}
 		}
 
@@ -225,7 +237,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * 
 		 * @return
 		 */
-		public int getExpectedCount() {
+		public long getExpectedCount() {
 				return expectedCount;
 		}
 
@@ -233,7 +245,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * 
 		 * @param expectedCount
 		 */
-		public void setExpectedCount(int expectedCount) {
+		public void setExpectedCount(long expectedCount) {
 				this.expectedCount = expectedCount;
 		}
 
@@ -249,7 +261,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * 
 		 * @return
 		 */
-		public int getRecievedCount() {
+		public long getRecievedCount() {
 				return recievedCount;
 		}
 
@@ -257,8 +269,12 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * 
 		 * @return
 		 */
-		public int getServerId() {
-				return serverId;
+		public long getServerId() {
+				return server.serverId;
+		}
+
+		public int getTestId() {
+				return testId;
 		}
 
 		/**
@@ -273,15 +289,19 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * 
 		 * @return
 		 */
-		public int getResolvedCount() {
+		public long getResolvedCount() {
 				return resolvedCount;
+		}
+
+		public int getLifeTimeCount() {
+				return lifeTimeCount;
 		}
 
 		/**
 		 * 
 		 * @return
 		 */
-		public int[] getKeySpace() {
+		public Map<Long, Long> getKeySpace() {
 				return keySpace;
 		}
 
@@ -297,9 +317,15 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * 
 		 * @param realKeySpace
 		 */
-		public void setRealKeySpace(int[] realKeySpace) {
+		public void setRealKeySpace(Map<Long, Long> realKeySpace) {
 				this.realKeySpace = realKeySpace;
 		}
+
+		public boolean isRunning() {
+				return running;
+		}
+		
+		
 
 		/**
 		 * 
@@ -318,11 +344,40 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 
 		@Override
 		public boolean equals(Object obj) {
-				return this.serverId == ((Tester) obj).serverId;
+				return this.testId == ((Tester) obj).testId;
 		}
 
 		@Override
 		public int hashCode() {
-				return this.serverId;
+				return (int) this.server.serverId;
+		}
+
+		private Node getRemoteNode(long serverId, String address, int portId) {
+				try {
+						URL url = new URL("http://cseanremo.appspot.com/remoteip?"
+								+ "sid=" + serverId
+								+ "&url=" + address
+								+ "&pid=" + portId);
+						URLConnection yc = url.openConnection();
+						InputStreamReader isr = new InputStreamReader(yc.getInputStream());
+						BufferedReader in = new BufferedReader(isr);
+						String resp = in.readLine();
+						System.out.println(testId + ":\tresp: " + resp);
+						if (resp != null && !resp.equalsIgnoreCase("n/a")) {
+								Node node = new Node();
+								node.serverId = Long.parseLong(resp.split(":")[0]);
+								node.address = resp.split(":")[1];
+								node.portId = Short.parseShort(resp.split(":")[2]);
+								in.close();
+								return node;
+						}
+				} catch (IOException | NumberFormatException e) {
+						throw new RuntimeException("Invalid response from the cache server!", e);
+				}
+				return null;
+		}
+
+		void trigger() {
+				this.server.trigger();
 		}
 }

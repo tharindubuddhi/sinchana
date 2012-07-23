@@ -30,9 +30,9 @@ import org.slf4j.LoggerFactory;
 public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.io.Serializable, Cloneable {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Node");
 
-  private static final org.apache.thrift.protocol.TField SERVER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("serverId", org.apache.thrift.protocol.TType.I32, (short)1);
+  private static final org.apache.thrift.protocol.TField SERVER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("serverId", org.apache.thrift.protocol.TType.I64, (short)1);
   private static final org.apache.thrift.protocol.TField ADDRESS_FIELD_DESC = new org.apache.thrift.protocol.TField("address", org.apache.thrift.protocol.TType.STRING, (short)2);
-  private static final org.apache.thrift.protocol.TField PORT_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("portId", org.apache.thrift.protocol.TType.I32, (short)3);
+  private static final org.apache.thrift.protocol.TField PORT_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("portId", org.apache.thrift.protocol.TType.I16, (short)3);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -40,9 +40,9 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     schemes.put(TupleScheme.class, new NodeTupleSchemeFactory());
   }
 
-  public int serverId; // required
+  public long serverId; // required
   public String address; // required
-  public int portId; // required
+  public short portId; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -116,11 +116,11 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.SERVER_ID, new org.apache.thrift.meta_data.FieldMetaData("serverId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.ADDRESS, new org.apache.thrift.meta_data.FieldMetaData("address", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.PORT_ID, new org.apache.thrift.meta_data.FieldMetaData("portId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Node.class, metaDataMap);
   }
@@ -129,9 +129,9 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   }
 
   public Node(
-    int serverId,
+    long serverId,
     String address,
-    int portId)
+    short portId)
   {
     this();
     this.serverId = serverId;
@@ -167,11 +167,11 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     this.portId = 0;
   }
 
-  public int getServerId() {
+  public long getServerId() {
     return this.serverId;
   }
 
-  public Node setServerId(int serverId) {
+  public Node setServerId(long serverId) {
     this.serverId = serverId;
     setServerIdIsSet(true);
     return this;
@@ -214,11 +214,11 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     }
   }
 
-  public int getPortId() {
+  public short getPortId() {
     return this.portId;
   }
 
-  public Node setPortId(int portId) {
+  public Node setPortId(short portId) {
     this.portId = portId;
     setPortIdIsSet(true);
     return this;
@@ -243,7 +243,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       if (value == null) {
         unsetServerId();
       } else {
-        setServerId((Integer)value);
+        setServerId((Long)value);
       }
       break;
 
@@ -259,7 +259,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       if (value == null) {
         unsetPortId();
       } else {
-        setPortId((Integer)value);
+        setPortId((Short)value);
       }
       break;
 
@@ -269,13 +269,13 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case SERVER_ID:
-      return Integer.valueOf(getServerId());
+      return Long.valueOf(getServerId());
 
     case ADDRESS:
       return getAddress();
 
     case PORT_ID:
-      return Integer.valueOf(getPortId());
+      return Short.valueOf(getPortId());
 
     }
     throw new IllegalStateException();
@@ -464,8 +464,8 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         }
         switch (schemeField.id) {
           case 1: // SERVER_ID
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.serverId = iprot.readI32();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.serverId = iprot.readI64();
               struct.setServerIdIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -480,8 +480,8 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
             }
             break;
           case 3: // PORT_ID
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.portId = iprot.readI32();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
+              struct.portId = iprot.readI16();
               struct.setPortIdIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -503,7 +503,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
 
       oprot.writeStructBegin(STRUCT_DESC);
       oprot.writeFieldBegin(SERVER_ID_FIELD_DESC);
-      oprot.writeI32(struct.serverId);
+      oprot.writeI64(struct.serverId);
       oprot.writeFieldEnd();
       if (struct.address != null) {
         oprot.writeFieldBegin(ADDRESS_FIELD_DESC);
@@ -511,7 +511,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         oprot.writeFieldEnd();
       }
       oprot.writeFieldBegin(PORT_ID_FIELD_DESC);
-      oprot.writeI32(struct.portId);
+      oprot.writeI16(struct.portId);
       oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -542,13 +542,13 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       }
       oprot.writeBitSet(optionals, 3);
       if (struct.isSetServerId()) {
-        oprot.writeI32(struct.serverId);
+        oprot.writeI64(struct.serverId);
       }
       if (struct.isSetAddress()) {
         oprot.writeString(struct.address);
       }
       if (struct.isSetPortId()) {
-        oprot.writeI32(struct.portId);
+        oprot.writeI16(struct.portId);
       }
     }
 
@@ -557,7 +557,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       TTupleProtocol iprot = (TTupleProtocol) prot;
       BitSet incoming = iprot.readBitSet(3);
       if (incoming.get(0)) {
-        struct.serverId = iprot.readI32();
+        struct.serverId = iprot.readI64();
         struct.setServerIdIsSet(true);
       }
       if (incoming.get(1)) {
@@ -565,7 +565,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         struct.setAddressIsSet(true);
       }
       if (incoming.get(2)) {
-        struct.portId = iprot.readI32();
+        struct.portId = iprot.readI16();
         struct.setPortIdIsSet(true);
       }
     }

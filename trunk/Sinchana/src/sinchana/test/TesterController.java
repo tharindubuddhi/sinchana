@@ -4,19 +4,20 @@
  */
 package sinchana.test;
 
-import sinchana.RoutingHandler;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Set;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
-import sinchana.thrift.Node;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import sinchana.Server;
 
 /**
  *
@@ -27,32 +28,32 @@ public class TesterController {
 		/**
 		 * 
 		 */
-		public static final String LOCAL_SERVER_ADDRESS = "localhost";
+//		public static final String LOCAL_SERVER_ADDRESS = "localhost";
 //		public static final String LOCAL_SERVER_ADDRESS = "10.8.108.59";
 		/**
 		 * 
 		 */
-		public static final int LOCAL_PORT_ID_RANGE = 8000;
+		public static final short LOCAL_PORT_ID_RANGE = 8000;
 		/**
 		 * 
 		 */
-		public static final String REMOTE_SERVER_ADDRESS = "localhost";
+//		public static final String REMOTE_SERVER_ADDRESS = "localhost";
 		/**
 		 * 
 		 */
-		public static final int REMOTE_SERVER_ID = 0;
+//		public static final int REMOTE_SERVER_ID = 0;
 		/**
 		 * 
 		 */
-		public static final int REMOTE_SERVER_PORT_ID = 8000 + REMOTE_SERVER_ID;
+//		public static final short REMOTE_SERVER_PORT_ID = 8000 + REMOTE_SERVER_ID;
 		/**
 		 * 
 		 */
-		public static int NUM_OF_TESTING_NODES = 2;
+		public static short NUM_OF_TESTING_NODES = 0;
 		/**
 		 * 
 		 */
-		public static int NUM_OF_AUTO_TESTING_NODES = 1;
+		public static short NUM_OF_AUTO_TESTING_NODES = 1;
 		/**
 		 * 
 		 */
@@ -67,19 +68,26 @@ public class TesterController {
 		 * 
 		 */
 		public static int max_buffer_size = 0;
-		private Tester[] testServers;
+		private Map<Short, Tester> testServers = new HashMap<>();
 		private ControllerUI cui;
 		private int completedCount = 0;
 		private Semaphore startLock = new Semaphore(0);
-		private Map<Integer, Integer> expectedCountMap = new HashMap<>();
-		private int[] keySpace = new int[RoutingHandler.GRID_SIZE];
-		private int[] testIds;
+		private Map<Long, Long> expectedCountMap = new HashMap<>();
+		private Map<Long, Long> keySpace = new HashMap<>();
 
 		/**
 		 * 
 		 * @param args
 		 */
 		public static void main(String[] args) {
+				try {
+						URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=true");
+						URLConnection yc = yahoo.openConnection();
+						InputStreamReader isr = new InputStreamReader(yc.getInputStream());
+						isr.close();
+				} catch (Exception e) {
+						System.out.println("Error " + e.getLocalizedMessage());
+				}
 				TesterController testerController = new TesterController();
 		}
 
@@ -90,94 +98,46 @@ public class TesterController {
 
 		/**
 		 * 
-		 * @param id
-		 * @param rid
-		 */
-		public void join(int id, int rid) {
-				Node n = new Node();
-				n.serverId = REMOTE_SERVER_ID;
-				n.portId = REMOTE_SERVER_PORT_ID;
-				n.address = REMOTE_SERVER_ADDRESS;
-				Tester tester = new Tester(id, n, this);
-				//		new Server().startNode(sid, sid + LOCAL_PORT_ID_RANGE, LOCAL_SERVER_ADDRESS, n);
-		}
-
-		private int[] generateIds(int numberOfIds) {
-				int temp;
-				List<Integer> nodeIds = new ArrayList<>();
-				nodeIds.add(REMOTE_SERVER_ID);
-				while (nodeIds.size() < numberOfIds) {
-						temp = (int) (Math.random() * RoutingHandler.GRID_SIZE);
-						if (temp != 0 && !nodeIds.contains(temp)) {
-								nodeIds.add(temp);
-						}
-				}
-				int[] tIds = new int[numberOfIds];
-				temp = 0;
-				for (Integer i : nodeIds) {
-						tIds[temp++] = i;
-				}
-				return tIds;
-		}
-
-		public void startNodes(String nodeIds) {
-				Node n = new Node();
-				n.serverId = REMOTE_SERVER_ID;
-				n.portId = REMOTE_SERVER_PORT_ID;
-				n.address = REMOTE_SERVER_ADDRESS;
-				String[] nids = nodeIds.trim().split("-");
-				for (String string : nids) {
-						int id = Integer.parseInt(string);
-						Tester tester = new Tester(id, n, this);
-						tester.resetTester();
-						tester.startServer();
-				}
-		}
-
-		/**
-		 * 
 		 * @param numOfTesters
 		 */
-		public void startNodeSet(int numOfTesters) {
+		public void startNodeSet(short numOfTesters) {
 				String[] coloms = {"Node ID", "Start", "End", "Duration"};
 				cui.initTableInfo(coloms);
 				try {
-						NUM_OF_TESTING_NODES = numOfTesters;
+						Tester tester;
+						for (short i = NUM_OF_TESTING_NODES; i < NUM_OF_TESTING_NODES + numOfTesters; i++) {
+								tester = new Tester(i, this);
+								testServers.put(i, tester);
+						}
+						NUM_OF_TESTING_NODES += numOfTesters;
+						long[] testServerIds = new long[NUM_OF_TESTING_NODES];
 
-						testIds = this.generateIds(NUM_OF_TESTING_NODES);
+						for (short i = 0; i < NUM_OF_TESTING_NODES; i++) {
+								testServerIds[i] = testServers.get(i).getServerId();
+						}
 
-						for (int i = 0; i < testIds.length; i++) {
-								int j = testIds[i];
-								System.out.print(j + " ");
+						Arrays.sort(testServerIds);
+						for (long i : testServerIds) {
+								System.out.print(i + " ");
 						}
 						System.out.println("");
-
-						Node n = new Node();
-						n.serverId = REMOTE_SERVER_ID;
-						n.portId = REMOTE_SERVER_PORT_ID;
-						n.address = REMOTE_SERVER_ADDRESS;
-
-						testServers = new Tester[NUM_OF_TESTING_NODES];
-						for (int i = 0; i < testServers.length; i++) {
-								testServers[i] = new Tester(testIds[i], n, this);
-						}
-
-						Arrays.sort(testIds);
-						generateKeySpace(testIds, keySpace);
-						generateExpectedCountMap(testIds);
-
-						for (int i = 0; i < testServers.length; i++) {
-								testServers[i].setExpectedCount(expectedCountMap.get(testServers[i].getServerId()));
-								testServers[i].setRealKeySpace(keySpace);
-								testServers[i].resetTester();
-								testServers[i].startServer();
+//						generateKeySpace(testServerIds, keySpace);
+//						generateExpectedCountMap(testServerIds);
+						Set<Short> keySet = testServers.keySet();
+						for (Short key : keySet) {
+								Tester server = testServers.get(key);
+								if (!server.isRunning()) {
+										server.resetTester();
+										server.startServer();
+										System.out.println("Server " + server.getServerId() + " is running...");
+								}
 						}
 
 						startLock.acquire();
 
 						Object[][] tableData = new Object[NUM_OF_TESTING_NODES][4];
-						for (int i = 0; i < testServers.length; i++) {
-								tableData[i][0] = testServers[i].getServerId();
+//						for (int i = 0; i < testServers.length; i++) {
+//								tableData[i][0] = testServers[i].getServerId();
 //								tableData[i][1] = testServers[i].getStartTime().get(Calendar.HOUR_OF_DAY)
 //										+ ":" + testServers[i].getStartTime().get(Calendar.MINUTE)
 //										+ ":" + testServers[i].getStartTime().get(Calendar.SECOND)
@@ -188,8 +148,8 @@ public class TesterController {
 //										+ ":" + testServers[i].getEndTime().get(Calendar.MILLISECOND);
 //								tableData[i][3] = testServers[i].getEndTime().getTimeInMillis()
 //										- testServers[i].getStartTime().getTimeInMillis();
-						}
-						cui.setTableInfo(tableData);
+//						}
+//						cui.setTableInfo(tableData);
 				} catch (InterruptedException ex) {
 						Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 				}
@@ -199,23 +159,27 @@ public class TesterController {
 		 * 
 		 * @param numOfAutoTesters
 		 */
-		public void startAutoTest(int numOfAutoTesters) {
+		public void startAutoTest(short numOfAutoTesters) {
 				String[] coloms = {"Node ID", "Expected", "Recieved", "Precentage", "Resolved", "Precentage"};
 				cui.initTableInfo(coloms);
 
 				NUM_OF_AUTO_TESTING_NODES = numOfAutoTesters;
-				Arrays.sort(testIds);
-				generateKeySpace(testIds, keySpace);
-				generateExpectedCountMap(testIds);
+				long[] testServerIds = new long[NUM_OF_TESTING_NODES];
+				for (int i = 0; i < NUM_OF_TESTING_NODES; i++) {
+//						testServerIds[i] = testServers[i].getServerId();
+				}
+				Arrays.sort(testServerIds);
+				generateKeySpace(testServerIds, keySpace);
+				generateExpectedCountMap(testServerIds);
 
 				for (int i = 0; i < NUM_OF_TESTING_NODES; i++) {
-						testServers[i].setExpectedCount(expectedCountMap.get(testServers[i].getServerId()));
-						testServers[i].setRealKeySpace(keySpace);
-						testServers[i].resetTester();
+//						testServers[i].setExpectedCount(expectedCountMap.get(testServers[i].getServerId()));
+//						testServers[i].setRealKeySpace(keySpace);
+//						testServers[i].resetTester();
 				}
-				TesterController.lifeTimeCounter = 0;
+				Calendar startTime = Calendar.getInstance();
 				for (int i = 0; i < NUM_OF_AUTO_TESTING_NODES; i++) {
-						testServers[i].startTest();
+//						testServers[i].startTest();
 				}
 				int tCount = 0;
 				boolean running = true;
@@ -231,69 +195,82 @@ public class TesterController {
 						timeNow = Calendar.getInstance().getTimeInMillis();
 						tCount++;
 						cui.setStatus("   " + tCount);
-						for (Tester tester : testServers) {
-								if (timeNow - tester.getEndTime().getTimeInMillis() < AUTO_TEST_TIMEOUT * 1000) {
-										running = true;
-										break;
-								}
-						}
+//						for (Tester tester : testServers) {
+//								if (timeNow - tester.getEndTime().getTimeInMillis() < AUTO_TEST_TIMEOUT * 1000) {
+//										running = true;
+//										break;
+//								}
+//						}
 				}
+				Calendar endTime = Calendar.getInstance();
 				setAutoTestTableInfo();
 				testKeySpaces();
 
-				int averageLife = TesterController.lifeTimeCounter
-						/ (TesterController.NUM_OF_AUTO_TESTING_NODES * RoutingHandler.GRID_SIZE);
+
+				int resolvedCount = 0;
+				int avarageLifeCount = 0;
+//				for (Tester tester : testServers) {
+//						resolvedCount += tester.getResolvedCount();
+//						avarageLifeCount += tester.getLifeTimeCount();
+//				}
+
+				int averageLife = (int) (avarageLifeCount
+						/ (TesterController.NUM_OF_AUTO_TESTING_NODES * Server.GRID_SIZE));
 				System.out.println("Average life used is "
 						+ (TesterController.AUTO_TEST_MESSAGE_LIFE_TIME - averageLife));
+				long time = endTime.getTimeInMillis() - startTime.getTimeInMillis();
+				long throughPut = resolvedCount * 1000 / time;
+				System.out.println(resolvedCount + " resolves in " + time + "ms. Message throughput: " + throughPut);
 
 		}
 
 		private void setAutoTestTableInfo() {
 				Object[][] tableData = new Object[NUM_OF_TESTING_NODES][6];
-				for (int i = 0; i < testServers.length; i++) {
-						tableData[i][0] = testServers[i].getServerId();
-						tableData[i][1] = expectedCountMap.get(testServers[i].getServerId());
-						tableData[i][2] = testServers[i].getRecievedCount();
-						tableData[i][3] = (testServers[i].getRecievedCount() * 100
-								/ expectedCountMap.get(testServers[i].getServerId())) + "%";
-						tableData[i][4] = testServers[i].getResolvedCount();
-						tableData[i][5] = (testServers[i].getResolvedCount() * 100 / RoutingHandler.GRID_SIZE) + "%";
-				}
+//				for (int i = 0; i < testServers.length; i++) {
+//						tableData[i][0] = testServers[i].getServerId();
+//						tableData[i][1] = expectedCountMap.get(testServers[i].getServerId());
+//						tableData[i][2] = testServers[i].getRecievedCount();
+//						tableData[i][3] = (testServers[i].getRecievedCount() * 100
+//								/ expectedCountMap.get(testServers[i].getServerId())) + "%";
+//						tableData[i][4] = testServers[i].getResolvedCount();
+//						tableData[i][5] = (testServers[i].getResolvedCount() * 100 / Server.GRID_SIZE) + "%";
+//				}
 				cui.setTableInfo(tableData);
 		}
 
-		private void generateKeySpace(int[] tIds, int[] ks) {
-				int i, tc = 0;
-				for (i = 0; tc < ks.length; i++) {
+		private void generateKeySpace(long[] tIds, Map<Long, Long> ks) {
+				long i;
+				int tc = 0;
+				for (i = 0; tc < Server.GRID_SIZE; i++) {
 						if (i > tIds[tc]) {
 								tc++;
 								if (tc == tIds.length) {
 										break;
 								}
 						}
-						ks[i] = tIds[tc];
+						ks.put(i, tIds[tc]);
 				}
-				for (; i < ks.length; i++) {
-						ks[i] = tIds[0];
+				for (; i < Server.GRID_SIZE; i++) {
+						ks.put(i, tIds[0]);
 				}
 		}
 
 		private void testKeySpaces() {
-				int[] tempKeySpace;
-				int failCount;
+				Map<Long, Long> tempKeySpace;
+				long failCount;
 				for (int i = 0; i < NUM_OF_AUTO_TESTING_NODES; i++) {
 						failCount = 0;
-						tempKeySpace = testServers[i].getKeySpace();
-						for (int j = 0; j < tempKeySpace.length; j++) {
-								if (tempKeySpace[j] != keySpace[j]) {
-										failCount++;
-								}
+//						tempKeySpace = testServers[i].getKeySpace();
+						for (long j = 0; j < Server.GRID_SIZE; j++) {
+//								if (tempKeySpace.get(j) != keySpace.get(j)) {
+//										failCount++;
+//								}
 						}
 						if (failCount == 0) {
-								System.out.println("Tester " + testServers[i].getServerId() + "'s key space is matching 100%");
+//								System.out.println("Tester " + testServers[i].getServerId() + "'s key space is matching 100%");
 						} else {
-								System.out.println("Tester " + testServers[i].getServerId()
-										+ "'s key space is invalid " + (failCount * 100 / tempKeySpace.length) + "%");
+//								System.out.println("Tester " + testServers[i].getServerId()
+//										+ "'s key space is invalid " + (failCount * 100 / Server.GRID_SIZE) + "%");
 						}
 //						System.out.println("Expected map");
 //						printKeySpace(keySpace);
@@ -302,10 +279,10 @@ public class TesterController {
 				}
 		}
 
-		private void generateExpectedCountMap(int[] testIds) {
+		private void generateExpectedCountMap(long[] testIds) {
 				expectedCountMap.clear();
 				expectedCountMap.put(testIds[0],
-						(RoutingHandler.GRID_SIZE - testIds[testIds.length - 1] + testIds[0]) * NUM_OF_AUTO_TESTING_NODES);
+						(Server.GRID_SIZE - testIds[testIds.length - 1] + testIds[0]) * NUM_OF_AUTO_TESTING_NODES);
 				for (int i = 1; i < testIds.length; i++) {
 						expectedCountMap.put(testIds[i], (testIds[i] - testIds[i - 1]) * NUM_OF_AUTO_TESTING_NODES);
 				}
@@ -316,7 +293,12 @@ public class TesterController {
 		 * 
 		 */
 		public void startRingTest() {
-				testServers[0].startRingTest();
+				Set<Short> keySet = testServers.keySet();
+				for (Short key : keySet) {
+						testServers.get(key).startRingTest();
+						break;
+				}
+
 		}
 
 		/**
@@ -332,28 +314,20 @@ public class TesterController {
 				}
 		}
 
-		private void printKeySpace(int[] ks) {
-				StringBuffer sb = new StringBuffer("");
-				for (int i = 0; i < ks.length; i++) {
-						sb.append(" ").append(ks[i]);
-				}
-				System.out.println(sb);
-		}
-
 		/**
 		 * 
 		 * @param text
 		 * @param destination
 		 * @param requester
 		 */
-		public void send(String text, int destination, int requester) {
-				for (Tester tester : testServers) {
-						if (tester.getServerId() == requester) {
+		public void send(String text, long destination, long requester) {
+				Set<Short> keySet = testServers.keySet();
+				for (Short key : keySet) {
+						if (testServers.get(key).getServerId() == requester) {
 								Message msg = new Message(null, MessageType.GET, 10);
 								msg.setTargetKey(destination);
 								msg.setMessage(text);
-								tester.getServer().send(msg);
-								break;
+								testServers.get(key).getServer().send(msg);
 						}
 				}
 		}
@@ -365,7 +339,8 @@ public class TesterController {
 		 * @param classIdsString
 		 * @param locationsString
 		 */
-		public void printLogs(String nodeIdsString, String typesString, String classIdsString, String locationsString) {
+		public void printLogs(String nodeIdsString, String typesString, String classIdsString,
+				String locationsString, String containTextString) {
 				String[] temp;
 				int[] nodeIds = null, levels = null, classIds = null, locations = null;
 				if (nodeIdsString.length() > 0) {
@@ -396,7 +371,7 @@ public class TesterController {
 								locations[i] = Integer.parseInt(temp[i]);
 						}
 				}
-				sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations);
+				sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations, containTextString);
 		}
 
 		/**
@@ -411,7 +386,10 @@ public class TesterController {
 		}
 		public static int lifeTimeCounter = 0;
 
-		public static synchronized void incLifeTimeCounter(int life) {
-				lifeTimeCounter += life;
+		public void trigger() {
+				Set<Short> keySet = testServers.keySet();
+				for (Short key : keySet) {
+						testServers.get(key).trigger();
+				}
 		}
 }

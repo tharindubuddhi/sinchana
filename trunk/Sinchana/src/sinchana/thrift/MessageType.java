@@ -18,7 +18,8 @@ public enum MessageType implements org.apache.thrift.TEnum {
   FIND_SUCCESSOR(3),
   ERROR(4),
   ACCEPT(5),
-  TEST_RING(6);
+  VERIFY_RING(6),
+  TEST_RING(7);
 
   private final int value;
 
@@ -52,6 +53,8 @@ public enum MessageType implements org.apache.thrift.TEnum {
       case 5:
         return ACCEPT;
       case 6:
+        return VERIFY_RING;
+      case 7:
         return TEST_RING;
       default:
         return null;
