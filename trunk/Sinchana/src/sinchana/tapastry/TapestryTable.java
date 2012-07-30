@@ -186,7 +186,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		@Override
 		public Set<Node> getNeighbourSet() {
 				//initializes an empty node set.
-				Set<Node> neighbourSet = new HashSet<>();
+				Set<Node> neighbourSet = new HashSet<Node>();
 				for (Node[] nodes : fingerTable) {
 						for (Node node : nodes) {
 								/**
