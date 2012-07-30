@@ -72,12 +72,12 @@ public class TesterController {
      * 
      */
     public static int max_buffer_size = 0;
-    private Map<Short, Tester> testServers = new HashMap<>();
+    private Map<Short, Tester> testServers = new HashMap<Short, Tester>();
     private ControllerUI cui;
     private int completedCount = 0;
     private Semaphore startLock = new Semaphore(0);
-    private Map<Long, Long> expectedCountMap = new HashMap<>();
-    private Map<Long, Long> keySpace = new HashMap<>();
+    private Map<Long, Long> expectedCountMap = new HashMap<Long, Long>();
+    private Map<Long, Long> keySpace = new HashMap<Long, Long>();
 
     /**
      * 
@@ -86,8 +86,8 @@ public class TesterController {
     public static void main(String[] args) {
         try {
             Properties systemProperties = System.getProperties();
-            systemProperties.setProperty("http.proxyHost", "cache.mrt.ac.lk");
-            systemProperties.setProperty("http.proxyPort", "3128");
+            systemProperties.setProperty("http.proxyHost", "cache.mrt.ac.lk");      // this line to set the proxy settings
+            systemProperties.setProperty("http.proxyPort", "3128");                 // this line is to set the proxy settings
             URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=false");
             URLConnection yc = yahoo.openConnection();
             InputStreamReader isr = new InputStreamReader(yc.getInputStream());
