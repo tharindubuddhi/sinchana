@@ -151,7 +151,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		@Override
 		public Set<Node> getNeighbourSet() {
 				//initializes an empty node set.
-				Set<Node> neighbourSet = new HashSet<>();
+				Set<Node> neighbourSet = new HashSet<Node>();
 				for (FingerTableEntry fingerTableEntry : fingerTable) {
 						/**
 						 * add each successor in the finger table to the set if it is
