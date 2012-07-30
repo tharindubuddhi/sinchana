@@ -7,6 +7,9 @@ package sinchana.test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.SocketAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import sinchana.Server;
@@ -20,6 +23,7 @@ import sinchana.util.logging.Logger;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -40,7 +44,7 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		private Calendar startTime;
 		private Calendar endTime;
 		private Semaphore threadLock = new Semaphore(0);
-		private Map<Long, Long> keySpace = new HashMap<>();
+		private Map<Long, Long> keySpace = new HashMap<Long, Long>();
 		private Map<Long, Long> realKeySpace;
 		private boolean running = false;
 
@@ -371,9 +375,11 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 								in.close();
 								return node;
 						}
-				} catch (IOException | NumberFormatException e) {
+				} catch (IOException e) {
 						throw new RuntimeException("Invalid response from the cache server!", e);
-				}
+				} catch(NumberFormatException e){
+                                                throw new RuntimeException("Invalid response from the cache server!", e);
+                                }
 				return null;
 		}
 
