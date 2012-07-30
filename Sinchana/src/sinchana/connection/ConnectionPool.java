@@ -22,7 +22,7 @@ import sinchana.util.logging.Logger;
  */
 public class ConnectionPool {
 
-		private Map<Long, TTransport> pool = new HashMap<>();
+		private Map<Long, TTransport> pool = new HashMap<Long, TTransport>();
 		private Server server;
 		private static final int NUM_OF_MAX_CONNECTIONS = 18;
 
@@ -52,7 +52,7 @@ public class ConnectionPool {
 				Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 				Set<Long> keySet = pool.keySet();
 				boolean terminate;
-				Set<Long> idsToTerminate = new HashSet<>();
+				Set<Long> idsToTerminate = new HashSet<Long>();
 				for (long sid : keySet) {
 						terminate = true;
 						for (Node node : neighbourSet) {
