@@ -57,9 +57,12 @@ public class Server extends Node {
 		public Server(short portId) {
 				try {
 						InetAddress inetAddress = InetAddress.getLocalHost();
-						this.serverId = Hash.generateId(inetAddress.getAddress(), portId, GRID_SIZE);
-						this.portId = portId;
-						this.address = inetAddress.getHostAddress();
+                                                byte[] a = new byte[]{10,8,108,11};
+						//this.serverId = Hash.generateId(inetAddress.getAddress(), portId, GRID_SIZE);
+						this.serverId = Hash.generateId(a, portId, GRID_SIZE);
+                                                this.portId = portId;
+						//this.address = inetAddress.getHostAddress();
+                                                this.address = "10.8.108.11";
 				} catch (UnknownHostException ex) {
 						throw new RuntimeException("Error getting local host ip.", ex);
 				}
