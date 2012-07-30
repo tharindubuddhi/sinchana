@@ -26,9 +26,11 @@ public class Hash {
 						byte[] digest = cript.digest();
 						lsb = digest[digest.length - 1];
 //						lsb = digest[0];
-				} catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+				} catch (UnsupportedEncodingException ex) {
 						throw new RuntimeException("Error calculating hash value", ex);
-				}
+				} catch(NoSuchAlgorithmException ex){
+                                               throw new RuntimeException("Error calculating hash value", ex);
+                                }
 
 				long id = 0;
 				int t0 = portId % 256;
@@ -73,11 +75,13 @@ public class Hash {
 						long id = tid % gridSize;
 						check(id);
 						return id;
-				} catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+				} catch (UnsupportedEncodingException ex) {
 						throw new RuntimeException("Error calculating hash value", ex);
-				}
+				} catch (NoSuchAlgorithmException ex){
+                                                throw new RuntimeException("Error calculating hash value", ex);
+                                }
 		}
-		private static Set<Long> ids = new HashSet<>();
+		private static Set<Long> ids = new HashSet<Long>();
 
 		private static synchronized void check(long id) {
 				if (ids.contains(id)) {
