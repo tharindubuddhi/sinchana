@@ -60,6 +60,9 @@ public class Server extends Node {
 						this.serverId = Hash.generateId(inetAddress.getAddress(), portId, GRID_SIZE);
 						this.portId = portId;
 						this.address = inetAddress.getHostAddress();
+//						byte[] ta = new byte[]{50, 0, 0, 50};
+//						this.serverId = Hash.generateId(ta, portId, GRID_SIZE);
+//						this.address = "50.0.0.50";
 				} catch (UnknownHostException ex) {
 						throw new RuntimeException("Error getting local host ip.", ex);
 				}

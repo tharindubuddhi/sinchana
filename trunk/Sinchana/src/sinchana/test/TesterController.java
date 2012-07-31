@@ -40,6 +40,8 @@ public class TesterController {
 		private int completedCount = 0;
 		private final Semaphore startLock = new Semaphore(0);
 		private final Timer timer = new Timer();
+		private final Timer timer2 = new Timer();
+		private long numOfTestMessages = 0;
 
 		/**
 		 * 
@@ -61,13 +63,15 @@ public class TesterController {
 				cui.setVisible(true);
 				timer.scheduleAtFixedRate(new TimerTask() {
 
-						int totalMessageIncome, totalInputMessageQueue, totalOutputMessageQueue;
+						long totalMessageIncome, totalInputMessageQueue, totalOutputMessageQueue, totalResolves;
+						long newTime, oldTime = Calendar.getInstance().getTimeInMillis();
 
 						@Override
 						public void run() {
 								totalMessageIncome = 0;
 								totalInputMessageQueue = 0;
 								totalOutputMessageQueue = 0;
+								totalResolves = 0;
 								long[] testData;
 								Set<Short> keySet = testServers.keySet();
 								for (Short tid : keySet) {
@@ -75,15 +79,29 @@ public class TesterController {
 										totalMessageIncome += testData[0];
 										totalInputMessageQueue += testData[1];
 										totalOutputMessageQueue += testData[2];
+										totalResolves += testData[3];
 								}
+								newTime = Calendar.getInstance().getTimeInMillis();
 
 								if (completedCount != 0) {
-										cui.setStat("ic: " + (totalMessageIncome / completedCount)
-												+ "    ib: " + (totalInputMessageQueue / completedCount)
-												+ "    ob: " + (totalOutputMessageQueue / completedCount));
+										cui.setStat("IC: " + (totalMessageIncome / completedCount)
+												+ "    IB: " + (totalInputMessageQueue / completedCount)
+												+ "    OB: " + (totalOutputMessageQueue / completedCount)
+												+ "    TR: " + totalResolves
+												+ "    TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S");
 								}
+								oldTime = newTime;
 						}
 				}, 1000, 1000);
+				timer2.scheduleAtFixedRate(new TimerTask() {
+
+						@Override
+						public void run() {
+								if (numOfTestMessages != 0) {
+										testMessages(numOfTestMessages / 10);
+								}
+						}
+				}, 100, 100);
 		}
 
 		/**
@@ -128,6 +146,10 @@ public class TesterController {
 		 * @param numOfAutoTesters
 		 */
 		public void startAutoTest(long numOfTestMessages) {
+				this.numOfTestMessages = numOfTestMessages;
+		}
+
+		public void testMessages(long numOfTestMessages) {
 				int numOfTestServers = testServers.size();
 				short randomId;
 				long randomAmount = 0;
