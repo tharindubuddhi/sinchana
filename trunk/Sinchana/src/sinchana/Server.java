@@ -57,15 +57,18 @@ public class Server extends Node {
 		public Server(short portId) {
 				try {
 						InetAddress inetAddress = InetAddress.getLocalHost();
-                                                byte[] a = new byte[]{10,8,108,11};
-						//this.serverId = Hash.generateId(inetAddress.getAddress(), portId, GRID_SIZE);
-						this.serverId = Hash.generateId(a, portId, GRID_SIZE);
-                                                this.portId = portId;
-						//this.address = inetAddress.getHostAddress();
-                                                this.address = "10.8.108.11";
+						this.serverId = Hash.generateId(inetAddress.getAddress(), portId, GRID_SIZE);
+						this.portId = portId;
+						this.address = inetAddress.getHostAddress();
 				} catch (UnknownHostException ex) {
 						throw new RuntimeException("Error getting local host ip.", ex);
 				}
+		}
+
+		public Server(InetAddress localInetAddress, short portId) {
+				this.serverId = Hash.generateId(localInetAddress.getAddress(), portId, GRID_SIZE);
+				this.portId = portId;
+				this.address = localInetAddress.getHostAddress();
 		}
 
 		public void setAnotherNode(Node anotherNode) {
@@ -176,8 +179,9 @@ public class Server extends Node {
 		 * @param destination	Destination ID to receive message.
 		 * @param message		Message string.
 		 */
-		public void send(int destination, String message) {
+		public void send(long destination, String message) {
 				Message msg = new Message(this, MessageType.GET, MESSAGE_LIFETIME);
+				msg.setTargetKey(destination);
 				msg.setMessage(message);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);

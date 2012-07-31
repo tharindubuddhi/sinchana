@@ -7,11 +7,14 @@ package sinchana.test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import sinchana.Server;
 import sinchana.SinchanaInterface;
 import sinchana.SinchanaTestInterface;
@@ -20,7 +23,6 @@ import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -33,20 +35,13 @@ import java.util.concurrent.Semaphore;
 public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnable {
 
 		private Server server;
-		private long expectedCount = 0;
-		private long recievedCount = 0;
-		private long resolvedCount = 0;
-		private int lifeTimeCount = 0;
-		private int ringCount = 0;
 		private short testId;
 		private ServerUI gui = null;
 		private TesterController testerController;
-		private Calendar startTime;
-		private Calendar endTime;
 		private Semaphore threadLock = new Semaphore(0);
 		private Map<Long, Long> keySpace = new HashMap<Long, Long>();
-		private Map<Long, Long> realKeySpace;
 		private boolean running = false;
+		private long numOfTestingMessages = 0;
 
 		/**
 		 * 
@@ -55,19 +50,24 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * @param tc
 		 */
 		public Tester(short testId, TesterController tc) {
-
-				this.testId = testId;
-				this.testerController = tc;
-				server = new Server(
-						(short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
-				Node node = getRemoteNode(server.serverId,
-						server.address, server.portId);
-				server.setAnotherNode(node);
-				server.registerSinchanaInterface(this);
-				server.registerSinchanaTestInterface(this);
-				server.startServer();
-				if (TesterController.GUI_ON) {
-						this.gui = new ServerUI(this);
+				try {
+						this.testId = testId;
+						this.testerController = tc;
+						InetAddress[] ip = InetAddress.getAllByName("localhost");
+						System.out.println(testId + ": " + ip[0].toString());
+						server = new Server(ip[0],
+								(short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
+						Node node = getRemoteNode(server.serverId,
+								server.address, server.portId);
+						server.setAnotherNode(node);
+						server.registerSinchanaInterface(this);
+						server.registerSinchanaTestInterface(this);
+						server.startServer();
+						if (TesterController.GUI_ON) {
+								this.gui = new ServerUI(this);
+						}
+				} catch (UnknownHostException ex) {
+						ex.printStackTrace();
 				}
 		}
 
@@ -76,7 +76,6 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 */
 		public void startServer() {
 				Thread thread = new Thread(this);
-				startTime = Calendar.getInstance();
 				thread.start();
 				this.running = true;
 		}
@@ -92,7 +91,8 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		/**
 		 * 
 		 */
-		public void startTest() {
+		public void startTest(long numOfTestingMessages) {
+				this.numOfTestingMessages = numOfTestingMessages;
 				threadLock.release();
 		}
 
@@ -105,16 +105,6 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				this.server.send(msg);
 		}
 
-		/**
-		 * 
-		 */
-		public void resetTester() {
-				recievedCount = 0;
-				resolvedCount = 0;
-				ringCount = 0;
-				lifeTimeCount = 0;
-		}
-
 		@Override
 		public Message receive(Message message) {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_TESTER, 0,
@@ -122,31 +112,20 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				Message response = null;
 				switch (message.type) {
 						case ACCEPT:
-//								if (realKeySpace[message.targetKey] != message.source.serverId) {
-//										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 1,
-//												"Resolving error : " + message);
-//								} else {
-//										resolvedCount++;
-//								}
-//								keySpace[message.getTargetKey()] = message.source.serverId;
+								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+										"Recieved ACCEPT message : " + message);
 								break;
 						case ERROR:
-								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 2,
-										"Recieved error message : " + message);
+								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+										"Recieved ERROR message : " + message);
 								break;
 						case GET:
-//								if (realKeySpace[message.targetKey] != this.server.serverId) {
-//										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
-//												"Receiving error : " + message);
-//								} else {
-//										recievedCount++;
-//										lifeTimeCount += message.lifetime;
-//										response = new Message(this.server, MessageType.ACCEPT, 1);
-//										response.setTargetKey(message.getTargetKey());
-//								}
+								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+										"Recieved GET message : " + message);
+//								response = new Message(this.server, MessageType.ACCEPT, 1);
+//								response.setTargetKey(message.getTargetKey());
 								break;
 				}
-				endTime = Calendar.getInstance();
 				return response;
 		}
 
@@ -157,18 +136,14 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 								this.gui.setServerId(server.serverId);
 								this.gui.setVisible(true);
 						}
-//						startTime = Calendar.getInstance();
 						server.join();
 						while (true) {
 								threadLock.acquire();
-								resetTester();
-								while (ringCount < Server.GRID_SIZE) {
-										Message msg = new Message(this.server, MessageType.GET,
-												TesterController.AUTO_TEST_MESSAGE_LIFE_TIME);
-										msg.setTargetKey(ringCount);
-										msg.setMessage("");
-										this.server.send(msg);
-										ringCount++;
+								long randomDestination;
+								while (numOfTestingMessages > 0) {
+										randomDestination = (long) (Math.random() * Server.GRID_SIZE);
+										server.send(randomDestination, "where are you?");
+										numOfTestingMessages--;
 								}
 						}
 				} catch (InterruptedException ex) {
@@ -188,7 +163,6 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 						if (this.gui != null) {
 								this.gui.setMessage("stabilized!");
 						}
-						endTime = Calendar.getInstance();
 						testerController.incrementCompletedCount(this.testId);
 				}
 		}
@@ -241,64 +215,12 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 		 * 
 		 * @return
 		 */
-		public long getExpectedCount() {
-				return expectedCount;
-		}
-
-		/**
-		 * 
-		 * @param expectedCount
-		 */
-		public void setExpectedCount(long expectedCount) {
-				this.expectedCount = expectedCount;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public Calendar getEndTime() {
-				return endTime;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public long getRecievedCount() {
-				return recievedCount;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
 		public long getServerId() {
 				return server.serverId;
 		}
 
 		public int getTestId() {
 				return testId;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public Calendar getStartTime() {
-				return startTime;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public long getResolvedCount() {
-				return resolvedCount;
-		}
-
-		public int getLifeTimeCount() {
-				return lifeTimeCount;
 		}
 
 		/**
@@ -317,19 +239,9 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				return server;
 		}
 
-		/**
-		 * 
-		 * @param realKeySpace
-		 */
-		public void setRealKeySpace(Map<Long, Long> realKeySpace) {
-				this.realKeySpace = realKeySpace;
-		}
-
 		public boolean isRunning() {
 				return running;
 		}
-		
-		
 
 		/**
 		 * 
@@ -367,7 +279,12 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 						BufferedReader in = new BufferedReader(isr);
 						String resp = in.readLine();
 						System.out.println(testId + ":\tresp: " + resp);
-						if (resp != null && !resp.equalsIgnoreCase("n/a")) {
+						if (resp == null || resp.equalsIgnoreCase("null")) {
+								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
+										"Error in getting remote server details.");
+								return null;
+						}
+						if (!resp.equalsIgnoreCase("n/a")) {
 								Node node = new Node();
 								node.serverId = Long.parseLong(resp.split(":")[0]);
 								node.address = resp.split(":")[1];
@@ -377,13 +294,51 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 						}
 				} catch (IOException e) {
 						throw new RuntimeException("Invalid response from the cache server!", e);
-				} catch(NumberFormatException e){
-                                                throw new RuntimeException("Invalid response from the cache server!", e);
-                                }
+				} catch (NumberFormatException e) {
+						throw new RuntimeException("Invalid response from the cache server!", e);
+				}
 				return null;
 		}
 
 		void trigger() {
 				this.server.trigger();
+		}
+		private long inputMessageCount = 0;
+		private long avarageInputMessageQueueSize = 0;
+		private long inputMessageQueueTimesCount = 0;
+		private long avarageOutputMessageQueueSize = 0;
+		private long outputMessageQueueTimesCount = 0;
+		private long requestCount = 0;
+
+		@Override
+		public void incIncomingMessageCount() {
+				inputMessageCount++;
+		}
+
+		@Override
+		public void setMessageQueueSize(int size) {
+				avarageInputMessageQueueSize += size;
+				inputMessageQueueTimesCount++;
+		}
+
+		@Override
+		public void setOutMessageQueueSize(int size) {
+				avarageOutputMessageQueueSize += size;
+				outputMessageQueueTimesCount++;
+		}
+
+		public long[] getTestData() {
+				long[] data = new long[4];
+				data[0] = inputMessageCount;
+				data[1] = inputMessageQueueTimesCount == 0 ? 0 : (avarageInputMessageQueueSize / inputMessageQueueTimesCount);
+				data[2] = outputMessageQueueTimesCount == 0 ? 0 : (avarageOutputMessageQueueSize / outputMessageQueueTimesCount);
+				data[3] = requestCount;
+				inputMessageCount = 0;
+				avarageInputMessageQueueSize = 0;
+				inputMessageQueueTimesCount = 0;
+				avarageOutputMessageQueueSize = 0;
+				outputMessageQueueTimesCount = 0;
+				requestCount = 0;
+				return data;
 		}
 }

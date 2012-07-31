@@ -72,6 +72,10 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 		public void setStatus(String status) {
 				this.statusField.setText(status);
 		}
+		
+		public void setStat(String status) {
+				this.statField.setText(status);
+		}
 
 		/** This method is called from within the constructor to
 		 * initialize the form.
@@ -102,6 +106,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 message = new javax.swing.JTextField();
                 sendButton = new javax.swing.JButton();
                 joinJoinPanel = new javax.swing.JPanel();
+                statField = new javax.swing.JLabel();
                 triggerButton = new javax.swing.JButton();
                 jScrollPane1 = new javax.swing.JScrollPane();
                 table = new javax.swing.JTable();
@@ -214,8 +219,12 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
                 joinJoinPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
+                statField.setText("Stat");
+                statField.setPreferredSize(new java.awt.Dimension(420, 24));
+                joinJoinPanel.add(statField);
+
                 triggerButton.setText("Trigger Optimize");
-                triggerButton.setPreferredSize(new java.awt.Dimension(180, 24));
+                triggerButton.setPreferredSize(new java.awt.Dimension(64, 24));
                 triggerButton.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
                                 triggerButtonActionPerformed(evt);
@@ -409,6 +418,7 @@ private void triggerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN
         private javax.swing.JButton sendButton;
         private javax.swing.JPanel sendMessagePanel;
         private javax.swing.JButton startNodeSetButton;
+        private javax.swing.JLabel statField;
         private javax.swing.JLabel statusField;
         private javax.swing.JTable table;
         private javax.swing.JButton triggerButton;
