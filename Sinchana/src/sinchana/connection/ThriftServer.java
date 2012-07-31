@@ -29,7 +29,7 @@ import sinchana.util.messagequeue.MessageQueue;
  * @author Hiru
  */
 public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
-		
+
 		private Server server;
 		private TServer tServer;
 		private boolean running;
@@ -39,7 +39,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private static final int MESSAGE_QUEUE_SIZE = 4196;
 		private static final int NUM_OF_MAX_RETRIES = 3;
 		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageEventHandler() {
-				
+
 				@Override
 				public void process(Message message) {
 						if (server.getSinchanaTestInterface() != null) {
@@ -64,8 +64,8 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 												"Messaage is terminated as lifetime expired! :: " + message);
 										break;
 								case PortHandler.REMOTE_SERVER_ERROR:
-										server.getRoutingHandler().removeNode(message.destination);
-										server.getRoutingHandler().optimize();
+												server.getRoutingHandler().removeNode(message.destination);
+												server.getRoutingHandler().optimize();
 										break;
 						}
 				}
@@ -109,7 +109,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				}
 				return PortHandler.ACCEPT_ERROR;
 		}
-		
+
 		@Override
 		public void run() {
 				try {
@@ -143,7 +143,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				} catch (InterruptedException ex) {
 						ex.printStackTrace();
 				}
-				
+
 				this.runningLocal = true;
 				messageQueue.start();
 				if (this.server.getSinchanaTestInterface() != null) {
@@ -187,14 +187,17 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						this.server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 				}
 		}
-		
+
 		private void queueMessage(Message message) {
-				if (!this.messageQueue.queueMessage(message)) {
+				if (this.messageQueue.queueMessage(message)) {
+						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 1,
+								"Queued in transport buffer: " + message);
+				} else {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
 								"Message is unacceptable 'cos transport buffer is full! " + message);
 				}
 		}
-		
+
 		private int send(Message message) {
 				message.lifetime--;
 				if (message.lifetime < 0) {
@@ -205,7 +208,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				if (transport == null) {
 						return PortHandler.REMOTE_SERVER_ERROR;
 				}
-				
+
 				try {
 						TProtocol protocol = new TBinaryProtocol(transport);
 						DHTServer.Client client = new DHTServer.Client(protocol);

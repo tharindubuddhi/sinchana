@@ -21,7 +21,7 @@ public class TestClass {
 				InetAddress[] ip = InetAddress.getAllByName("localhost");
 				System.out.println(ip[0].toString());
 
-				final Server sinchanaServer = new Server(ip[0], (short) 2000);
+				final Server sinchanaServer = new Server((short) 2000);
 
 				sinchanaServer.registerSinchanaInterface(new SinchanaInterface() {
 
@@ -49,7 +49,7 @@ public class TestClass {
 
 
 
-				final Server sinchanaServer2 = new Server(ip[0], (short) 2001);
+				final Server sinchanaServer2 = new Server((short) 2001);
 
 				sinchanaServer2.registerSinchanaInterface(new SinchanaInterface() {
 

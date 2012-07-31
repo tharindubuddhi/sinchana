@@ -49,25 +49,25 @@ public class ConnectionPool {
 						return pool.get(serverId);
 				}
 
-				Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
-				Set<Long> keySet = pool.keySet();
-				boolean terminate;
-				Set<Long> idsToTerminate = new HashSet<Long>();
-				for (long sid : keySet) {
-						terminate = true;
-						for (Node node : neighbourSet) {
-								if (node.serverId == sid) {
-										terminate = false;
-										break;
+						Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
+						Set<Long> keySet = pool.keySet();
+						boolean terminate;
+						Set<Long> idsToTerminate = new HashSet<Long>();
+						for (long sid : keySet) {
+								terminate = true;
+								for (Node node : neighbourSet) {
+										if (node.serverId == sid) {
+												terminate = false;
+												break;
+										}
+								}
+								if (terminate) {
+										idsToTerminate.add(sid);
 								}
 						}
-						if (terminate) {
-								idsToTerminate.add(sid);
+						for (Long id : idsToTerminate) {
+								closeConnection(id);
 						}
-				}
-				for (Long id : idsToTerminate) {
-						closeConnection(id);
-				}
 
 				TTransport transport = new TSocket(address, portId);
 				try {
@@ -77,10 +77,10 @@ public class ConnectionPool {
 				} catch (TTransportException ex) {
 						System.out.println("msg " + ex.getLocalizedMessage());
 						System.out.println("type is " + ex.getType());
-						return null;
-				}
+								return null;
+						}
 
-				pool.put(serverId, transport);
+						pool.put(serverId, transport);
 				if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
 								"Maximum number of connections opened exceeded! ("

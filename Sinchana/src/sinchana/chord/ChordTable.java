@@ -93,8 +93,12 @@ public class ChordTable implements RoutingHandler, Runnable {
 		@Override
 		public void optimize() {
 				synchronized (this) {
-						this.importNeighbours(this.predecessor);
-						this.importNeighbours(this.successor);
+						if (this.serverId != this.predecessor.serverId) {
+								this.importNeighbours(this.predecessor);
+						}
+						if (this.serverId != this.successor.serverId) {
+								this.importNeighbours(this.successor);
+						}
 				}
 		}
 
