@@ -4,8 +4,6 @@
  */
 package sinchana.chord;
 
-import java.util.logging.Level;
-import sinchana.PortHandler;
 import sinchana.RoutingHandler;
 import sinchana.Server;
 import sinchana.thrift.Message;
@@ -21,6 +19,7 @@ import java.util.Set;
  */
 public class ChordTable implements RoutingHandler, Runnable {
 
+		private static final int OPTIMIZE_TIME_OUT = 5;
 		public static final int TABLE_SIZE = (int) (Math.log(Server.GRID_SIZE) / Math.log(2));
 
 		static {
@@ -35,6 +34,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 		private Node successor = null;
 		private Node predecessor = null;
 		private long serverId;
+		private Thread thread = new Thread(this);
+		private int timeOutCount = 0;
 
 		/**
 		 * Class constructor with the server instance where the routing table is initialize.
@@ -42,6 +43,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		 */
 		public ChordTable(Server server) {
 				this.server = server;
+				this.thread.start();
 		}
 
 		/**
@@ -90,10 +92,10 @@ public class ChordTable implements RoutingHandler, Runnable {
 		 */
 		@Override
 		public void optimize() {
-				synchronized(this){
+				synchronized (this) {
 						this.importNeighbours(this.predecessor);
 						this.importNeighbours(this.successor);
-				}				
+				}
 		}
 
 		/**
@@ -105,6 +107,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 						"Importing neighbour set from " + neighbour.serverId);
 				Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBOURS, 256);
 				this.server.getPortHandler().send(msg, neighbour);
+				timeOutCount = 0;
 		}
 
 		@Override
@@ -301,13 +304,15 @@ public class ChordTable implements RoutingHandler, Runnable {
 		@Override
 		public void run() {
 				while (true) {
-						this.optimize();
 						try {
-								Thread.sleep(5000);
+								Thread.sleep(1000);
+								if (++timeOutCount >= OPTIMIZE_TIME_OUT) {
+										timeOutCount = 0;
+										this.optimize();
+								}
 						} catch (InterruptedException ex) {
-								java.util.logging.Logger.getLogger(ChordTable.class.getName()).log(Level.SEVERE, null, ex);
+								ex.printStackTrace();
 						}
-						break;
 				}
 		}
 

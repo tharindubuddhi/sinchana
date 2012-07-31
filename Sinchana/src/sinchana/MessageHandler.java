@@ -42,6 +42,9 @@ public class MessageHandler {
 						 * Once the node receives it's JOIN message, the joining is 
 						 * completed and all the messages are processed with no restriction.
 						 */
+						if (server.getSinchanaTestInterface() != null) {
+								server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
+						}
 						processMessage(message);
 
 				}
@@ -90,7 +93,12 @@ public class MessageHandler {
 				}
 
 				if (messageQueue.queueMessage(message)) {
-//						System.out.println(this.server.serverId + ": queued :: " + message);
+						if (this.server.getSinchanaTestInterface() != null) {
+								this.server.getSinchanaTestInterface().incIncomingMessageCount();
+								this.server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
+						}
+						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 0,
+								"Queued: " + message);
 						return true;
 				} else {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 0,
