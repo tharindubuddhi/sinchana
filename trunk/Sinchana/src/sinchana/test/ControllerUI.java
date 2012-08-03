@@ -429,7 +429,7 @@ private void triggerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN
 				if (Thread.currentThread().getId() == this.startNodeThreadId) {
 						testerController.startNodeSet(Short.parseShort(this.numOfTesters.getText()));
 				} else if (Thread.currentThread().getId() == this.startAutoTestThreadId) {
-						testerController.startAutoTest(Short.parseShort(this.numOfAutoTesters.getText()));
+						testerController.testMessages(Short.parseShort(this.numOfAutoTesters.getText()));
 						this.autoTestButton.setEnabled(true);
 				}
 		}
