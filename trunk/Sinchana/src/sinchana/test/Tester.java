@@ -49,10 +49,12 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 						this.testId = testId;
 						this.testerController = tc;
 						InetAddress[] ip = InetAddress.getAllByName("localhost");
-						System.out.println(testId + ": " + ip[0].toString());
-						server = new Server(ip[0],
-								(short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
-						Node node = getRemoteNode(server.serverId,
+//						System.out.println(testId + ": " + ip[0].toString());
+//						server = new Server(ip[0],
+//								(short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
+						server = new Server((short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
+						
+                                                Node node = getRemoteNode(server.serverId,
 								server.address, server.portId);
 						server.setAnotherNode(node);
 						server.registerSinchanaInterface(this);
