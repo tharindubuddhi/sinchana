@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
@@ -35,7 +36,7 @@ public class TesterController {
 		public static final int ROUND_TIP_TIME = 0;
 		public static final int AUTO_TEST_MESSAGE_LIFE_TIME = 120;
 		public static int max_buffer_size = 0;
-		private final Map<Short, Tester> testServers = new HashMap<>();
+		private final Map<Short, Tester> testServers = new HashMap<Short, Tester>();
 		private final ControllerUI cui = new ControllerUI(this);
 		private int completedCount = 0;
 		private final Semaphore startLock = new Semaphore(0);
@@ -49,7 +50,10 @@ public class TesterController {
 		 */
 		public static void main(String[] args) {
 				try {
-						URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=true");
+//                                                Properties props = System.getProperties();
+//                                                props.put("http.proxyHost", "cache.mrt.ac.lk");
+//                                                props.put("http.proxyPort", "3128");
+						URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=false");
 						URLConnection yc = yahoo.openConnection();
 						InputStreamReader isr = new InputStreamReader(yc.getInputStream());
 						isr.close();
