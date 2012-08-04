@@ -9,10 +9,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TTransportException;
 import sinchana.Server;
+import sinchana.thrift.DHTServer;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 
@@ -22,7 +20,7 @@ import sinchana.util.logging.Logger;
  */
 public class ConnectionPool {
 
-		private Map<Long, TTransport> pool = new HashMap<Long, TTransport>();
+		private Map<Long, Connection> pool = new HashMap<Long, Connection>();
 		private Server server;
 		private static final int NUM_OF_MAX_CONNECTIONS = 18;
 
@@ -44,65 +42,50 @@ public class ConnectionPool {
 		 * @param portId		Port id of the destination.
 		 * @return				TTransport connection opened to the destination.
 		 */
-		public TTransport getConnection(long serverId, String address, int portId) {
-				if (pool.containsKey(serverId)) {
-						return pool.get(serverId);
+		public DHTServer.Client getConnection(long serverId, String address, int portId) {
+				synchronized (this) {
+						if (pool.containsKey(serverId)) {
+								return pool.get(serverId).open();
+						}
+						Connection connection = new Connection(address, portId);
+						pool.put(serverId, connection);
+						if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
+								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
+										"Maximum number of connections opened exceeded! ("
+										+ pool.size() + "/" + NUM_OF_MAX_CONNECTIONS + " are opened)");
+								getSpace();
+						}
+						return connection.open();
 				}
-
-						Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
-						Set<Long> keySet = pool.keySet();
-						boolean terminate;
-						Set<Long> idsToTerminate = new HashSet<Long>();
-						for (long sid : keySet) {
-								terminate = true;
-								for (Node node : neighbourSet) {
-										if (node.serverId == sid) {
-												terminate = false;
-												break;
-										}
-								}
-								if (terminate) {
-										idsToTerminate.add(sid);
-								}
-						}
-						for (Long id : idsToTerminate) {
-								closeConnection(id);
-						}
-
-				TTransport transport = new TSocket(address, portId);
-				try {
-						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_CONNECTION_POOL, 0,
-								"Opening connection to " + serverId + "........\t# of connections opened: " + pool.size());
-						transport.open();
-				} catch (TTransportException ex) {
-						System.out.println("msg " + ex.getLocalizedMessage());
-						System.out.println("type is " + ex.getType());
-								return null;
-						}
-
-						pool.put(serverId, transport);
-				if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
-								"Maximum number of connections opened exceeded! ("
-								+ pool.size() + "/" + NUM_OF_MAX_CONNECTIONS + " are opened)");
-				}
-				return transport;
 		}
 
-		/**
-		 * Closes the connection to the given destination, if it is available in 
-		 * the connection pool.  
-		 * @param serverId		Server id to close the connection.
-		 */
-		public void closeConnection(long serverId) {
-				if (pool.containsKey(serverId)) {
-						TTransport tTransport = pool.get(serverId);
-						if (tTransport.isOpen()) {
-								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_CONNECTION_POOL, 2,
-										"Clossing connection to " + serverId + "......");
-								tTransport.close();
+		private void getSpace() {
+				Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
+				Set<Long> keySet = pool.keySet();
+				boolean terminate;
+				Set<Long> idsToTerminate = new HashSet<Long>();
+				for (long sid : keySet) {
+						terminate = true;
+						for (Node node : neighbourSet) {
+								if (node.serverId == sid) {
+										terminate = false;
+										break;
+								}
 						}
-						pool.remove(serverId);
+						if (terminate) {
+								idsToTerminate.add(sid);
+						}
+				}
+				for (Long id : idsToTerminate) {
+						pool.get(id).reset();
+						pool.remove(id);
+				}
+		}
+
+		public void resetConnection(long id) {
+				synchronized (this) {
+						pool.get(id).reset();
+						pool.remove(id);
 				}
 		}
 
@@ -110,14 +93,14 @@ public class ConnectionPool {
 		 * Closes all the connections in the connection pool.
 		 */
 		public void closeAllConnections() {
-				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 3,
-						"Clossing all the connections.");
-				Collection<TTransport> values = pool.values();
-				for (TTransport tTransport : values) {
-						if (tTransport.isOpen()) {
-								tTransport.close();
+				synchronized (this) {
+						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 3,
+								"Clossing all the connections.");
+						Collection<Connection> values = pool.values();
+						for (Connection connection : values) {
+								connection.reset();
 						}
+						pool.clear();
 				}
-				pool.clear();
 		}
 }

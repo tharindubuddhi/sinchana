@@ -4,24 +4,19 @@
  */
 package sinchana.connection;
 
-import java.util.concurrent.Semaphore;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
 import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
-import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.PortHandler;
 import sinchana.Server;
 import sinchana.test.TesterController;
 import sinchana.thrift.Node;
-import sinchana.util.messagequeue.MessageEventHandler;
 import sinchana.util.messagequeue.MessageQueue;
 
 /**
@@ -32,13 +27,11 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 
 		private Server server;
 		private TServer tServer;
-		private boolean running;
-		private boolean runningLocal;
 		private ConnectionPool connectionPool;
-		private Semaphore serverRun = new Semaphore(0);
 		private static final int MESSAGE_QUEUE_SIZE = 4196;
-		private static final int NUM_OF_MAX_RETRIES = 3;
-		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageEventHandler() {
+		private static final int NUM_OF_MAX_SEND_RETRIES = 3;
+		private static final int NUM_OF_MAX_CONNECT_RETRIES = 3;
+		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageQueue.MessageEventHandler() {
 
 				@Override
 				public void process(Message message) {
@@ -50,7 +43,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 								case PortHandler.ACCEPT_ERROR:
 								case PortHandler.LOCAL_SERVER_ERROR:
 										message.retryCount++;
-										if (message.retryCount > NUM_OF_MAX_RETRIES) {
+										if (message.retryCount > NUM_OF_MAX_SEND_RETRIES) {
 												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 														"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
 										} else {
@@ -64,8 +57,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 												"Messaage is terminated as lifetime expired! :: " + message);
 										break;
 								case PortHandler.REMOTE_SERVER_ERROR:
-												server.getRoutingHandler().removeNode(message.destination);
-												server.getRoutingHandler().optimize();
+										server.getRoutingHandler().removeNode(message.destination);
 										break;
 						}
 				}
@@ -78,8 +70,6 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		public ThriftServer(Server svr) {
 				this.server = svr;
 				this.connectionPool = new ConnectionPool(svr);
-				this.running = false;
-				this.runningLocal = false;
 		}
 
 		/**
@@ -98,12 +88,6 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 								ex.printStackTrace();
 						}
 				}
-				if (!runningLocal) {
-						return PortHandler.REMOTE_SERVER_ERROR;
-				}
-//				if (message.type == sinchana.thrift.MessageType.GET && message.targetKey == 88) {
-//						return PortHandler.ACCEPT_ERROR;
-//				}
 				if (this.server.getMessageHandler().queueMessage(message)) {
 						return PortHandler.SUCCESS;
 				}
@@ -119,10 +103,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 								new TThreadPoolServer.Args(serverTransport).processor(processor));
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 0,
 								"Starting the server on port " + this.server.getPortId());
-						this.running = true;
-						serverRun.release();
 						tServer.serve();
-						this.running = false;
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 								"Server is shutting down...");
 				} catch (TTransportException ex) {
@@ -134,17 +115,17 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		 * 
 		 */
 		@Override
-		public void startServer() {
-				if (!this.running) {
+		public synchronized void startServer() {
+				if (tServer == null || !tServer.isServing()) {
 						new Thread(this).start();
+						while (tServer == null || !tServer.isServing()) {
+								try {
+										Thread.sleep(100);
+								} catch (InterruptedException ex) {
+										ex.printStackTrace();
+								}
+						}
 				}
-				try {
-						serverRun.acquire();
-				} catch (InterruptedException ex) {
-						ex.printStackTrace();
-				}
-
-				this.runningLocal = true;
 				messageQueue.start();
 				if (this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setServerIsRunning(true);
@@ -156,18 +137,16 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		 */
 		@Override
 		public void stopServer() {
-//				if (this.running && this.tServer != null) {
-//						tServer.stop();
-//				}
 				messageQueue.reset();
-				this.runningLocal = false;
+				if (tServer != null && tServer.isServing()) {
+						tServer.stop();
+				}
 				this.connectionPool.closeAllConnections();
 				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 						"Server is shutting down...");
 				if (this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setServerIsRunning(false);
 				}
-				serverRun.release();
 		}
 
 		/**
@@ -203,36 +182,28 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 				if (message.lifetime < 0) {
 						return PortHandler.MESSAGE_LIFE_TIME_EXPIRED;
 				}
-				TTransport transport = connectionPool.getConnection(
-						message.destination.serverId, message.destination.address, message.destination.portId);
-				if (transport == null) {
-						return PortHandler.REMOTE_SERVER_ERROR;
-				}
-
+				DHTServer.Client client;
 				try {
-						TProtocol protocol = new TBinaryProtocol(transport);
-						DHTServer.Client client = new DHTServer.Client(protocol);
-						
-						return client.transfer(message);
-						
-						
-				} catch (TTransportException ex) {
-						if (ex.toString().split(":")[1].trim().equals("java.net.ConnectException")) {
+						client = connectionPool.getConnection(
+								message.destination.serverId, message.destination.address, message.destination.portId);
+						if (client == null) {
 								return PortHandler.REMOTE_SERVER_ERROR;
-						} else if (ex.toString().split(":")[1].trim().equals("java.net.SocketException")) {
-								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 4,
-										"Falied to connect " + ex.toString() + message.destination.address + ":" + message.destination.portId + " " + ex.getMessage() + " :: " + message);
 						}
+						return client.transfer(message);
+
+				} catch (TTransportException ex) {
+						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 5,
+								"Error " + ex.getClass().getName() + " - " + message.destination.address + ":" + message.destination.portId);
 						return PortHandler.REMOTE_SERVER_ERROR;
 				} catch (TException ex) {
 						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 5,
-								"Falied to connect 1 " + message.destination.address + ":" + message.destination.portId);
-						return PortHandler.LOCAL_SERVER_ERROR;
+								"Error " + ex.getClass().getName() + " - " + message.destination.address + ":" + message.destination.portId);
+						return PortHandler.REMOTE_SERVER_ERROR;
 				} catch (Exception ex) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 6,
-								"Falied to connect 2 " + message.destination.address + ":" + message.destination.portId);
+						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 5,
+								"Error " + ex.getClass().getName() + " - " + message.destination.address + ":" + message.destination.portId);
 						ex.printStackTrace();
-						return PortHandler.LOCAL_SERVER_ERROR;
+						return PortHandler.REMOTE_SERVER_ERROR;
 				}
 		}
 }

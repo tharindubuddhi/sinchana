@@ -5,6 +5,7 @@
 package sinchana.util.tools;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
@@ -28,9 +29,9 @@ public class Hash {
 //						lsb = digest[0];
 				} catch (UnsupportedEncodingException ex) {
 						throw new RuntimeException("Error calculating hash value", ex);
-				} catch(NoSuchAlgorithmException ex){
-                                               throw new RuntimeException("Error calculating hash value", ex);
-                                }
+				} catch (NoSuchAlgorithmException ex) {
+						throw new RuntimeException("Error calculating hash value", ex);
+				}
 
 				long id = 0;
 				int t0 = portId % 256;
@@ -52,7 +53,7 @@ public class Hash {
 				id *= 256;
 
 				id += ((address[0] + 256) % 256);
-				
+
 				id = id % gridSize;
 
 				check(id);
@@ -77,9 +78,9 @@ public class Hash {
 						return id;
 				} catch (UnsupportedEncodingException ex) {
 						throw new RuntimeException("Error calculating hash value", ex);
-				} catch (NoSuchAlgorithmException ex){
-                                                throw new RuntimeException("Error calculating hash value", ex);
-                                }
+				} catch (NoSuchAlgorithmException ex) {
+						throw new RuntimeException("Error calculating hash value", ex);
+				}
 		}
 		private static Set<Long> ids = new HashSet<Long>();
 
@@ -88,5 +89,34 @@ public class Hash {
 						throw new RuntimeException("Duplicating ID " + id + "! Go & find a new hash function :P");
 				}
 				ids.add(id);
+		}
+
+		public static void main(String[] args) {
+				String text = "this will be hashed";
+				String hashed;
+
+				try {
+						MessageDigest cript = MessageDigest.getInstance("SHA-1");
+						cript.reset();
+						cript.update(text.getBytes("utf8"));
+						byte[] digest = cript.digest();
+						for (byte b : digest) {
+								System.out.print(" " + b);
+						}
+						System.out.println("");
+						hashed = new BigInteger(1, digest).toString(64);
+						System.out.println(hashed);
+						byte[] reByte = hashed.getBytes("utf8");
+						for (byte b : reByte) {
+								System.out.print(" " + b);
+						}
+						System.out.println("");
+						
+				} catch (UnsupportedEncodingException ex) {
+						ex.printStackTrace();
+				} catch (NoSuchAlgorithmException ex) {
+						throw new RuntimeException("Error calculating hash value", ex);
+				}
+
 		}
 }

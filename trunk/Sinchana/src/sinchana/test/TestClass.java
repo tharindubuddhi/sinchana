@@ -26,16 +26,21 @@ public class TestClass {
 				sinchanaServer.registerSinchanaInterface(new SinchanaInterface() {
 
 						@Override
-						public Message receive(Message message) {
-
+						public Message request(Message message) {
 								System.out.println("S1: " + message);
-
-								Message message2 = new Message(sinchanaServer, MessageType.ACCEPT, 1);
-
+								Message message2 = new Message(sinchanaServer, MessageType.RESPONSE, 1);
 								message2.setMessage("S1: " + "response form " + message.message);
-
 								return message2;
+						}
 
+						@Override
+						public void response(Message message) {
+								throw new UnsupportedOperationException("Not supported yet.");
+						}
+
+						@Override
+						public void error(Message message) {
+								throw new UnsupportedOperationException("Not supported yet.");
 						}
 				});
 
@@ -54,12 +59,18 @@ public class TestClass {
 				sinchanaServer2.registerSinchanaInterface(new SinchanaInterface() {
 
 						@Override
-						public Message receive(Message message) {
+						public Message request(Message message) {
+								throw new UnsupportedOperationException("Not supported yet.");
+						}
 
-								System.out.println("S2: " + message);
+						@Override
+						public void response(Message message) {
+								throw new UnsupportedOperationException("Not supported yet.");
+						}
 
-								return null;
-
+						@Override
+						public void error(Message message) {
+								throw new UnsupportedOperationException("Not supported yet.");
 						}
 				});
 
@@ -89,7 +100,7 @@ public class TestClass {
 
 
 
-				Message message2 = new Message(sinchanaServer2, MessageType.GET, 10);
+				Message message2 = new Message(sinchanaServer2, MessageType.REQUEST, 10);
 
 				message2.setMessage("Hello");
 

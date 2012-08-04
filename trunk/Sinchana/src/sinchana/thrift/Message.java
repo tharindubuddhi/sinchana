@@ -42,9 +42,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final org.apache.thrift.protocol.TField START_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("startOfRange", org.apache.thrift.protocol.TType.I64, (short)10);
   private static final org.apache.thrift.protocol.TField END_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("endOfRange", org.apache.thrift.protocol.TType.I64, (short)11);
   private static final org.apache.thrift.protocol.TField NEIGHBOUR_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("neighbourSet", org.apache.thrift.protocol.TType.SET, (short)12);
-  private static final org.apache.thrift.protocol.TField TARGET_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("targetKey", org.apache.thrift.protocol.TType.I64, (short)13);
-  private static final org.apache.thrift.protocol.TField RETRY_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("retryCount", org.apache.thrift.protocol.TType.I32, (short)14);
-  private static final org.apache.thrift.protocol.TField TIME_STAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStamp", org.apache.thrift.protocol.TType.I64, (short)15);
+  private static final org.apache.thrift.protocol.TField TO_REMOVE_NODE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("toRemoveNodeSet", org.apache.thrift.protocol.TType.SET, (short)13);
+  private static final org.apache.thrift.protocol.TField TARGET_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("targetKey", org.apache.thrift.protocol.TType.I64, (short)14);
+  private static final org.apache.thrift.protocol.TField RETRY_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("retryCount", org.apache.thrift.protocol.TType.I32, (short)15);
+  private static final org.apache.thrift.protocol.TField TIME_STAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStamp", org.apache.thrift.protocol.TType.I64, (short)16);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -68,6 +69,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public long startOfRange; // optional
   public long endOfRange; // optional
   public Set<Node> neighbourSet; // optional
+  public Set<Node> toRemoveNodeSet; // optional
   public long targetKey; // optional
   public int retryCount; // optional
   public long timeStamp; // optional
@@ -90,9 +92,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     START_OF_RANGE((short)10, "startOfRange"),
     END_OF_RANGE((short)11, "endOfRange"),
     NEIGHBOUR_SET((short)12, "neighbourSet"),
-    TARGET_KEY((short)13, "targetKey"),
-    RETRY_COUNT((short)14, "retryCount"),
-    TIME_STAMP((short)15, "timeStamp");
+    TO_REMOVE_NODE_SET((short)13, "toRemoveNodeSet"),
+    TARGET_KEY((short)14, "targetKey"),
+    RETRY_COUNT((short)15, "retryCount"),
+    TIME_STAMP((short)16, "timeStamp");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -131,11 +134,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           return END_OF_RANGE;
         case 12: // NEIGHBOUR_SET
           return NEIGHBOUR_SET;
-        case 13: // TARGET_KEY
+        case 13: // TO_REMOVE_NODE_SET
+          return TO_REMOVE_NODE_SET;
+        case 14: // TARGET_KEY
           return TARGET_KEY;
-        case 14: // RETRY_COUNT
+        case 15: // RETRY_COUNT
           return RETRY_COUNT;
-        case 15: // TIME_STAMP
+        case 16: // TIME_STAMP
           return TIME_STAMP;
         default:
           return null;
@@ -185,7 +190,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final int __RETRYCOUNT_ISSET_ID = 5;
   private static final int __TIMESTAMP_ISSET_ID = 6;
   private BitSet __isset_bit_vector = new BitSet(7);
-  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP};
+  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.TO_REMOVE_NODE_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -212,6 +217,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     tmpMap.put(_Fields.END_OF_RANGE, new org.apache.thrift.meta_data.FieldMetaData("endOfRange", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.NEIGHBOUR_SET, new org.apache.thrift.meta_data.FieldMetaData("neighbourSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
+            new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
+    tmpMap.put(_Fields.TO_REMOVE_NODE_SET, new org.apache.thrift.meta_data.FieldMetaData("toRemoveNodeSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
     tmpMap.put(_Fields.TARGET_KEY, new org.apache.thrift.meta_data.FieldMetaData("targetKey", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -277,6 +285,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       this.neighbourSet = __this__neighbourSet;
     }
+    if (other.isSetToRemoveNodeSet()) {
+      Set<Node> __this__toRemoveNodeSet = new HashSet<Node>();
+      for (Node other_element : other.toRemoveNodeSet) {
+        __this__toRemoveNodeSet.add(new Node(other_element));
+      }
+      this.toRemoveNodeSet = __this__toRemoveNodeSet;
+    }
     this.targetKey = other.targetKey;
     this.retryCount = other.retryCount;
     this.timeStamp = other.timeStamp;
@@ -304,6 +319,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     setEndOfRangeIsSet(false);
     this.endOfRange = 0;
     this.neighbourSet = null;
+    this.toRemoveNodeSet = null;
     setTargetKeyIsSet(false);
     this.targetKey = 0;
     setRetryCountIsSet(false);
@@ -619,6 +635,45 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
+  public int getToRemoveNodeSetSize() {
+    return (this.toRemoveNodeSet == null) ? 0 : this.toRemoveNodeSet.size();
+  }
+
+  public java.util.Iterator<Node> getToRemoveNodeSetIterator() {
+    return (this.toRemoveNodeSet == null) ? null : this.toRemoveNodeSet.iterator();
+  }
+
+  public void addToToRemoveNodeSet(Node elem) {
+    if (this.toRemoveNodeSet == null) {
+      this.toRemoveNodeSet = new HashSet<Node>();
+    }
+    this.toRemoveNodeSet.add(elem);
+  }
+
+  public Set<Node> getToRemoveNodeSet() {
+    return this.toRemoveNodeSet;
+  }
+
+  public Message setToRemoveNodeSet(Set<Node> toRemoveNodeSet) {
+    this.toRemoveNodeSet = toRemoveNodeSet;
+    return this;
+  }
+
+  public void unsetToRemoveNodeSet() {
+    this.toRemoveNodeSet = null;
+  }
+
+  /** Returns true if field toRemoveNodeSet is set (has been assigned a value) and false otherwise */
+  public boolean isSetToRemoveNodeSet() {
+    return this.toRemoveNodeSet != null;
+  }
+
+  public void setToRemoveNodeSetIsSet(boolean value) {
+    if (!value) {
+      this.toRemoveNodeSet = null;
+    }
+  }
+
   public long getTargetKey() {
     return this.targetKey;
   }
@@ -786,6 +841,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       break;
 
+    case TO_REMOVE_NODE_SET:
+      if (value == null) {
+        unsetToRemoveNodeSet();
+      } else {
+        setToRemoveNodeSet((Set<Node>)value);
+      }
+      break;
+
     case TARGET_KEY:
       if (value == null) {
         unsetTargetKey();
@@ -851,6 +914,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     case NEIGHBOUR_SET:
       return getNeighbourSet();
 
+    case TO_REMOVE_NODE_SET:
+      return getToRemoveNodeSet();
+
     case TARGET_KEY:
       return Long.valueOf(getTargetKey());
 
@@ -895,6 +961,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       return isSetEndOfRange();
     case NEIGHBOUR_SET:
       return isSetNeighbourSet();
+    case TO_REMOVE_NODE_SET:
+      return isSetToRemoveNodeSet();
     case TARGET_KEY:
       return isSetTargetKey();
     case RETRY_COUNT:
@@ -1023,6 +1091,15 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (!(this_present_neighbourSet && that_present_neighbourSet))
         return false;
       if (!this.neighbourSet.equals(that.neighbourSet))
+        return false;
+    }
+
+    boolean this_present_toRemoveNodeSet = true && this.isSetToRemoveNodeSet();
+    boolean that_present_toRemoveNodeSet = true && that.isSetToRemoveNodeSet();
+    if (this_present_toRemoveNodeSet || that_present_toRemoveNodeSet) {
+      if (!(this_present_toRemoveNodeSet && that_present_toRemoveNodeSet))
+        return false;
+      if (!this.toRemoveNodeSet.equals(that.toRemoveNodeSet))
         return false;
     }
 
@@ -1189,6 +1266,16 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetToRemoveNodeSet()).compareTo(typedOther.isSetToRemoveNodeSet());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetToRemoveNodeSet()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.toRemoveNodeSet, typedOther.toRemoveNodeSet);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     lastComparison = Boolean.valueOf(isSetTargetKey()).compareTo(typedOther.isSetTargetKey());
     if (lastComparison != 0) {
       return lastComparison;
@@ -1333,6 +1420,16 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         sb.append("null");
       } else {
         sb.append(this.neighbourSet);
+      }
+      first = false;
+    }
+    if (isSetToRemoveNodeSet()) {
+      if (!first) sb.append(", ");
+      sb.append("toRemoveNodeSet:");
+      if (this.toRemoveNodeSet == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.toRemoveNodeSet);
       }
       first = false;
     }
@@ -1517,7 +1614,26 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 13: // TARGET_KEY
+          case 13: // TO_REMOVE_NODE_SET
+            if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
+              {
+                org.apache.thrift.protocol.TSet _set3 = iprot.readSetBegin();
+                struct.toRemoveNodeSet = new HashSet<Node>(2*_set3.size);
+                for (int _i4 = 0; _i4 < _set3.size; ++_i4)
+                {
+                  Node _elem5; // required
+                  _elem5 = new Node();
+                  _elem5.read(iprot);
+                  struct.toRemoveNodeSet.add(_elem5);
+                }
+                iprot.readSetEnd();
+              }
+              struct.setToRemoveNodeSetIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 14: // TARGET_KEY
             if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
               struct.targetKey = iprot.readI64();
               struct.setTargetKeyIsSet(true);
@@ -1525,7 +1641,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 14: // RETRY_COUNT
+          case 15: // RETRY_COUNT
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
               struct.retryCount = iprot.readI32();
               struct.setRetryCountIsSet(true);
@@ -1533,7 +1649,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 15: // TIME_STAMP
+          case 16: // TIME_STAMP
             if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
               struct.timeStamp = iprot.readI64();
               struct.setTimeStampIsSet(true);
@@ -1627,9 +1743,23 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldBegin(NEIGHBOUR_SET_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.neighbourSet.size()));
-            for (Node _iter3 : struct.neighbourSet)
+            for (Node _iter6 : struct.neighbourSet)
             {
-              _iter3.write(oprot);
+              _iter6.write(oprot);
+            }
+            oprot.writeSetEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.toRemoveNodeSet != null) {
+        if (struct.isSetToRemoveNodeSet()) {
+          oprot.writeFieldBegin(TO_REMOVE_NODE_SET_FIELD_DESC);
+          {
+            oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.toRemoveNodeSet.size()));
+            for (Node _iter7 : struct.toRemoveNodeSet)
+            {
+              _iter7.write(oprot);
             }
             oprot.writeSetEnd();
           }
@@ -1699,16 +1829,19 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetNeighbourSet()) {
         optionals.set(8);
       }
-      if (struct.isSetTargetKey()) {
+      if (struct.isSetToRemoveNodeSet()) {
         optionals.set(9);
       }
-      if (struct.isSetRetryCount()) {
+      if (struct.isSetTargetKey()) {
         optionals.set(10);
       }
-      if (struct.isSetTimeStamp()) {
+      if (struct.isSetRetryCount()) {
         optionals.set(11);
       }
-      oprot.writeBitSet(optionals, 12);
+      if (struct.isSetTimeStamp()) {
+        optionals.set(12);
+      }
+      oprot.writeBitSet(optionals, 13);
       if (struct.isSetId()) {
         oprot.writeI64(struct.id);
       }
@@ -1736,9 +1869,18 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetNeighbourSet()) {
         {
           oprot.writeI32(struct.neighbourSet.size());
-          for (Node _iter4 : struct.neighbourSet)
+          for (Node _iter8 : struct.neighbourSet)
           {
-            _iter4.write(oprot);
+            _iter8.write(oprot);
+          }
+        }
+      }
+      if (struct.isSetToRemoveNodeSet()) {
+        {
+          oprot.writeI32(struct.toRemoveNodeSet.size());
+          for (Node _iter9 : struct.toRemoveNodeSet)
+          {
+            _iter9.write(oprot);
           }
         }
       }
@@ -1763,7 +1905,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       struct.setTypeIsSet(true);
       struct.lifetime = iprot.readI32();
       struct.setLifetimeIsSet(true);
-      BitSet incoming = iprot.readBitSet(12);
+      BitSet incoming = iprot.readBitSet(13);
       if (incoming.get(0)) {
         struct.id = iprot.readI64();
         struct.setIdIsSet(true);
@@ -1802,27 +1944,41 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       if (incoming.get(8)) {
         {
-          org.apache.thrift.protocol.TSet _set5 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.neighbourSet = new HashSet<Node>(2*_set5.size);
-          for (int _i6 = 0; _i6 < _set5.size; ++_i6)
+          org.apache.thrift.protocol.TSet _set10 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.neighbourSet = new HashSet<Node>(2*_set10.size);
+          for (int _i11 = 0; _i11 < _set10.size; ++_i11)
           {
-            Node _elem7; // required
-            _elem7 = new Node();
-            _elem7.read(iprot);
-            struct.neighbourSet.add(_elem7);
+            Node _elem12; // required
+            _elem12 = new Node();
+            _elem12.read(iprot);
+            struct.neighbourSet.add(_elem12);
           }
         }
         struct.setNeighbourSetIsSet(true);
       }
       if (incoming.get(9)) {
+        {
+          org.apache.thrift.protocol.TSet _set13 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.toRemoveNodeSet = new HashSet<Node>(2*_set13.size);
+          for (int _i14 = 0; _i14 < _set13.size; ++_i14)
+          {
+            Node _elem15; // required
+            _elem15 = new Node();
+            _elem15.read(iprot);
+            struct.toRemoveNodeSet.add(_elem15);
+          }
+        }
+        struct.setToRemoveNodeSetIsSet(true);
+      }
+      if (incoming.get(10)) {
         struct.targetKey = iprot.readI64();
         struct.setTargetKeyIsSet(true);
       }
-      if (incoming.get(10)) {
+      if (incoming.get(11)) {
         struct.retryCount = iprot.readI32();
         struct.setRetryCountIsSet(true);
       }
-      if (incoming.get(11)) {
+      if (incoming.get(12)) {
         struct.timeStamp = iprot.readI64();
         struct.setTimeStampIsSet(true);
       }
