@@ -14,13 +14,11 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sinchana.Server;
 
 /**
  *
@@ -122,15 +120,15 @@ public class TesterController {
 								testServers.put(i, tester);
 						}
 						NUM_OF_TESTING_NODES += numOfTesters;
-						long[] testServerIds = new long[NUM_OF_TESTING_NODES];
+						String[] testServerIds = new String[NUM_OF_TESTING_NODES];
 
 						for (short i = 0; i < NUM_OF_TESTING_NODES; i++) {
 								testServerIds[i] = testServers.get(i).getServerId();
 						}
 
 						Arrays.sort(testServerIds);
-						for (long i : testServerIds) {
-								System.out.print(i + " ");
+						for (String id : testServerIds) {
+								System.out.print(id + " ");
 						}
 						System.out.println("");
 						Set<Short> keySet = testServers.keySet();
@@ -172,23 +170,6 @@ public class TesterController {
 				}
 		}
 
-		private void generateKeySpace(long[] tIds, Map<Long, Long> ks) {
-				long i;
-				int tc = 0;
-				for (i = 0; tc < Server.GRID_SIZE; i++) {
-						if (i > tIds[tc]) {
-								tc++;
-								if (tc == tIds.length) {
-										break;
-								}
-						}
-						ks.put(i, tIds[tc]);
-				}
-				for (; i < Server.GRID_SIZE; i++) {
-						ks.put(i, tIds[0]);
-				}
-		}
-
 		/**
 		 * 
 		 */
@@ -220,10 +201,10 @@ public class TesterController {
 		 * @param destination
 		 * @param requester
 		 */
-		public void send(String text, long destination, long requester) {
+		public void send(String text, String destination, String requester) {
 				Set<Short> keySet = testServers.keySet();
 				for (Short key : keySet) {
-						if (testServers.get(key).getServerId() == requester) {
+						if (testServers.get(key).getServerId().equals(requester)) {
 								Message msg = new Message(null, MessageType.REQUEST, 10);
 								msg.setTargetKey(destination);
 								msg.setMessage(text);
@@ -242,13 +223,10 @@ public class TesterController {
 		public void printLogs(String nodeIdsString, String typesString, String classIdsString,
 				String locationsString, String containTextString) {
 				String[] temp;
-				int[] nodeIds = null, levels = null, classIds = null, locations = null;
+				String[] nodeIds = null; 
+				int[] levels = null, classIds = null, locations = null;
 				if (nodeIdsString.length() > 0) {
-						temp = nodeIdsString.split(" ");
-						nodeIds = new int[temp.length];
-						for (int i = 0; i < nodeIds.length; i++) {
-								nodeIds[i] = Integer.parseInt(temp[i]);
-						}
+						nodeIds = nodeIdsString.split(" ");
 				}
 				if (typesString.length() > 0) {
 						temp = typesString.split(" ");

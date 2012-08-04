@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.io.Serializable, Cloneable {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Node");
 
-  private static final org.apache.thrift.protocol.TField SERVER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("serverId", org.apache.thrift.protocol.TType.I64, (short)1);
+  private static final org.apache.thrift.protocol.TField SERVER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("serverId", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField ADDRESS_FIELD_DESC = new org.apache.thrift.protocol.TField("address", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField PORT_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("portId", org.apache.thrift.protocol.TType.I16, (short)3);
 
@@ -40,7 +40,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     schemes.put(TupleScheme.class, new NodeTupleSchemeFactory());
   }
 
-  public long serverId; // required
+  public String serverId; // required
   public String address; // required
   public short portId; // required
 
@@ -109,14 +109,13 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   }
 
   // isset id assignments
-  private static final int __SERVERID_ISSET_ID = 0;
-  private static final int __PORTID_ISSET_ID = 1;
-  private BitSet __isset_bit_vector = new BitSet(2);
+  private static final int __PORTID_ISSET_ID = 0;
+  private BitSet __isset_bit_vector = new BitSet(1);
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.SERVER_ID, new org.apache.thrift.meta_data.FieldMetaData("serverId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.ADDRESS, new org.apache.thrift.meta_data.FieldMetaData("address", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.PORT_ID, new org.apache.thrift.meta_data.FieldMetaData("portId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
@@ -129,13 +128,12 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   }
 
   public Node(
-    long serverId,
+    String serverId,
     String address,
     short portId)
   {
     this();
     this.serverId = serverId;
-    setServerIdIsSet(true);
     this.address = address;
     this.portId = portId;
     setPortIdIsSet(true);
@@ -147,7 +145,9 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   public Node(Node other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
-    this.serverId = other.serverId;
+    if (other.isSetServerId()) {
+      this.serverId = other.serverId;
+    }
     if (other.isSetAddress()) {
       this.address = other.address;
     }
@@ -160,34 +160,34 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
 
   @Override
   public void clear() {
-    setServerIdIsSet(false);
-    this.serverId = 0;
+    this.serverId = null;
     this.address = null;
     setPortIdIsSet(false);
     this.portId = 0;
   }
 
-  public long getServerId() {
+  public String getServerId() {
     return this.serverId;
   }
 
-  public Node setServerId(long serverId) {
+  public Node setServerId(String serverId) {
     this.serverId = serverId;
-    setServerIdIsSet(true);
     return this;
   }
 
   public void unsetServerId() {
-    __isset_bit_vector.clear(__SERVERID_ISSET_ID);
+    this.serverId = null;
   }
 
   /** Returns true if field serverId is set (has been assigned a value) and false otherwise */
   public boolean isSetServerId() {
-    return __isset_bit_vector.get(__SERVERID_ISSET_ID);
+    return this.serverId != null;
   }
 
   public void setServerIdIsSet(boolean value) {
-    __isset_bit_vector.set(__SERVERID_ISSET_ID, value);
+    if (!value) {
+      this.serverId = null;
+    }
   }
 
   public String getAddress() {
@@ -243,7 +243,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       if (value == null) {
         unsetServerId();
       } else {
-        setServerId((Long)value);
+        setServerId((String)value);
       }
       break;
 
@@ -269,7 +269,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case SERVER_ID:
-      return Long.valueOf(getServerId());
+      return getServerId();
 
     case ADDRESS:
       return getAddress();
@@ -311,12 +311,12 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     if (that == null)
       return false;
 
-    boolean this_present_serverId = true;
-    boolean that_present_serverId = true;
+    boolean this_present_serverId = true && this.isSetServerId();
+    boolean that_present_serverId = true && that.isSetServerId();
     if (this_present_serverId || that_present_serverId) {
       if (!(this_present_serverId && that_present_serverId))
         return false;
-      if (this.serverId != that.serverId)
+      if (!this.serverId.equals(that.serverId))
         return false;
     }
 
@@ -405,7 +405,11 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     boolean first = true;
 
     sb.append("serverId:");
-    sb.append(this.serverId);
+    if (this.serverId == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.serverId);
+    }
     first = false;
     if (!first) sb.append(", ");
     sb.append("address:");
@@ -464,8 +468,8 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         }
         switch (schemeField.id) {
           case 1: // SERVER_ID
-            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-              struct.serverId = iprot.readI64();
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.serverId = iprot.readString();
               struct.setServerIdIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -502,9 +506,11 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      oprot.writeFieldBegin(SERVER_ID_FIELD_DESC);
-      oprot.writeI64(struct.serverId);
-      oprot.writeFieldEnd();
+      if (struct.serverId != null) {
+        oprot.writeFieldBegin(SERVER_ID_FIELD_DESC);
+        oprot.writeString(struct.serverId);
+        oprot.writeFieldEnd();
+      }
       if (struct.address != null) {
         oprot.writeFieldBegin(ADDRESS_FIELD_DESC);
         oprot.writeString(struct.address);
@@ -542,7 +548,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       }
       oprot.writeBitSet(optionals, 3);
       if (struct.isSetServerId()) {
-        oprot.writeI64(struct.serverId);
+        oprot.writeString(struct.serverId);
       }
       if (struct.isSetAddress()) {
         oprot.writeString(struct.address);
@@ -557,7 +563,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       TTupleProtocol iprot = (TTupleProtocol) prot;
       BitSet incoming = iprot.readBitSet(3);
       if (incoming.get(0)) {
-        struct.serverId = iprot.readI64();
+        struct.serverId = iprot.readString();
         struct.setServerIdIsSet(true);
       }
       if (incoming.get(1)) {

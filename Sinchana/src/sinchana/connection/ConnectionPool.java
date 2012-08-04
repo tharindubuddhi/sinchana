@@ -20,7 +20,7 @@ import sinchana.util.logging.Logger;
  */
 public class ConnectionPool {
 
-		private Map<Long, Connection> pool = new HashMap<Long, Connection>();
+		private Map<String, Connection> pool = new HashMap<String, Connection>();
 		private Server server;
 		private static final int NUM_OF_MAX_CONNECTIONS = 18;
 
@@ -42,7 +42,7 @@ public class ConnectionPool {
 		 * @param portId		Port id of the destination.
 		 * @return				TTransport connection opened to the destination.
 		 */
-		public DHTServer.Client getConnection(long serverId, String address, int portId) {
+		public DHTServer.Client getConnection(String serverId, String address, int portId) {
 				synchronized (this) {
 						if (pool.containsKey(serverId)) {
 								return pool.get(serverId).open();
@@ -50,7 +50,7 @@ public class ConnectionPool {
 						Connection connection = new Connection(address, portId);
 						pool.put(serverId, connection);
 						if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
-								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
+								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 1,
 										"Maximum number of connections opened exceeded! ("
 										+ pool.size() + "/" + NUM_OF_MAX_CONNECTIONS + " are opened)");
 								getSpace();
@@ -61,13 +61,13 @@ public class ConnectionPool {
 
 		private void getSpace() {
 				Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
-				Set<Long> keySet = pool.keySet();
+				Set<String> keySet = pool.keySet();
 				boolean terminate;
-				Set<Long> idsToTerminate = new HashSet<Long>();
-				for (long sid : keySet) {
+				Set<String> idsToTerminate = new HashSet<String>();
+				for (String sid : keySet) {
 						terminate = true;
 						for (Node node : neighbourSet) {
-								if (node.serverId == sid) {
+								if (node.serverId.equals(sid)) {
 										terminate = false;
 										break;
 								}
@@ -76,13 +76,13 @@ public class ConnectionPool {
 								idsToTerminate.add(sid);
 						}
 				}
-				for (Long id : idsToTerminate) {
+				for (String id : idsToTerminate) {
 						pool.get(id).reset();
 						pool.remove(id);
 				}
 		}
 
-		public void resetConnection(long id) {
+		public void resetConnection(String id) {
 				synchronized (this) {
 						pool.get(id).reset();
 						pool.remove(id);

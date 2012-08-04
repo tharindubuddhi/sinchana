@@ -10,12 +10,25 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Set;
+import sinchana.Server;
 
 /**
  *
  * @author Hiru
  */
-public class Hash {
+public class CommonTools {
+
+		public static BigInteger generateId(String address) {
+				try {
+						MessageDigest cript = MessageDigest.getInstance("SHA-1");
+						cript.reset();
+						cript.update(address.getBytes("utf8"));
+						byte[] digest = cript.digest();
+						return new BigInteger(1, digest);
+				} catch (Exception ex) {
+						throw new RuntimeException("Error calculating hash value", ex);
+				}
+		}
 
 		public static long generateId(byte[] address, short portId, long gridSize) {
 				byte msb = 1;
@@ -104,14 +117,14 @@ public class Hash {
 								System.out.print(" " + b);
 						}
 						System.out.println("");
-						hashed = new BigInteger(1, digest).toString(64);
-						System.out.println(hashed);
+						hashed = new BigInteger(1, digest).toString(16);
+						System.out.println(hashed.length() + " : " + hashed);
 						byte[] reByte = hashed.getBytes("utf8");
 						for (byte b : reByte) {
 								System.out.print(" " + b);
 						}
 						System.out.println("");
-						
+
 				} catch (UnsupportedEncodingException ex) {
 						ex.printStackTrace();
 				} catch (NoSuchAlgorithmException ex) {

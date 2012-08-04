@@ -18,7 +18,7 @@ public class LocalCacheServer {
 		public static Node getRemoteNode(Node node) {
 				boolean contains = false;
 				for (int i = 0; i < CACHE_SIZE; i++) {
-						if (NODES[i] != null && NODES[i].serverId == node.serverId) {
+						if (NODES[i] != null && NODES[i].serverId.equals(node.serverId)) {
 								contains = true;
 						}
 				}
@@ -36,7 +36,7 @@ public class LocalCacheServer {
 				int val, count = 0;
 				while (reply == null && count < 1000000) {
 						val = (int) (Math.random() * CACHE_SIZE);
-						if (NODES[val] != null && NODES[val].serverId != node.serverId) {
+						if (NODES[val] != null && !NODES[val].serverId.equals(node.serverId)) {
 								reply = NODES[val];
 						}
 						count++;

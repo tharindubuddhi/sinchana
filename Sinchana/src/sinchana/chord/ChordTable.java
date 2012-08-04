@@ -4,6 +4,7 @@
  */
 package sinchana.chord;
 
+import java.math.BigInteger;
 import sinchana.RoutingHandler;
 import sinchana.Server;
 import sinchana.thrift.Message;
@@ -20,20 +21,13 @@ import java.util.Set;
 public class ChordTable implements RoutingHandler, Runnable {
 
 		private static final int OPTIMIZE_TIME_OUT = 5;
-		public static final int TABLE_SIZE = (int) (Math.log(Server.GRID_SIZE) / Math.log(2));
-
-		static {
-				System.out.println("CHORD: \tGrid size: " + Server.GRID_SIZE + " vs Table size: " + TABLE_SIZE);
-				long diff = Server.GRID_SIZE - ((long) Math.pow(2, TABLE_SIZE));
-				if (diff != 0) {
-						throw new RuntimeException("GRID SIZE defined in Server.class is invalid by " + diff);
-				}
-		}
+		public static final int TABLE_SIZE = 160;
 		private final FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
 		private Server server;
 		private Node successor = null;
 		private Node predecessor = null;
-		private long serverId;
+		private String serverId;
+		private BigInteger serverIdAsBigInt;
 		private Thread thread = new Thread(this);
 		private int timeOutCount = 0;
 		private Node lastRemovedNode = null;
@@ -54,6 +48,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		@Override
 		public void init() {
 				this.serverId = this.server.getServerId();
+				this.serverIdAsBigInt = new BigInteger(this.serverId);
 				synchronized (this) {
 						this.initFingerTable();
 				}
@@ -71,8 +66,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * all the table entries.
 						 */
 						fingerTable[i] = new FingerTableEntry();
-						fingerTable[i].setStart((this.serverId + (long) Math.pow(2, i)) % Server.GRID_SIZE);
-						fingerTable[i].setEnd((this.serverId + (long) Math.pow(2, i + 1) - 1) % Server.GRID_SIZE);
+						fingerTable[i].setStart(new BigInteger("2").pow(i).add(serverIdAsBigInt).mod(Server.GRID_SIZE));
+						fingerTable[i].setEnd(new BigInteger("2").pow(i + 1).add(serverIdAsBigInt).subtract(new BigInteger("1")).mod(Server.GRID_SIZE));
 						fingerTable[i].setSuccessor(this.server.deepCopy());
 				}
 				/**
@@ -94,10 +89,10 @@ public class ChordTable implements RoutingHandler, Runnable {
 		@Override
 		public void optimize() {
 				synchronized (this) {
-						if (this.serverId != this.predecessor.serverId) {
+						if (!this.serverId.equals(this.predecessor.serverId)) {
 								this.importNeighbours(this.predecessor);
 						}
-						if (this.serverId != this.successor.serverId) {
+						if (!this.serverId.equals(this.successor.serverId)) {
 								this.importNeighbours(this.successor);
 						}
 				}
@@ -126,8 +121,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 		}
 
 		@Override
-		public Node getNextNode(long destination) {
-				long destinationOffset, startOffset, endOffset;
+		public Node getNextNode(String destination) {
+				BigInteger destinationOffset, startOffset, endOffset;
 				//calculates the offset to the destination.
 				destinationOffset = getOffset(destination);
 				//takes finger table entries one by one.
@@ -139,7 +134,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * If so, returns the successor of that entry.
 						 * 0-----finger.table.entry.start------destination.id-------finger.table.entry.end----------End.of.Grid
 						 */
-						if (startOffset <= destinationOffset && destinationOffset <= endOffset) {
+						if (startOffset.compareTo(destinationOffset) != 1
+								&& destinationOffset.compareTo(endOffset) != 1) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 4,
 										"Next hop for the destination " + destination
 										+ " in " + fingerTableEntry.getStart() + "-" + fingerTableEntry.getEnd()
@@ -167,16 +163,16 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * about this server, so sending it again is a waste.
 						 */
 						if (fingerTableEntry.getSuccessor() != null
-								&& fingerTableEntry.getSuccessor().serverId != this.serverId) {
+								&& !fingerTableEntry.getSuccessor().serverId.equals(this.serverId)) {
 								neighbourSet.add(fingerTableEntry.getSuccessor());
 						}
 				}
 				//adds the predecessor.
-				if (this.predecessor.serverId != this.serverId) {
+				if (!this.predecessor.serverId.equals(this.serverId)) {
 						neighbourSet.add(this.predecessor);
 				}
 				//adds the successor.
-				if (this.successor.serverId != this.serverId) {
+				if (!this.successor.serverId.equals(this.serverId)) {
 						neighbourSet.add(this.successor);
 				}
 				//returns the node set.
@@ -186,8 +182,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 		@Override
 		public void getOptimalSuccessor(Message message) {
 				//calculates offset.
-				long idOffset = getOffset(message.getStartOfRange());
-				long neighBourOffset, mostAdvance = 0;
+				BigInteger idOffset = getOffset(message.getStartOfRange());
+				BigInteger neighBourOffset, mostAdvance = new BigInteger("0");
 				//initializes to this server.
 				Node optimalSuccessor = this.server;
 				//get the neighbor set (the knows node set of this server)
@@ -199,7 +195,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * checks if the node successes the id (idOffset <= neighBourOffset)
 						 * and is it much suitable than the existing one (mostAdvance < neighBourOffset)
 						 */
-						if (idOffset <= neighBourOffset && mostAdvance < neighBourOffset) {
+						if (idOffset.compareTo(neighBourOffset) != 1
+								&& mostAdvance.compareTo(neighBourOffset) == -1) {
 								//if so, sets it as the most suitable one.
 								mostAdvance = neighBourOffset;
 								optimalSuccessor = node;
@@ -207,8 +204,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 				}
 
 
-				if (optimalSuccessor.serverId == this.server.serverId) {
-						if (message.station.serverId != message.source.serverId) {
+				if (optimalSuccessor.serverId.equals(this.server.serverId)) {
+						if (!message.station.serverId.equals(message.source.serverId)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 6,
 										"Valid response for " + message.targetKey
 										+ " in " + message.startOfRange + "-" + message.endOfRange
@@ -225,15 +222,15 @@ public class ChordTable implements RoutingHandler, Runnable {
 
 		@Override
 		public void updateTable(Node node) {
-				if (lastRemovedNode != null && lastRemovedNode.serverId == node.serverId) {
+				if (lastRemovedNode != null && lastRemovedNode.serverId.equals(node.serverId)) {
 						return;
 				}
 				//calculates offsets for the ids.
-				long newNodeOffset = getOffset(node.serverId);
+				BigInteger newNodeOffset = getOffset(node.serverId);
 				boolean tableChanged = false;
 				boolean updated = false;
 				synchronized (this) {
-						long successorOffset = getOffset(this.successor.serverId);
+						BigInteger successorOffset = getOffset(this.successor.serverId);
 						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 7,
 								"Updating table: S:" + this.successor.serverId + " P:" + this.predecessor.serverId
 								+ " N:" + node.serverId);
@@ -245,7 +242,9 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * the new node will be set as the successor.
 						 * 0-----this.server.id------new.server.id-------existing.successor.id----------End.of.Grid
 						 */
-						if (successorOffset == 0 || (newNodeOffset != 0 && newNodeOffset < successorOffset)) {
+						if (successorOffset.equals(new BigInteger("0"))
+								|| (!newNodeOffset.equals(new BigInteger("0"))
+								&& newNodeOffset.compareTo(successorOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 										"Node " + node + " is set as successor overriding " + this.successor);
 								this.successor = node.deepCopy();
@@ -263,8 +262,10 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * the new node will be set as the predecessor.
 						 * 0-----existing.predecessor.id------new.server.id-------this.server.id----------End.of.Grid
 						 */
-						long predecessorOffset = getOffset(this.predecessor.serverId);
-						if (predecessorOffset == 0 || (newNodeOffset != 0 && predecessorOffset < newNodeOffset)) {
+						BigInteger predecessorOffset = getOffset(this.predecessor.serverId);
+						if (predecessorOffset.equals(new BigInteger("0"))
+								|| (!newNodeOffset.equals(new BigInteger("0"))
+								&& predecessorOffset.compareTo(newNodeOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 										"Node " + node + " is set as predecessor overriding " + this.predecessor);
 								this.predecessor = node.deepCopy();
@@ -274,7 +275,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 								}
 						}
 
-						long startOffset;
+						BigInteger startOffset;
 						for (int i = 0; i < fingerTable.length; i++) {
 								startOffset = getOffset(fingerTable[i].getStart());
 								successorOffset = getOffset(fingerTable[i].getSuccessor().serverId);
@@ -287,7 +288,9 @@ public class ChordTable implements RoutingHandler, Runnable {
 								 * the new node will be set as the successor for that fingertable entry.
 								 * 0-----finger.table.entry.start------new.server.id-------existing.successor.id----------End.of.Grid
 								 */
-								if (startOffset <= newNodeOffset && (newNodeOffset < successorOffset || successorOffset == 0)) {
+								if (startOffset.compareTo(newNodeOffset) != 1
+										&& (newNodeOffset.compareTo(successorOffset) == -1
+										|| successorOffset.equals(new BigInteger("0")))) {
 										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 0,
 												"Setting " + node.serverId + " as successor of "
 												+ fingerTable[i].getStart() + "-" + fingerTable[i].getEnd()
@@ -344,7 +347,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 								 * back, with the known node set, if the node is not equal 
 								 * to the node which is to be remove.
 								 */
-								if (node.serverId != nodeToRemove.serverId) {
+								if (!node.serverId.equals(nodeToRemove.serverId)) {
 										updateTable(node);
 								}
 						}
@@ -357,7 +360,11 @@ public class ChordTable implements RoutingHandler, Runnable {
 		 * @param id	Id to calculate the offset.
 		 * @return		Offset of the id relative to this server.
 		 */
-		private long getOffset(long id) {
-				return (id + Server.GRID_SIZE - this.server.serverId) % Server.GRID_SIZE;
+		private BigInteger getOffset(String id) {
+				return Server.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
+		}
+
+		private BigInteger getOffset(BigInteger id) {
+				return Server.GRID_SIZE.add(id).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
 		}
 }
