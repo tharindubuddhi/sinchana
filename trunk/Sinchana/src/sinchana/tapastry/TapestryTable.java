@@ -4,6 +4,7 @@
  */
 package sinchana.tapastry;
 
+import java.math.BigInteger;
 import java.util.logging.Level;
 import sinchana.PortHandler;
 import sinchana.RoutingHandler;
@@ -21,18 +22,12 @@ import java.util.Set;
  */
 public class TapestryTable implements RoutingHandler, Runnable {
 
-		public static final int TABLE_SIZE = (int) Math.log10(Server.GRID_SIZE);
-
-		static {
-				System.out.println("TAPESTRY: \tGrid size: " + Server.GRID_SIZE + " vs Table size: " + TABLE_SIZE);
-				if (Server.GRID_SIZE - ((int) Math.pow(10, TABLE_SIZE)) != 0) {
-						throw new RuntimeException("GRID SIZE defined in Server.class is invalid");
-				}
-		}
+		public static final int TABLE_SIZE = 37;
 		private Server server;
 		private Node successor = null;
 		private Node predecessor = null;
-		private long serverId;
+		private String serverId;
+		private BigInteger serverIdAsBigInt;
 		private Node[][] fingerTable = new Node[TABLE_SIZE][10];
 		private boolean neighboursImported = false;
 
@@ -51,6 +46,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		@Override
 		public void init() {
 				this.serverId = this.server.getServerId();
+				this.serverIdAsBigInt = new BigInteger(this.serverId);
 				synchronized (this) {
 						this.initFingerTable();
 						this.neighboursImported = false;
@@ -89,7 +85,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				Message msg;
 				for (Node[] nodes : fingerTable) {
 						for (Node node : nodes) {
-								if (node != null && node.serverId != this.serverId) {
+								if (node != null && !node.serverId.equals(this.serverId)) {
 										msg = new Message(this.server, MessageType.FIND_SUCCESSOR, Server.MESSAGE_LIFETIME);
 										ph.send(msg, node);
 								}
@@ -119,7 +115,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		}
 
 		@Override
-		public Node getNextNode(long destination) {
+		public Node getNextNode(String destination) {
 
 				int raw = getRaw(this.serverId, destination);
 				if (raw == -1) {
@@ -194,18 +190,18 @@ public class TapestryTable implements RoutingHandler, Runnable {
 								 * not this server it self. This is because the requester knows 
 								 * about this server, so sending it again is a waste.
 								 */
-								if (node != null && node.serverId != this.serverId) {
+								if (node != null && !node.serverId.equals(this.serverId)) {
 										neighbourSet.add(node);
 								}
 						}
 
 				}
 				//adds the predecessor.
-				if (this.predecessor != null && this.predecessor.serverId != this.serverId) {
+				if (this.predecessor != null && !this.predecessor.serverId.equals(this.serverId)) {
 						neighbourSet.add(this.predecessor);
 				}
 				//adds the successor.
-				if (this.successor != null && this.successor.serverId != this.serverId) {
+				if (this.successor != null && !this.successor.serverId.equals(this.serverId)) {
 						neighbourSet.add(this.successor);
 				}
 				//returns the node set.
@@ -218,14 +214,14 @@ public class TapestryTable implements RoutingHandler, Runnable {
 
 		@Override
 		public void updateTable(Node node) {
-				if (node.serverId == this.serverId) {
+				if (node.serverId.equals(this.serverId)) {
 						return;
 				}
 				//calculates offsets for the ids.
-				long newNodeOffset = getOffset(node.serverId);
+				BigInteger newNodeOffset = getOffset(node.serverId);
 				boolean tableChanged = false;
 				synchronized (this) {
-						long successorOffset = getOffset(this.successor.serverId);
+						BigInteger successorOffset = getOffset(this.successor.serverId);
 						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 7,
 								"Updating table: S:" + this.successor.serverId + " P:" + this.predecessor.serverId
 								+ " N:" + node.serverId);
@@ -237,7 +233,9 @@ public class TapestryTable implements RoutingHandler, Runnable {
 						 * the new node will be set as the successor.
 						 * 0-----this.server.id------new.server.id-------existing.successor.id----------End.of.Grid
 						 */
-						if (successorOffset == 0 || (newNodeOffset != 0 && newNodeOffset < successorOffset)) {
+						if (successorOffset.equals(new BigInteger("0"))
+								|| (!newNodeOffset.equals(new BigInteger("0"))
+								&& newNodeOffset.compareTo(successorOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 										"Node " + node + " is set as successor overriding " + this.successor);
 								this.successor = node.deepCopy();
@@ -254,8 +252,10 @@ public class TapestryTable implements RoutingHandler, Runnable {
 						 * the new node will be set as the predecessor.
 						 * 0-----existing.predecessor.id------new.server.id-------this.server.id----------End.of.Grid
 						 */
-						long predecessorOffset = getOffset(this.predecessor.serverId);
-						if (predecessorOffset == 0 || (newNodeOffset != 0 && predecessorOffset < newNodeOffset)) {
+						BigInteger predecessorOffset = getOffset(this.predecessor.serverId);
+						if (predecessorOffset.equals(new BigInteger("0"))
+								|| (!newNodeOffset.equals(new BigInteger("0"))
+								&& predecessorOffset.compareTo(newNodeOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 										"Node " + node + " is set as predecessor overriding " + this.predecessor);
 								this.predecessor = node.deepCopy();
@@ -280,7 +280,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				 * if the neighbor set has not imported, imports it from the predecessor.
 				 * This will happens only once after the node successfully joined to the grid.
 				 */
-				if (!neighboursImported && this.serverId != this.predecessor.serverId) {
+				if (!neighboursImported && !this.serverId.equals(this.predecessor.serverId)) {
 						importNeighbours(this.predecessor);
 						neighboursImported = true;
 				}
@@ -318,7 +318,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 								 * back, with the known node set, if the node is not equal 
 								 * to the node which is to be remove.
 								 */
-								if (node.serverId != nodeToRemove.serverId) {
+								if (!node.serverId.equals(nodeToRemove.serverId)) {
 										updateTable(node);
 								}
 						}
@@ -331,25 +331,24 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		 * @param id	Id to calculate the offset.
 		 * @return		Offset of the id relative to this server.
 		 */
-		private long getOffset(long id) {
-				return (id + Server.GRID_SIZE - this.server.serverId) % Server.GRID_SIZE;
+		private BigInteger getOffset(String id) {
+				return Server.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
 		}
 
-		private int getRaw(long id, long newId) {
-				int factor; 
-				long t1, t2;
+		private int getRaw(String id, String newId) {
+				BigInteger factor, t1, t2;
 				for (int i = TABLE_SIZE - 1; i >= 0; i--) {
-						factor = (int) Math.pow(10, i);
-						t1 = id / factor;
-						t2 = newId / factor;
-						if (t1 != t2) {
+						factor = new BigInteger("10").pow(i);
+						t1 = new BigInteger(id).divide(factor);
+						t2 = new BigInteger(newId).divide(factor);
+						if (!t1.equals(t2)) {
 								return i;
 						}
 				}
 				return -1;
 		}
 
-		private int getColumn(long id, int raw) {
-				return (int)(id % ((long) Math.pow(10, raw + 1)) / ((long) Math.pow(10, raw)));
+		private int getColumn(String id, int raw) {
+				return (new BigInteger(id).mod(new BigInteger("10").pow(raw + 1)).divide(new BigInteger("10").pow(raw))).intValue();
 		}
 }
