@@ -14,7 +14,7 @@ import java.util.logging.Level;
  * @author Hiru
  */
 public final class Logger {
-
+		
 		private static List<Log> logDB = new LinkedList<Log>();
 		/**
 		 * 
@@ -58,7 +58,7 @@ public final class Logger {
 		 * 
 		 */
 		public static final int CURRENT_LOG_LEVEL = 2;
-
+		
 		private Logger() {
 		}
 
@@ -70,7 +70,7 @@ public final class Logger {
 		 * @param locId
 		 * @param logData
 		 */
-		public static synchronized void log(long nodeId, int type, int classId, int locId, String logData) {
+		public static synchronized void log(String nodeId, int type, int classId, int locId, String logData) {
 				Log nl = new Log();
 				nl.nodeId = nodeId;
 				nl.level = type;
@@ -123,8 +123,8 @@ public final class Logger {
 				}
 				java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
 						className, "Server " + nodeId, logData);
-
-
+				
+				
 		}
 
 		/**
@@ -146,7 +146,7 @@ public final class Logger {
 		 * @param classIds
 		 * @param locations
 		 */
-		public static synchronized void print(int[] nodeIds, int[] levels,
+		public static synchronized void print(String[] nodeIds, int[] levels,
 				int[] classIds, int[] locations, String containTextString) {
 				System.out.println("processing quaries...");
 				Iterator<Log> listIterator = logDB.iterator();
@@ -166,8 +166,8 @@ public final class Logger {
 						}
 						if (filterByNodeId) {
 								validToPrint = false;
-								for (int i : nodeIds) {
-										if (log.nodeId == i) {
+								for (String id : nodeIds) {
+										if (log.nodeId.equals(id)) {
 												validToPrint = true;
 												break;
 										}

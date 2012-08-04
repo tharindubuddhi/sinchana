@@ -50,7 +50,7 @@ public interface RoutingHandler {
 		 * @param destination Destination id.
 		 * @return NExt hop (node) to reach to the destination.
 		 */
-		public abstract Node getNextNode(long destination);
+		public abstract Node getNextNode(String destination);
 		
 		/**
 		 * Returns the set of nodes contains successor, predecessor and all the

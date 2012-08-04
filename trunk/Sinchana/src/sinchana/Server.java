@@ -4,15 +4,15 @@
  */
 package sinchana;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import sinchana.connection.ThriftServer;
 import sinchana.chord.ChordTable;
-import sinchana.tapastry.TapestryTable;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
-import sinchana.util.tools.Hash;
+import sinchana.util.tools.CommonTools;
 
 /**
  *
@@ -20,7 +20,7 @@ import sinchana.util.tools.Hash;
  */
 public class Server extends Node {
 
-		public static final long GRID_SIZE = (long) Math.pow(2, 60);
+		public static final BigInteger GRID_SIZE = new BigInteger("2").pow(160);
 		private final PortHandler portHandler = new ThriftServer(this);
 		private final RoutingHandler routingHandler = Server.getRoutingHandler(RoutingHandler.TYPE_CHORD, this);
 		private final MessageHandler messageHandler = new MessageHandler(this);
@@ -38,12 +38,11 @@ public class Server extends Node {
 		 */
 		public long threadId;
 		private Node anotherNode;
+		private BigInteger serverIdAsBigInt;
 
 		private static RoutingHandler getRoutingHandler(String type, Server server) {
 				if (type.equalsIgnoreCase(RoutingHandler.TYPE_CHORD)) {
 						return new ChordTable(server);
-				} else if (type.equalsIgnoreCase(RoutingHandler.TYPE_TAPESTRY)) {
-						return new TapestryTable(server);
 				}
 				return null;
 		}
@@ -59,11 +58,12 @@ public class Server extends Node {
 		public Server(short portId) {
 				try {
 						InetAddress inetAddress = InetAddress.getLocalHost();
-						this.serverId = Hash.generateId(inetAddress.getAddress(), portId, GRID_SIZE);
 						this.portId = portId;
 						this.address = inetAddress.getHostAddress();
+						this.serverIdAsBigInt = CommonTools.generateId(this.address + ":" + this.portId);
+						this.serverId = serverIdAsBigInt.toString();
 //						byte[] ta = new byte[]{50, 0, 0, 50};
-//						this.serverId = Hash.generateId(ta, portId, GRID_SIZE);
+//						this.serverId = CommonTools.generateId(ta, portId, GRID_SIZE);
 //						this.address = "50.0.0.50";
 				} catch (UnknownHostException ex) {
 						throw new RuntimeException("Error getting local host ip.", ex);
@@ -71,9 +71,10 @@ public class Server extends Node {
 		}
 
 		public Server(InetAddress localInetAddress, short portId) {
-				this.serverId = Hash.generateId(localInetAddress.getAddress(), portId, GRID_SIZE);
 				this.portId = portId;
 				this.address = localInetAddress.getHostAddress();
+				this.serverIdAsBigInt = CommonTools.generateId(this.address + ":" + this.portId);
+				this.serverId = serverIdAsBigInt.toString();
 		}
 
 		public void setAnotherNode(Node anotherNode) {
@@ -91,7 +92,7 @@ public class Server extends Node {
 		}
 
 		public void join() {
-				if (this.anotherNode != null && this.anotherNode.serverId != this.serverId) {
+				if (this.anotherNode != null && !this.anotherNode.serverId.equals(this.serverId)) {
 						Message msg = new Message(this, MessageType.JOIN, MESSAGE_LIFETIME);
 						this.portHandler.send(msg, this.anotherNode);
 				} else {
@@ -161,6 +162,10 @@ public class Server extends Node {
 				return routingHandler;
 		}
 
+		public BigInteger getServerIdAsBigInt() {
+				return serverIdAsBigInt;
+		}
+		
 		/**
 		 * 
 		 * @return
@@ -200,52 +205,52 @@ public class Server extends Node {
 		 * @param destination	Destination ID to receive message.
 		 * @param message		Message string.
 		 */
-		public void send(long destination, String message) {
+		public void send(String destination, String message) {
 				Message msg = new Message(this, MessageType.REQUEST, MESSAGE_LIFETIME);
 				msg.setTargetKey(destination);
 				msg.setMessage(message);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		
-		public void publishService(long key, String service) {
+
+		public void publishService(String key, String service) {
 				Message msg = new Message(this, MessageType.PUBLISH_SERVICE, MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setMessage(service);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		
-		public void removeService(long key) {
+
+		public void removeService(String key) {
 				Message msg = new Message(this, MessageType.REMOVE_SERVICE, MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		
-		public void getService(long key) {
+
+		public void getService(String key) {
 				Message msg = new Message(this, MessageType.GET_SERVICE, MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		
-		public void storeData(long key, String data) {
+
+		public void storeData(String key, String data) {
 				Message msg = new Message(this, MessageType.STORE_DATA, MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setMessage(data);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		
-		public void deleteData(long key) {
+
+		public void deleteData(String key) {
 				Message msg = new Message(this, MessageType.DELETE_DATA, MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
-		
-		public void getData(long key) {
+
+		public void getData(String key) {
 				Message msg = new Message(this, MessageType.GET_DATA, MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);

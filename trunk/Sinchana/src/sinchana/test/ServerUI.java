@@ -43,7 +43,7 @@ public class ServerUI extends javax.swing.JFrame {
 		 * 
 		 * @param id
 		 */
-		public void setServerId(long id) {
+		public void setServerId(String id) {
 				this.idLabel.setText("Server " + id);
 		}
 
@@ -51,7 +51,7 @@ public class ServerUI extends javax.swing.JFrame {
 		 * 
 		 * @param id
 		 */
-		public void setSuccessorId(long id) {
+		public void setSuccessorId(String id) {
 				this.next.setText("Next: " + id);
 		}
 
@@ -59,7 +59,7 @@ public class ServerUI extends javax.swing.JFrame {
 		 * 
 		 * @param id
 		 */
-		public void setPredecessorId(long id) {
+		public void setPredecessorId(String id) {
 				this.prev.setText("Prev: " + id);
 		}
 
@@ -241,7 +241,7 @@ private void destFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIR
 }//GEN-LAST:event_destFieldActionPerformed
 
 private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
-		this.tester.send(Integer.parseInt(this.destField.getText()), this.messageField.getText());
+		this.tester.send(this.destField.getText(), this.messageField.getText());
 }//GEN-LAST:event_sendButtonActionPerformed
 
 private void downActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downActionPerformed

@@ -4,6 +4,7 @@
  */
 package sinchana.chord;
 
+import java.math.BigInteger;
 import sinchana.thrift.Node;
 
 /**
@@ -12,15 +13,15 @@ import sinchana.thrift.Node;
  */
 public class FingerTableEntry {
 
-		private long start;
-		private long end;
+		private BigInteger start;
+		private BigInteger end;
 		private Node successor;
 
 		/**
 		 * 
 		 * @return
 		 */
-		public long getEnd() {
+		public BigInteger getEnd() {
 				return end;
 		}
 
@@ -28,7 +29,7 @@ public class FingerTableEntry {
 		 * 
 		 * @param end
 		 */
-		public void setEnd(long end) {
+		public void setEnd(BigInteger end) {
 				this.end = end;
 		}
 
@@ -36,7 +37,7 @@ public class FingerTableEntry {
 		 * 
 		 * @return
 		 */
-		public long getStart() {
+		public BigInteger getStart() {
 				return start;
 		}
 
@@ -44,7 +45,7 @@ public class FingerTableEntry {
 		 * 
 		 * @param start
 		 */
-		public void setStart(long start) {
+		public void setStart(BigInteger start) {
 				this.start = start;
 		}
 
@@ -70,9 +71,10 @@ public class FingerTableEntry {
 		 * @return
 		 */
 		public boolean isInTheInterval(Node node) {
-				if (this.start > this.end) {
-						return this.start <= node.serverId || node.serverId >= this.end;
+				BigInteger bi = new BigInteger(node.serverId);
+				if (this.start.compareTo(this.end) == 1) {
+						return this.start.compareTo(bi) != 1 || bi.compareTo(this.end) != -1;
 				}
-				return this.start <= node.serverId && node.serverId <= this.end;
+				return this.start.compareTo(bi) != 1 && bi.compareTo(this.end) != 1;
 		}
 }

@@ -1,7 +1,7 @@
 namespace java sinchana.thrift
 
 struct Node {
-  1: i64 serverId,
+  1: string serverId,
   2: string address,
   3: i16 portId
 }
@@ -39,11 +39,11 @@ struct Message {
     7: optional string message,
     8: optional Node predecessor,
     9: optional Node successor,
-    10: optional i64 startOfRange,
-    11: optional i64 endOfRange,
+    10: optional string startOfRange,
+    11: optional string endOfRange,
     12: optional set<Node> neighbourSet,
     13: optional set<Node> toRemoveNodeSet,
-    14: optional i64 targetKey,
+    14: optional string targetKey,
     15: optional i32 retryCount,
     16: optional i64 timeStamp
 }

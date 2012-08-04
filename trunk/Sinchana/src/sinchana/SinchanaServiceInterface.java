@@ -11,8 +11,8 @@ package sinchana;
  */
 public interface SinchanaServiceInterface {
 		
-		public abstract boolean publish(long key, String service);
-		public abstract String get(long key);
-		public abstract boolean remove(long key);
+		public abstract boolean publish(String key, String service);
+		public abstract String get(String key);
+		public abstract boolean remove(String key);
 		
 }

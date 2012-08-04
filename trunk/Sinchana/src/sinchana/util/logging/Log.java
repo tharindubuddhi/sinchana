@@ -10,7 +10,7 @@ package sinchana.util.logging;
  */
 public class Log {
 
-		long nodeId;
+		String nodeId;
 		int level;
 		int classId;
 		int locId;

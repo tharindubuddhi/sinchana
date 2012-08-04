@@ -11,9 +11,9 @@ package sinchana;
  */
 public interface SinchanaStoreInterface {
 
-		public abstract boolean store(long key, String data);
+		public abstract boolean store(String key, String data);
 
-		public abstract String get(long key);
+		public abstract String get(String key);
 
-		public abstract boolean delete(long key);
+		public abstract boolean delete(String key);
 }

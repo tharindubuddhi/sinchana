@@ -5,7 +5,6 @@
 package sinchana.test;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URL;
@@ -19,7 +18,6 @@ import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
@@ -34,7 +32,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		private ServerUI gui = null;
 		private TesterController testerController;
 		private Semaphore threadLock = new Semaphore(0);
-		private Map<Long, Long> keySpace = new HashMap<Long, Long>();
 		private boolean running = false;
 		private long numOfTestingMessages = 0;
 
@@ -130,9 +127,9 @@ public class Tester implements SinchanaTestInterface, Runnable {
 						server.join();
 						while (true) {
 								threadLock.acquire();
-								long randomDestination;
+								String randomDestination;
 								while (numOfTestingMessages > 0) {
-										randomDestination = (long) (Math.random() * Server.GRID_SIZE);
+										randomDestination = "" + (long) (Math.random() * Server.GRID_SIZE.longValue());
 										server.send(randomDestination, "where are you?");
 										numOfTestingMessages--;
 								}
@@ -165,7 +162,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		@Override
 		public void setPredecessor(Node predecessor) {
 				if (this.gui != null) {
-						this.gui.setPredecessorId(predecessor != null ? predecessor.serverId : -1);
+						this.gui.setPredecessorId(predecessor != null ? predecessor.serverId : "n/a");
 				}
 		}
 
@@ -176,7 +173,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		@Override
 		public void setSuccessor(Node successor) {
 				if (this.gui != null) {
-						this.gui.setSuccessorId(successor != null ? successor.serverId : -1);
+						this.gui.setSuccessorId(successor != null ? successor.serverId : "n/a");
 				}
 		}
 
@@ -206,20 +203,12 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		 * 
 		 * @return
 		 */
-		public long getServerId() {
+		public String getServerId() {
 				return server.serverId;
 		}
 
 		public int getTestId() {
 				return testId;
-		}
-
-		/**
-		 * 
-		 * @return
-		 */
-		public Map<Long, Long> getKeySpace() {
-				return keySpace;
 		}
 
 		/**
@@ -245,7 +234,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				}
 		}
 
-		public void send(int dest, String msg) {
+		public void send(String dest, String msg) {
 				this.server.send(dest, msg);
 		}
 
@@ -256,10 +245,10 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 		@Override
 		public int hashCode() {
-				return (int) this.server.serverId;
+				return this.server.serverId.hashCode();
 		}
 
-		private Node getRemoteNode(long serverId, String address, short portId) {
+		private Node getRemoteNode(String serverId, String address, short portId) {
 				if (TesterController.USE_REMOTE_CACHE_SERVER) {
 						try {
 								URL url = new URL("http://cseanremo.appspot.com/remoteip?"
@@ -278,15 +267,13 @@ public class Tester implements SinchanaTestInterface, Runnable {
 								}
 								if (!resp.equalsIgnoreCase("n/a")) {
 										Node node = new Node();
-										node.serverId = Long.parseLong(resp.split(":")[0]);
+										node.serverId = resp.split(":")[0];
 										node.address = resp.split(":")[1];
 										node.portId = Short.parseShort(resp.split(":")[2]);
 										in.close();
 										return node;
 								}
-						} catch (IOException e) {
-								throw new RuntimeException("Invalid response from the cache server!", e);
-						} catch (NumberFormatException e) {
+						} catch (Exception e) {
 								throw new RuntimeException("Invalid response from the cache server!", e);
 						}
 						return null;
