@@ -12,14 +12,26 @@ import java.util.HashMap;
 import org.apache.thrift.TEnum;
 
 public enum MessageType implements org.apache.thrift.TEnum {
-  GET(0),
-  JOIN(1),
-  DISCOVER_NEIGHBOURS(2),
-  FIND_SUCCESSOR(3),
-  ERROR(4),
-  ACCEPT(5),
-  VERIFY_RING(6),
-  TEST_RING(7);
+  STORE_DATA(0),
+  DELETE_DATA(1),
+  GET_DATA(2),
+  RESPONSE_DATA(3),
+  ACKNOWLEDGE_DATA(4),
+  FAILURE_DATA(5),
+  PUBLISH_SERVICE(6),
+  GET_SERVICE(7),
+  REMOVE_SERVICE(8),
+  RESPONSE_SERVICE(9),
+  ACKNOWLEDGE_SERVICE(10),
+  FAILURE_SERVICE(11),
+  REQUEST(12),
+  RESPONSE(13),
+  ERROR(14),
+  JOIN(15),
+  DISCOVER_NEIGHBOURS(16),
+  FIND_SUCCESSOR(17),
+  VERIFY_RING(18),
+  TEST_RING(19);
 
   private final int value;
 
@@ -41,20 +53,44 @@ public enum MessageType implements org.apache.thrift.TEnum {
   public static MessageType findByValue(int value) { 
     switch (value) {
       case 0:
-        return GET;
+        return STORE_DATA;
       case 1:
-        return JOIN;
+        return DELETE_DATA;
       case 2:
-        return DISCOVER_NEIGHBOURS;
+        return GET_DATA;
       case 3:
-        return FIND_SUCCESSOR;
+        return RESPONSE_DATA;
       case 4:
-        return ERROR;
+        return ACKNOWLEDGE_DATA;
       case 5:
-        return ACCEPT;
+        return FAILURE_DATA;
       case 6:
-        return VERIFY_RING;
+        return PUBLISH_SERVICE;
       case 7:
+        return GET_SERVICE;
+      case 8:
+        return REMOVE_SERVICE;
+      case 9:
+        return RESPONSE_SERVICE;
+      case 10:
+        return ACKNOWLEDGE_SERVICE;
+      case 11:
+        return FAILURE_SERVICE;
+      case 12:
+        return REQUEST;
+      case 13:
+        return RESPONSE;
+      case 14:
+        return ERROR;
+      case 15:
+        return JOIN;
+      case 16:
+        return DISCOVER_NEIGHBOURS;
+      case 17:
+        return FIND_SUCCESSOR;
+      case 18:
+        return VERIFY_RING;
+      case 19:
         return TEST_RING;
       default:
         return null;

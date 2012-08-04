@@ -26,6 +26,8 @@ public class Server extends Node {
 		private final MessageHandler messageHandler = new MessageHandler(this);
 		private SinchanaInterface sinchanaInterface = null;
 		private SinchanaTestInterface sinchanaTestInterface = null;
+		private SinchanaServiceInterface sinchanaServiceInterface = null;
+		private SinchanaStoreInterface sinchanaStoreInterface = null;
 		/**
 		 * Default life time of a message. At each hop, the lifetime decrements 
 		 * and when it reaches 0, the message is discarded.
@@ -82,10 +84,10 @@ public class Server extends Node {
 		 * Start the server.
 		 */
 		public void startServer() {
-				this.portHandler.startServer();
 				this.threadId = Thread.currentThread().getId();
 				this.routingHandler.init();
 				this.threadId = this.messageHandler.init();
+				this.portHandler.startServer();
 		}
 
 		public void join() {
@@ -125,6 +127,14 @@ public class Server extends Node {
 		 */
 		public void registerSinchanaTestInterface(SinchanaTestInterface sinchanaTestInterface) {
 				this.sinchanaTestInterface = sinchanaTestInterface;
+		}
+
+		public void registerSinchanaServiceInterface(SinchanaServiceInterface sinchanaServiceInterface) {
+				this.sinchanaServiceInterface = sinchanaServiceInterface;
+		}
+
+		public void registerSinchanaStoreInterface(SinchanaStoreInterface sinchanaStoreInterface) {
+				this.sinchanaStoreInterface = sinchanaStoreInterface;
 		}
 
 		/**
@@ -167,6 +177,14 @@ public class Server extends Node {
 				return sinchanaInterface;
 		}
 
+		public SinchanaServiceInterface getSinchanaServiceInterface() {
+				return sinchanaServiceInterface;
+		}
+
+		public SinchanaStoreInterface getSinchanaStoreInterface() {
+				return sinchanaStoreInterface;
+		}
+
 		/**
 		 * Send a message. If the message type is MessageType.GET, targetKey field should be set.
 		 * @param message		Message to pass to the network.
@@ -183,9 +201,53 @@ public class Server extends Node {
 		 * @param message		Message string.
 		 */
 		public void send(long destination, String message) {
-				Message msg = new Message(this, MessageType.GET, MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.REQUEST, MESSAGE_LIFETIME);
 				msg.setTargetKey(destination);
 				msg.setMessage(message);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
+		
+		public void publishService(long key, String service) {
+				Message msg = new Message(this, MessageType.PUBLISH_SERVICE, MESSAGE_LIFETIME);
+				msg.setTargetKey(key);
+				msg.setMessage(service);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
+		
+		public void removeService(long key) {
+				Message msg = new Message(this, MessageType.REMOVE_SERVICE, MESSAGE_LIFETIME);
+				msg.setTargetKey(key);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
+		
+		public void getService(long key) {
+				Message msg = new Message(this, MessageType.GET_SERVICE, MESSAGE_LIFETIME);
+				msg.setTargetKey(key);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
+		
+		public void storeData(long key, String data) {
+				Message msg = new Message(this, MessageType.STORE_DATA, MESSAGE_LIFETIME);
+				msg.setTargetKey(key);
+				msg.setMessage(data);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
+		
+		public void deleteData(long key) {
+				Message msg = new Message(this, MessageType.DELETE_DATA, MESSAGE_LIFETIME);
+				msg.setTargetKey(key);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
+		
+		public void getData(long key) {
+				Message msg = new Message(this, MessageType.GET_DATA, MESSAGE_LIFETIME);
+				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}

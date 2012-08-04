@@ -9,7 +9,6 @@ import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
-import sinchana.util.messagequeue.MessageEventHandler;
 import sinchana.util.messagequeue.MessageQueue;
 
 /**
@@ -27,7 +26,7 @@ public class MessageHandler {
 		 * Message queue to buffer incoming messages. The size of the queue is 
 		 * determined by MESSAGE_BUFFER_SIZE.
 		 */
-		private final MessageQueue messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageEventHandler() {
+		private final MessageQueue messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
 				@Override
 				public void process(Message message) {
@@ -125,7 +124,13 @@ public class MessageHandler {
 				}
 
 				switch (message.type) {
-						case GET:
+						case REQUEST:
+						case STORE_DATA:
+						case DELETE_DATA:
+						case GET_DATA:
+						case PUBLISH_SERVICE:
+						case GET_SERVICE:
+						case REMOVE_SERVICE:
 								this.processGet(message);
 								break;
 						case JOIN:
@@ -141,11 +146,15 @@ public class MessageHandler {
 								this.processTestRing(message);
 								break;
 
-						case ACCEPT:
 						case ERROR:
-								if (this.server.getSinchanaInterface() != null) {
-										this.server.getSinchanaInterface().receive(message.deepCopy());
-								}
+						case RESPONSE:
+						case RESPONSE_DATA:
+						case RESPONSE_SERVICE:
+						case FAILURE_DATA:
+						case FAILURE_SERVICE:
+						case ACKNOWLEDGE_DATA:
+						case ACKNOWLEDGE_SERVICE:
+								deliverMessage(message);
 								break;
 				}
 		}
@@ -188,20 +197,7 @@ public class MessageHandler {
 				long prevStationOffset = getOffset(message.station.serverId);
 
 				if (predecessorOffset < targetKeyOffset || targetKeyOffset == 0) {
-						Message returnMessage;
-						if (this.server.getSinchanaTestInterface() != null) {
-								this.server.getSinchanaTestInterface().setStatus("received: " + message.message);
-						}
-						if (this.server.getSinchanaInterface() != null) {
-								returnMessage = this.server.getSinchanaInterface().receive(message.deepCopy());
-						} else {
-								returnMessage = new Message(this.server, MessageType.ERROR, 1);
-								returnMessage.setTargetKey(message.targetKey);
-						}
-						if (returnMessage != null) {
-								returnMessage.setSource(this.server);
-								this.server.getPortHandler().send(returnMessage, message.source);
-						}
+						deliverMessage(message);
 				} else {
 						message.message += " " + this.server.serverId;
 						if (prevStationOffset != 0 && prevStationOffset < targetKeyOffset) {
@@ -339,5 +335,82 @@ public class MessageHandler {
 		 */
 		private long getOffset(long id) {
 				return (id + Server.GRID_SIZE - this.server.serverId) % Server.GRID_SIZE;
+		}
+
+		private void deliverMessage(Message message) {
+				Message returnMessage = null;
+				boolean success = false;
+				switch (message.type) {
+						case REQUEST:
+								if (this.server.getSinchanaInterface() != null) {
+										returnMessage = this.server.getSinchanaInterface().request(message.deepCopy());
+								}
+								break;
+						case RESPONSE:
+								if (this.server.getSinchanaInterface() != null) {
+										this.server.getSinchanaInterface().response(message.deepCopy());
+								}
+								break;
+						case ERROR:
+								if (this.server.getSinchanaInterface() != null) {
+										this.server.getSinchanaInterface().error(message.deepCopy());
+								}
+								break;
+
+						case STORE_DATA:
+								if (this.server.getSinchanaStoreInterface() != null) {
+										success = this.server.getSinchanaStoreInterface().store(message.targetKey, message.message);
+								}
+								break;
+						case DELETE_DATA:
+								if (this.server.getSinchanaStoreInterface() != null) {
+										success = this.server.getSinchanaStoreInterface().delete(message.targetKey);
+								}
+								break;
+						case GET_DATA:
+								if (this.server.getSinchanaStoreInterface() != null) {
+										returnMessage = new Message();
+										returnMessage.setLifetime(1);
+										message.setType(MessageType.RESPONSE_DATA);
+										message.setMessage(this.server.getSinchanaStoreInterface().get(message.targetKey));
+								}
+								break;
+						case FAILURE_DATA:
+								break;
+						case ACKNOWLEDGE_DATA:
+								break;
+						case RESPONSE_DATA:
+								break;
+
+						case PUBLISH_SERVICE:
+								if (this.server.getSinchanaServiceInterface() != null) {
+										success = this.server.getSinchanaServiceInterface().publish(message.targetKey, message.message);
+								}
+								break;
+						case REMOVE_SERVICE:
+								if (this.server.getSinchanaServiceInterface() != null) {
+										success = this.server.getSinchanaServiceInterface().remove(message.targetKey);
+								}
+								break;
+						case GET_SERVICE:
+								if (this.server.getSinchanaServiceInterface() != null) {
+										returnMessage = new Message();
+										returnMessage.setLifetime(1);
+										message.setType(MessageType.RESPONSE_SERVICE);
+										message.setMessage(this.server.getSinchanaServiceInterface().get(message.targetKey));
+								}
+								break;
+						case FAILURE_SERVICE:
+								break;
+						case ACKNOWLEDGE_SERVICE:
+								break;
+						case RESPONSE_SERVICE:
+								break;
+				}
+				if (returnMessage != null) {
+						returnMessage.setSource(this.server);
+						this.server.getPortHandler().send(returnMessage, message.source);
+				} else if (success) {
+				}
 		}
 }

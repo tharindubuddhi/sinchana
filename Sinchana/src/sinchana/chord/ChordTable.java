@@ -36,6 +36,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		private long serverId;
 		private Thread thread = new Thread(this);
 		private int timeOutCount = 0;
+		private Node lastRemovedNode = null;
 
 		/**
 		 * Class constructor with the server instance where the routing table is initialize.
@@ -165,7 +166,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * not this server it self. This is because the requester knows 
 						 * about this server, so sending it again is a waste.
 						 */
-						if (fingerTableEntry.getSuccessor().serverId != this.serverId) {
+						if (fingerTableEntry.getSuccessor() != null
+								&& fingerTableEntry.getSuccessor().serverId != this.serverId) {
 								neighbourSet.add(fingerTableEntry.getSuccessor());
 						}
 				}
@@ -223,6 +225,9 @@ public class ChordTable implements RoutingHandler, Runnable {
 
 		@Override
 		public void updateTable(Node node) {
+				if (lastRemovedNode != null && lastRemovedNode.serverId == node.serverId) {
+						return;
+				}
 				//calculates offsets for the ids.
 				long newNodeOffset = getOffset(node.serverId);
 				boolean tableChanged = false;
@@ -293,15 +298,14 @@ public class ChordTable implements RoutingHandler, Runnable {
 								}
 						}
 				}
-				if (updated) {
-						importNeighbours(node);
-				}
-
 				/**
 				 * updates the testing interfaces if the table is altered.
 				 */
 				if (tableChanged && this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
+				}
+				if (updated) {
+						importNeighbours(node);
 				}
 		}
 
@@ -328,6 +332,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		 */
 		@Override
 		public void removeNode(Node nodeToRemove) {
+				lastRemovedNode = nodeToRemove;
 				//gets the known node set.
 				Set<Node> neighbourSet = getNeighbourSet();
 				//reset the predecessor, successor and finger table entries.

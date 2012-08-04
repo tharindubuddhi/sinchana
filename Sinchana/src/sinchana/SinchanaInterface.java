@@ -11,7 +11,7 @@ import sinchana.thrift.Message;
  * @author Hiru
  */
 public interface SinchanaInterface {
-		
+
 		/**
 		 * Receive messages where the destination is this server. They can be either
 		 * <p>
@@ -22,6 +22,9 @@ public interface SinchanaInterface {
 		 * @param message		Message.
 		 * @return				Return message to send back to the sender. Return null if no messages need to be sent back
 		 */
-		public abstract Message receive(Message message);
-		
+		public abstract Message request(Message message);
+
+		public abstract void response(Message message);
+
+		public abstract void error(Message message);
 }

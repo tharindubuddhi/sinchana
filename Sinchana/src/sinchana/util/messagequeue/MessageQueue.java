@@ -94,7 +94,7 @@ public class MessageQueue implements Runnable {
 		 */
 		public boolean isStarted() {
 				return started;
-		}		
+		}
 
 		/**
 		 * Returns the size of the message queue. This returns the number of un-served message in the queue.
@@ -116,5 +116,14 @@ public class MessageQueue implements Runnable {
 								throw new RuntimeException(ex);
 						}
 				}
+		}
+
+		public interface MessageEventHandler {
+
+				/**
+				 * This method will be called when the message queue serves messages.
+				 * @param message		The message currently serving.
+				 */
+				public abstract void process(Message message);
 		}
 }

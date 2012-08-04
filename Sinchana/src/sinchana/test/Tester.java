@@ -27,7 +27,7 @@ import java.util.concurrent.Semaphore;
  *
  * @author Hiru
  */
-public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnable {
+public class Tester implements SinchanaTestInterface, Runnable {
 
 		private Server server;
 		private short testId;
@@ -49,15 +49,33 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 						this.testId = testId;
 						this.testerController = tc;
 						InetAddress[] ip = InetAddress.getAllByName("localhost");
-//						System.out.println(testId + ": " + ip[0].toString());
-//						server = new Server(ip[0],
-//								(short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
-						server = new Server((short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
-						
-                                                Node node = getRemoteNode(server.serverId,
+						server = new Server(ip[0],
+								(short) (testId + TesterController.LOCAL_PORT_ID_RANGE));
+						Node node = getRemoteNode(server.serverId,
 								server.address, server.portId);
 						server.setAnotherNode(node);
-						server.registerSinchanaInterface(this);
+						server.registerSinchanaInterface(new SinchanaInterface() {
+
+								@Override
+								public Message request(Message message) {
+										Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+												"Recieved REQUEST message : " + message);
+										requestCount++;
+										return null;
+								}
+
+								@Override
+								public void response(Message message) {
+										Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+												"Recieved RESPONSE message : " + message);
+								}
+
+								@Override
+								public void error(Message message) {
+										Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+												"Recieved ERROR message : " + message);
+								}
+						});
 						server.registerSinchanaTestInterface(this);
 						server.startServer();
 						if (TesterController.GUI_ON) {
@@ -100,31 +118,6 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				Message msg = new Message(this.server, MessageType.TEST_RING, Server.MESSAGE_LIFETIME);
 				msg.setMessage("");
 				this.server.send(msg);
-		}
-
-		@Override
-		public Message receive(Message message) {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_TESTER, 0,
-						"Recieved " + message);
-				Message response = null;
-				switch (message.type) {
-						case ACCEPT:
-								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
-										"Recieved ACCEPT message : " + message);
-								break;
-						case ERROR:
-								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
-										"Recieved ERROR message : " + message);
-								break;
-						case GET:
-								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
-										"Recieved GET message : " + message);
-								requestCount++;
-//								response = new Message(this.server, MessageType.ACCEPT, 1);
-//								response.setTargetKey(message.getTargetKey());
-								break;
-				}
-				return response;
 		}
 
 		@Override
@@ -266,36 +259,41 @@ public class Tester implements SinchanaInterface, SinchanaTestInterface, Runnabl
 				return (int) this.server.serverId;
 		}
 
-		private Node getRemoteNode(long serverId, String address, int portId) {
-				try {
-						URL url = new URL("http://cseanremo.appspot.com/remoteip?"
-								+ "sid=" + serverId
-								+ "&url=" + address
-								+ "&pid=" + portId);
-						URLConnection yc = url.openConnection();
-						InputStreamReader isr = new InputStreamReader(yc.getInputStream());
-						BufferedReader in = new BufferedReader(isr);
-						String resp = in.readLine();
-						System.out.println(testId + ":\tresp: " + resp);
-						if (resp == null || resp.equalsIgnoreCase("null")) {
-								Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
-										"Error in getting remote server details.");
-								return null;
+		private Node getRemoteNode(long serverId, String address, short portId) {
+				if (TesterController.USE_REMOTE_CACHE_SERVER) {
+						try {
+								URL url = new URL("http://cseanremo.appspot.com/remoteip?"
+										+ "sid=" + serverId
+										+ "&url=" + address
+										+ "&pid=" + portId);
+								URLConnection yc = url.openConnection();
+								InputStreamReader isr = new InputStreamReader(yc.getInputStream());
+								BufferedReader in = new BufferedReader(isr);
+								String resp = in.readLine();
+								System.out.println(testId + ":\tresp: " + resp);
+								if (resp == null || resp.equalsIgnoreCase("null")) {
+										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
+												"Error in getting remote server details.");
+										return null;
+								}
+								if (!resp.equalsIgnoreCase("n/a")) {
+										Node node = new Node();
+										node.serverId = Long.parseLong(resp.split(":")[0]);
+										node.address = resp.split(":")[1];
+										node.portId = Short.parseShort(resp.split(":")[2]);
+										in.close();
+										return node;
+								}
+						} catch (IOException e) {
+								throw new RuntimeException("Invalid response from the cache server!", e);
+						} catch (NumberFormatException e) {
+								throw new RuntimeException("Invalid response from the cache server!", e);
 						}
-						if (!resp.equalsIgnoreCase("n/a")) {
-								Node node = new Node();
-								node.serverId = Long.parseLong(resp.split(":")[0]);
-								node.address = resp.split(":")[1];
-								node.portId = Short.parseShort(resp.split(":")[2]);
-								in.close();
-								return node;
-						}
-				} catch (IOException e) {
-						throw new RuntimeException("Invalid response from the cache server!", e);
-				} catch (NumberFormatException e) {
-						throw new RuntimeException("Invalid response from the cache server!", e);
+						return null;
+				} else {
+						Node node = new Node(serverId, address, portId);
+						return LocalCacheServer.getRemoteNode(node);
 				}
-				return null;
 		}
 
 		void trigger() {

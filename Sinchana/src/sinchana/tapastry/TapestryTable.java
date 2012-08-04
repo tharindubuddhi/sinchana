@@ -276,7 +276,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 //						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
 				}
 
-				/**
+				/**tableChanged
 				 * if the neighbor set has not imported, imports it from the predecessor.
 				 * This will happens only once after the node successfully joined to the grid.
 				 */

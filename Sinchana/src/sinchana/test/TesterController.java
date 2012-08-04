@@ -32,6 +32,7 @@ public class TesterController {
 		public static short NUM_OF_TESTING_NODES = 0;
 		public static short NUM_OF_AUTO_TESTING_NODES = 1;
 		public static final boolean GUI_ON = false;
+		public static final boolean USE_REMOTE_CACHE_SERVER = false;
 		public static final int AUTO_TEST_TIMEOUT = 2;
 		public static final int ROUND_TIP_TIME = 0;
 		public static final int AUTO_TEST_MESSAGE_LIFE_TIME = 120;
@@ -49,16 +50,17 @@ public class TesterController {
 		 * @param args
 		 */
 		public static void main(String[] args) {
-				try {
-//                                                Properties props = System.getProperties();
-//                                                props.put("http.proxyHost", "cache.mrt.ac.lk");
-//                                                props.put("http.proxyPort", "3128");
-						URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=false");
-						URLConnection yc = yahoo.openConnection();
-						InputStreamReader isr = new InputStreamReader(yc.getInputStream());
-						isr.close();
-				} catch (Exception e) {
-						throw new RuntimeException("Error in clearing the cache server.", e);
+				if (TesterController.USE_REMOTE_CACHE_SERVER) {
+						try {
+								URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=true");
+								URLConnection yc = yahoo.openConnection();
+								InputStreamReader isr = new InputStreamReader(yc.getInputStream());
+								isr.close();
+						} catch (Exception e) {
+								throw new RuntimeException("Error in clearing the cache server.", e);
+						}
+				} else {
+						LocalCacheServer.clear();
 				}
 				new TesterController();
 		}
@@ -222,7 +224,7 @@ public class TesterController {
 				Set<Short> keySet = testServers.keySet();
 				for (Short key : keySet) {
 						if (testServers.get(key).getServerId() == requester) {
-								Message msg = new Message(null, MessageType.GET, 10);
+								Message msg = new Message(null, MessageType.REQUEST, 10);
 								msg.setTargetKey(destination);
 								msg.setMessage(text);
 								testServers.get(key).getServer().send(msg);

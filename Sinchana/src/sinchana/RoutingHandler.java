@@ -84,5 +84,5 @@ public interface RoutingHandler {
 		 * Updates the table, successor and predecessor with the new node.
 		 * @param node Node to be added to the routing table.
 		 */
-		public abstract void updateTable(Node node);				
+		public abstract void updateTable(Node node);
 }
