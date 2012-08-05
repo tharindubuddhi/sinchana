@@ -5,7 +5,10 @@
 package sinchana;
 
 import java.math.BigInteger;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import sinchana.thrift.DataObject;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -362,12 +365,14 @@ public class MessageHandler {
 
 						case STORE_DATA:
 								if (this.server.getSinchanaStoreInterface() != null) {
-										success = this.server.getSinchanaStoreInterface().store(message.targetKey, message.message);
+                                                                                DataObject dataObject = new DataObject(message.source.serverId, message.source.address, message.message);
+                                                                                processStore(message.targetKey, dataObject);
+										this.server.getSinchanaStoreInterface().store(dataObject);
 								}
 								break;
 						case DELETE_DATA:
 								if (this.server.getSinchanaStoreInterface() != null) {
-										success = this.server.getSinchanaStoreInterface().delete(message.targetKey);
+//										success = this.server.getSinchanaStoreInterface().delete(message.targetKey);
 								}
 								break;
 						case GET_DATA:
@@ -375,12 +380,16 @@ public class MessageHandler {
 										returnMessage = new Message();
 										returnMessage.setLifetime(1);
 										message.setType(MessageType.RESPONSE_DATA);
-										message.setMessage(this.server.getSinchanaStoreInterface().get(message.targetKey));
+//										message.setMessage(this.server.getSinchanaStoreInterface().get(message.targetKey));
 								}
 								break;
 						case FAILURE_DATA:
 								break;
 						case ACKNOWLEDGE_DATA:
+                                                       if(message.message.equals("success")){
+                                                                success=true;
+                                                                }
+                                                                this.server.getSinchanaStoreInterface().isStored(success);                                                  
 								break;
 						case RESPONSE_DATA:
 								break;
@@ -416,4 +425,70 @@ public class MessageHandler {
 				} else if (success) {
 				}
 		}
+                
+                 private boolean processStore(String objectKey, DataObject dataObject){
+
+                     Map <String, Set <DataObject> > rootObjects = this.server.getSinchanaDataStore().getrootObjects();
+                     Set <DataObject> sourceServers = rootObjects.get(objectKey);
+
+                     if(sourceServers==null){
+                         sourceServers= new HashSet <DataObject> ();
+                     }
+                     sourceServers.add(dataObject);
+                     this.server.getSinchanaDataStore().setrootObjects(rootObjects);
+                     Message msg = new Message(this.server, MessageType.ACKNOWLEDGE_DATA, 10);
+                     msg.setTargetKey(dataObject.sourceID);
+                     msg.setMessage("success");
+                     msg.setStation(this.server);
+                     this.server.getMessageHandler().queueMessage(msg);                                                         
+                     return true;
+
+                }
+
+                private Set<DataObject> processStoreGet(String objectKey, String sourceKey){
+
+                     Map <String, Set <DataObject> > rootObjects=this.server.getSinchanaDataStore().getrootObjects();
+                     Set <DataObject> sourceServers= rootObjects.get(objectKey);
+
+                     if(sourceServers==null){
+
+                         System.out.println("error");
+
+                          Message msg = new Message(this.server, MessageType.RESPONSE_DATA, 10);
+                           msg.setTargetKey(sourceKey);
+                          msg.setMessage("no such object is stored");
+                          msg.setStation(this.server);
+                          this.server.getMessageHandler().queueMessage(msg);
+                         return null;
+
+                     }
+                    else{
+                    
+                        return sourceServers;
+                    }
+                    
+                }
+
+                private boolean processremove(String objectKey, String sourceKey ){
+
+                     Map <String, Set <DataObject> > rootObjects=this.server.getSinchanaDataStore().getrootObjects();
+                     Set <DataObject> sourceServers= rootObjects.get(objectKey);
+
+                     if(sourceServers==null){
+
+                         System.out.println("no objects for that key");
+
+                     }
+                    else if(!sourceServers.contains(sourceKey)){
+                     
+                         System.out.println("no objects published from that source for this object");
+                    }
+                    else{
+
+                         sourceServers.remove(sourceKey);
+                         return true;
+
+                    }
+                     return false;
+                }
 }

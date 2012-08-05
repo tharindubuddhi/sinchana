@@ -4,6 +4,9 @@
  */
 package sinchana;
 
+import java.util.Set;
+import sinchana.thrift.DataObject;
+
 
 /**
  *
@@ -12,9 +15,19 @@ package sinchana;
 
 public interface SinchanaStoreInterface {
 
-		public abstract boolean store(String key, String data);
+		public abstract void store(DataObject dataObject);
 
-		public abstract String get(String key);
+		public abstract void get(Set<DataObject> dataObjectSet);
 
-		public abstract boolean delete(String key);
+		public abstract void remove(DataObject dataObject);
+                
+                public abstract void isStored(Boolean success );
+
+                public abstract void isRemoved(Boolean success );
+                
+//                public abstract boolean store(String objectkey, String data);
+//
+//		public abstract void get(String sourceKey);
+//
+//		public abstract boolean remove(String objectkey, String sourcekey);
 }
