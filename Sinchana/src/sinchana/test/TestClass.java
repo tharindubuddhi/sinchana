@@ -82,7 +82,7 @@ public class TestClass {
 
 				sinchanaServer2.setAnotherNode(node);
 
-				System.out.println("startoing " + sinchanaServer2.getServerId());
+				System.out.println("starting " + sinchanaServer2.getServerId());
 
 				sinchanaServer2.startServer();
 
