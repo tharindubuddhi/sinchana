@@ -17,6 +17,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import sinchana.CONFIG;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.util.tools.CommonTools;
@@ -29,11 +30,6 @@ public class TesterController {
 
 		public static int NUM_OF_TESTING_NODES = 0;
 		public static int NUM_OF_AUTO_TESTING_NODES = 1;
-		public static final boolean GUI_ON = false;
-		public static final boolean USE_REMOTE_CACHE_SERVER = false;
-		public static final int AUTO_TEST_TIMEOUT = 2;
-		public static final int ROUND_TIP_TIME = 50;
-		public static final int AUTO_TEST_MESSAGE_LIFE_TIME = 120;
 		public static int max_buffer_size = 0;
 		private final Map<Integer, Tester> testServers = new HashMap<Integer, Tester>();
 		private final ControllerUI cui = new ControllerUI(this);
@@ -48,18 +44,7 @@ public class TesterController {
 		 * @param args
 		 */
 		public static void main(String[] args) {
-				if (TesterController.USE_REMOTE_CACHE_SERVER) {
-						try {
-								URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=true");
-								URLConnection yc = yahoo.openConnection();
-								InputStreamReader isr = new InputStreamReader(yc.getInputStream());
-								isr.close();
-						} catch (Exception e) {
-								throw new RuntimeException("Error in clearing the cache server.", e);
-						}
-				} else {
-						LocalCacheServer.clear();
-				}
+				LocalCacheServer.clear();
 				new TesterController();
 		}
 
@@ -264,22 +249,6 @@ public class TesterController {
 								randomAmount--;
 						}
 				}
-		}
-
-		public void retrieveService() {
-				int randomId;
-				int randomAmount;
-//                            while(noOfServices>0){
-				randomId = (int) (Math.random() * testServers.size());
-				randomAmount = (int) (Math.random() * serviceArray.length);
-				for (int i = 0; i < serviceArray.length; i++) {
-
-						testServers.get(randomId).getServer().getService(keyArray[i]);
-
-
-				}
-
-
 		}
 
 		/**

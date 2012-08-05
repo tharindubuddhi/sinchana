@@ -15,6 +15,7 @@ import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 import java.util.HashSet;
 import java.util.Set;
+import sinchana.CONFIG;
 
 /**
  *
@@ -86,7 +87,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				for (Node[] nodes : fingerTable) {
 						for (Node node : nodes) {
 								if (node != null && !node.serverId.equals(this.serverId)) {
-										msg = new Message(this.server, MessageType.FIND_SUCCESSOR, Server.MESSAGE_LIFETIME);
+										msg = new Message(this.server, MessageType.FIND_SUCCESSOR, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
 										ph.send(msg, node);
 								}
 						}

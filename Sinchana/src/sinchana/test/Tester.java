@@ -21,6 +21,7 @@ import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
+import sinchana.CONFIG;
 
 /**
  *
@@ -49,7 +50,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 						this.testerController = tc;
 						InetAddress[] ip = InetAddress.getAllByName("localhost");
 						String address = ip[0].getHostAddress();
-						String remoteNodeAddress = getRemoteNode(address, portId);
+						String remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
 						server = new Server(address + ":" + portId, remoteNodeAddress);
 						server.registerSinchanaInterface(new SinchanaInterface() {
 
@@ -76,7 +77,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 						server.registerSinchanaTestInterface(this);
 						server.startServer();
 						testService = new TestService(this, tc);
-						if (TesterController.GUI_ON) {
+						if (CONFIG.GUI_ON) {
 								this.gui = new ServerUI(this);
 						}
 				} catch (UnknownHostException ex) {
@@ -113,7 +114,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		 * 
 		 */
 		public void startRingTest() {
-				Message msg = new Message(this.server, MessageType.TEST_RING, Server.MESSAGE_LIFETIME);
+				Message msg = new Message(this.server, MessageType.TEST_RING, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setMessage("");
 				this.server.send(msg);
 		}
@@ -131,7 +132,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 								threadLock.acquire();
 								String randomDestination;
 								while (numOfTestingMessages > 0) {
-										randomDestination = "" + (long) (Math.random() * Server.GRID_SIZE.longValue());
+										randomDestination = new BigInteger(160, new Random()).toString(16);
 										server.send(randomDestination, "where are you?");
 										numOfTestingMessages--;
 								}
@@ -252,36 +253,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		@Override
 		public int hashCode() {
 				return this.server.serverId.hashCode();
-		}
-
-		private String getRemoteNode(String address, int portId) {
-				if (TesterController.USE_REMOTE_CACHE_SERVER) {
-						try {
-								URL url = new URL("http://cseanremo.appspot.com/remoteip?"
-										+ "sid=" + address + "@" + portId
-										+ "&url=" + address
-										+ "&pid=" + portId);
-								URLConnection yc = url.openConnection();
-								InputStreamReader isr = new InputStreamReader(yc.getInputStream());
-								BufferedReader in = new BufferedReader(isr);
-								String resp = in.readLine();
-								in.close();
-								System.out.println(testId + ":\tresp: " + resp);
-								if (resp == null || resp.equalsIgnoreCase("null")) {
-										Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_TESTER, 3,
-												"Error in getting remote server details.");
-										return null;
-								}
-								if (!resp.equalsIgnoreCase("n/a")) {
-										return resp.split(":")[1] + ":" + resp.split(":")[2];
-								}
-						} catch (Exception e) {
-								throw new RuntimeException("Invalid response from the cache server!", e);
-						}
-						return null;
-				} else {
-						return LocalCacheServer.getRemoteNode(address + ":" + portId);
-				}
 		}
 
 		void trigger() {

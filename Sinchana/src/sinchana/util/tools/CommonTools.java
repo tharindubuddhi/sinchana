@@ -35,5 +35,5 @@ public class CommonTools {
 						throw new RuntimeException("Wrong ID " + id + "! Go & find a new hash function :P");
 				}
 				ids.add(id);
-		}
+		}		
 }

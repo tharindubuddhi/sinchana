@@ -6,9 +6,9 @@ package sinchana.connection;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import sinchana.CONFIG;
 import sinchana.Server;
 import sinchana.thrift.DHTServer;
 import sinchana.thrift.Node;
@@ -22,7 +22,6 @@ public class ConnectionPool {
 
 		private Map<String, Connection> pool = new HashMap<String, Connection>();
 		private Server server;
-		private static final int NUM_OF_MAX_CONNECTIONS = 18;
 
 		/**
 		 * Class constructor. The server instance where the connection fool is 
@@ -49,10 +48,14 @@ public class ConnectionPool {
 						}
 						Connection connection = new Connection(url);
 						pool.put(serverId, connection);
-						if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
-								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 1,
+						if (CONFIG.NUM_OF_MAX_OPENED_CONNECTION < pool.size()) {
+								int level = Logger.LEVEL_INFO;
+								if (CONFIG.NUM_OF_MAX_OPENED_CONNECTION + 1 < pool.size()) {
+										level = Logger.LEVEL_WARNING;
+								}
+								Logger.log(this.server.serverId, level, Logger.CLASS_CONNECTION_POOL, 1,
 										"Maximum number of connections opened exceeded! ("
-										+ pool.size() + "/" + NUM_OF_MAX_CONNECTIONS + " are opened)");
+										+ pool.size() + "/" + CONFIG.NUM_OF_MAX_OPENED_CONNECTION + " are opened)");
 								getSpace();
 						}
 						return connection.open();
@@ -63,7 +66,8 @@ public class ConnectionPool {
 				Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 				Set<String> keySet = pool.keySet();
 				boolean terminate;
-				Set<String> idsToTerminate = new HashSet<String>();
+				String idToTerminate = null;
+				long oldestTime = Long.MAX_VALUE;
 				for (String sid : keySet) {
 						terminate = true;
 						for (Node node : neighbourSet) {
@@ -72,13 +76,14 @@ public class ConnectionPool {
 										break;
 								}
 						}
-						if (terminate) {
-								idsToTerminate.add(sid);
+						if (terminate && pool.get(sid).getLastUsedTime() < oldestTime) {
+								oldestTime = pool.get(sid).getLastUsedTime();
+								idToTerminate = sid;
 						}
 				}
-				for (String id : idsToTerminate) {
-						pool.get(id).reset();
-						pool.remove(id);
+				if (idToTerminate != null) {
+						pool.get(idToTerminate).reset();
+						pool.remove(idToTerminate);
 				}
 		}
 
