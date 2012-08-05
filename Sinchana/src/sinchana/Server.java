@@ -28,7 +28,7 @@ public class Server extends Node {
 		private SinchanaTestInterface sinchanaTestInterface = null;
 		private SinchanaServiceInterface sinchanaServiceInterface = null;
 		private SinchanaStoreInterface sinchanaStoreInterface = null;
-                
+                private SinchanaDataStore sinchanaDataStore = new SinchanaDataStore();
 		private String remoteNodeAddress = null;
 		private BigInteger serverIdAsBigInt;
 
@@ -156,6 +156,11 @@ public class Server extends Node {
 				return routingHandler;
 		}
 
+                public SinchanaDataStore getSinchanaDataStore() {
+                                return sinchanaDataStore;
+                }
+
+                
 		public BigInteger getServerIdAsBigInt() {
 				return serverIdAsBigInt;
 		}
