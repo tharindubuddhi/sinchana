@@ -20,9 +20,9 @@ import sinchana.util.tools.CommonTools;
  */
 public class Server extends Node {
 
-		public static final BigInteger GRID_SIZE = new BigInteger("2").pow(160);
+		public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 		private final PortHandler portHandler = new ThriftServer(this);
-		private final RoutingHandler routingHandler = Server.getRoutingHandler(RoutingHandler.TYPE_CHORD, this);
+		private final RoutingHandler routingHandler = new ChordTable(this);
 		private final MessageHandler messageHandler = new MessageHandler(this);
 		private SinchanaInterface sinchanaInterface = null;
 		private SinchanaTestInterface sinchanaTestInterface = null;
@@ -37,16 +37,8 @@ public class Server extends Node {
 		/**
 		 * 
 		 */
-		public long threadId;
-		private Node anotherNode;
+		private String remoteNodeAddress = null;
 		private BigInteger serverIdAsBigInt;
-
-		private static RoutingHandler getRoutingHandler(String type, Server server) {
-				if (type.equalsIgnoreCase(RoutingHandler.TYPE_CHORD)) {
-						return new ChordTable(server);
-				}
-				return null;
-		}
 
 		/**
 		 * Start a new node with the given server ID and next hop.
@@ -56,53 +48,62 @@ public class Server extends Node {
 		 * @param address		URL of the server.
 		 * @param portId		Port Id number where the the server is running.
 		 */
-		public Server(short portId) {
+		public Server(int localPortId) {
 				try {
 						InetAddress inetAddress = InetAddress.getLocalHost();
-						this.portId = portId;
-						this.address = inetAddress.getHostAddress();
-						this.serverIdAsBigInt = CommonTools.generateId(this.address + ":" + this.portId);
-						this.serverId = serverIdAsBigInt.toString();
-//						byte[] ta = new byte[]{50, 0, 0, 50};
-//						this.serverId = CommonTools.generateId(ta, portId, GRID_SIZE);
-//						this.address = "50.0.0.50";
+						this.init(inetAddress.getHostAddress() + ":" + localPortId, null);
 				} catch (UnknownHostException ex) {
 						throw new RuntimeException("Error getting local host ip.", ex);
 				}
 		}
 
-		public Server(InetAddress localInetAddress, short portId) {
-				this.portId = portId;
-				this.address = localInetAddress.getHostAddress();
-				this.serverIdAsBigInt = CommonTools.generateId(this.address + ":" + this.portId);
-				this.serverId = serverIdAsBigInt.toString();
+		public Server(String localAddress) {
+				this.init(localAddress, null);
 		}
 
-		public void setAnotherNode(Node anotherNode) {
-				this.anotherNode = anotherNode;
+		public Server(int localPortId, String remoteNodeAddress) {
+				try {
+						InetAddress inetAddress = InetAddress.getLocalHost();
+						this.init(inetAddress.getHostAddress() + ":" + localPortId, remoteNodeAddress);
+				} catch (UnknownHostException ex) {
+						throw new RuntimeException("Error getting local host ip.", ex);
+				}
+		}
+
+		public Server(String localAddress, String remoteNodeAddress) {
+				this.init(localAddress, remoteNodeAddress);
+		}
+
+		private void init(String address, String remoteNodeAddress) {
+				this.address = address;
+				this.serverIdAsBigInt = CommonTools.generateId(this.address);
+				StringBuilder sb = new StringBuilder(serverIdAsBigInt.toString(16));
+				while (sb.length() < 40) {
+						sb.insert(0, "0");
+				}
+				this.serverId = sb.toString();
+				this.remoteNodeAddress = remoteNodeAddress;
 		}
 
 		/**
 		 * Start the server.
 		 */
 		public void startServer() {
-				this.threadId = Thread.currentThread().getId();
 				this.routingHandler.init();
-				this.threadId = this.messageHandler.init();
 				this.portHandler.startServer();
 		}
 
 		public void join() {
-				if (this.anotherNode != null && !this.anotherNode.serverId.equals(this.serverId)) {
+				if (this.remoteNodeAddress != null) {
 						Message msg = new Message(this, MessageType.JOIN, MESSAGE_LIFETIME);
-						this.portHandler.send(msg, this.anotherNode);
+						Node remoteNode = new Node("n/a", remoteNodeAddress);
+						this.portHandler.send(msg, remoteNode);
 				} else {
 						this.messageHandler.startAsRootNode();
 						if (this.sinchanaTestInterface != null) {
 								this.sinchanaTestInterface.setStable(true);
 						}
 				}
-
 		}
 
 		/**
@@ -166,7 +167,7 @@ public class Server extends Node {
 		public BigInteger getServerIdAsBigInt() {
 				return serverIdAsBigInt;
 		}
-		
+
 		/**
 		 * 
 		 * @return

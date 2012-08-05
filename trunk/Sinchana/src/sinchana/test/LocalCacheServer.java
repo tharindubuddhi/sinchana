@@ -4,7 +4,6 @@
  */
 package sinchana.test;
 
-import sinchana.thrift.Node;
 
 /**
  *
@@ -13,30 +12,30 @@ import sinchana.thrift.Node;
 public class LocalCacheServer {
 
 		private static final int CACHE_SIZE = 20;
-		private static final Node[] NODES = new Node[CACHE_SIZE];
+		private static final String[] NODES = new String[CACHE_SIZE];
 
-		public static Node getRemoteNode(Node node) {
+		public static String getRemoteNode(String address) {
 				boolean contains = false;
 				for (int i = 0; i < CACHE_SIZE; i++) {
-						if (NODES[i] != null && NODES[i].serverId.equals(node.serverId)) {
+						if (NODES[i] != null && NODES[i].equals(address)) {
 								contains = true;
 						}
 				}
 				if (!contains) {
 						for (int i = 0; i < CACHE_SIZE; i++) {
 								if (NODES[i] == null) {
-										NODES[i] = node.deepCopy();
+										NODES[i] = address;
 										break;
 								}
 						}
 				}
 
 
-				Node reply = null;
+				String reply = null;
 				int val, count = 0;
 				while (reply == null && count < 1000000) {
 						val = (int) (Math.random() * CACHE_SIZE);
-						if (NODES[val] != null && !NODES[val].serverId.equals(node.serverId)) {
+						if (NODES[val] != null && !NODES[val].equals(address)) {
 								reply = NODES[val];
 						}
 						count++;

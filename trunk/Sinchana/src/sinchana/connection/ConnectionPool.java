@@ -42,12 +42,12 @@ public class ConnectionPool {
 		 * @param portId		Port id of the destination.
 		 * @return				TTransport connection opened to the destination.
 		 */
-		public DHTServer.Client getConnection(String serverId, String address, int portId) {
+		public DHTServer.Client getConnection(String serverId, String url) {
 				synchronized (this) {
 						if (pool.containsKey(serverId)) {
 								return pool.get(serverId).open();
 						}
-						Connection connection = new Connection(address, portId);
+						Connection connection = new Connection(url);
 						pool.put(serverId, connection);
 						if (NUM_OF_MAX_CONNECTIONS < pool.size()) {
 								Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 1,

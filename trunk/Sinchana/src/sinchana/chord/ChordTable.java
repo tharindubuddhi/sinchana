@@ -48,7 +48,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		@Override
 		public void init() {
 				this.serverId = this.server.getServerId();
-				this.serverIdAsBigInt = new BigInteger(this.serverId);
+				this.serverIdAsBigInt = new BigInteger(this.serverId, 16);
 				synchronized (this) {
 						this.initFingerTable();
 				}
@@ -66,8 +66,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * all the table entries.
 						 */
 						fingerTable[i] = new FingerTableEntry();
-						fingerTable[i].setStart(new BigInteger("2").pow(i).add(serverIdAsBigInt).mod(Server.GRID_SIZE));
-						fingerTable[i].setEnd(new BigInteger("2").pow(i + 1).add(serverIdAsBigInt).subtract(new BigInteger("1")).mod(Server.GRID_SIZE));
+						fingerTable[i].setStart(new BigInteger("2", 16).pow(i).add(serverIdAsBigInt).mod(Server.GRID_SIZE));
+						fingerTable[i].setEnd(new BigInteger("2", 16).pow(i + 1).add(serverIdAsBigInt).subtract(new BigInteger("1", 16)).mod(Server.GRID_SIZE));
 						fingerTable[i].setSuccessor(this.server.deepCopy());
 				}
 				/**
@@ -183,7 +183,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		public void getOptimalSuccessor(Message message) {
 				//calculates offset.
 				BigInteger idOffset = getOffset(message.getStartOfRange());
-				BigInteger neighBourOffset, mostAdvance = new BigInteger("0");
+				BigInteger neighBourOffset, mostAdvance = new BigInteger("0", 16);
 				//initializes to this server.
 				Node optimalSuccessor = this.server;
 				//get the neighbor set (the knows node set of this server)
@@ -242,8 +242,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * the new node will be set as the successor.
 						 * 0-----this.server.id------new.server.id-------existing.successor.id----------End.of.Grid
 						 */
-						if (successorOffset.equals(new BigInteger("0"))
-								|| (!newNodeOffset.equals(new BigInteger("0"))
+						if (successorOffset.equals(new BigInteger("0", 16))
+								|| (!newNodeOffset.equals(new BigInteger("0", 16))
 								&& newNodeOffset.compareTo(successorOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 										"Node " + node + " is set as successor overriding " + this.successor);
@@ -263,8 +263,8 @@ public class ChordTable implements RoutingHandler, Runnable {
 						 * 0-----existing.predecessor.id------new.server.id-------this.server.id----------End.of.Grid
 						 */
 						BigInteger predecessorOffset = getOffset(this.predecessor.serverId);
-						if (predecessorOffset.equals(new BigInteger("0"))
-								|| (!newNodeOffset.equals(new BigInteger("0"))
+						if (predecessorOffset.equals(new BigInteger("0", 16))
+								|| (!newNodeOffset.equals(new BigInteger("0", 16))
 								&& predecessorOffset.compareTo(newNodeOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 										"Node " + node + " is set as predecessor overriding " + this.predecessor);
@@ -290,7 +290,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 								 */
 								if (startOffset.compareTo(newNodeOffset) != 1
 										&& (newNodeOffset.compareTo(successorOffset) == -1
-										|| successorOffset.equals(new BigInteger("0")))) {
+										|| successorOffset.equals(new BigInteger("0", 16)))) {
 										Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 0,
 												"Setting " + node.serverId + " as successor of "
 												+ fingerTable[i].getStart() + "-" + fingerTable[i].getEnd()
@@ -361,7 +361,7 @@ public class ChordTable implements RoutingHandler, Runnable {
 		 * @return		Offset of the id relative to this server.
 		 */
 		private BigInteger getOffset(String id) {
-				return Server.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
+				return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
 		}
 
 		private BigInteger getOffset(BigInteger id) {

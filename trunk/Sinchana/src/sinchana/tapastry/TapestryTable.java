@@ -46,7 +46,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		@Override
 		public void init() {
 				this.serverId = this.server.getServerId();
-				this.serverIdAsBigInt = new BigInteger(this.serverId);
+				this.serverIdAsBigInt = new BigInteger(this.serverId, 16);
 				synchronized (this) {
 						this.initFingerTable();
 						this.neighboursImported = false;
@@ -233,8 +233,8 @@ public class TapestryTable implements RoutingHandler, Runnable {
 						 * the new node will be set as the successor.
 						 * 0-----this.server.id------new.server.id-------existing.successor.id----------End.of.Grid
 						 */
-						if (successorOffset.equals(new BigInteger("0"))
-								|| (!newNodeOffset.equals(new BigInteger("0"))
+						if (successorOffset.equals(new BigInteger("0", 16))
+								|| (!newNodeOffset.equals(new BigInteger("0", 16))
 								&& newNodeOffset.compareTo(successorOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 										"Node " + node + " is set as successor overriding " + this.successor);
@@ -253,8 +253,8 @@ public class TapestryTable implements RoutingHandler, Runnable {
 						 * 0-----existing.predecessor.id------new.server.id-------this.server.id----------End.of.Grid
 						 */
 						BigInteger predecessorOffset = getOffset(this.predecessor.serverId);
-						if (predecessorOffset.equals(new BigInteger("0"))
-								|| (!newNodeOffset.equals(new BigInteger("0"))
+						if (predecessorOffset.equals(new BigInteger("0", 16))
+								|| (!newNodeOffset.equals(new BigInteger("0", 16))
 								&& predecessorOffset.compareTo(newNodeOffset) == -1)) {
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 										"Node " + node + " is set as predecessor overriding " + this.predecessor);
@@ -332,15 +332,15 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		 * @return		Offset of the id relative to this server.
 		 */
 		private BigInteger getOffset(String id) {
-				return Server.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
+				return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
 		}
 
 		private int getRaw(String id, String newId) {
 				BigInteger factor, t1, t2;
 				for (int i = TABLE_SIZE - 1; i >= 0; i--) {
-						factor = new BigInteger("10").pow(i);
-						t1 = new BigInteger(id).divide(factor);
-						t2 = new BigInteger(newId).divide(factor);
+						factor = new BigInteger("10", 16).pow(i);
+						t1 = new BigInteger(id, 16).divide(factor);
+						t2 = new BigInteger(newId, 16).divide(factor);
 						if (!t1.equals(t2)) {
 								return i;
 						}
@@ -349,6 +349,6 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		}
 
 		private int getColumn(String id, int raw) {
-				return (new BigInteger(id).mod(new BigInteger("10").pow(raw + 1)).divide(new BigInteger("10").pow(raw))).intValue();
+				return (new BigInteger(id, 16).mod(new BigInteger("10", 16).pow(raw + 1)).divide(new BigInteger("10", 16).pow(raw))).intValue();
 		}
 }

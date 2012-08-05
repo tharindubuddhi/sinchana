@@ -70,14 +70,14 @@ public final class Logger {
 		 * @param locId
 		 * @param logData
 		 */
-		public static synchronized void log(String nodeId, int type, int classId, int locId, String logData) {
+		public static void log(String nodeId, int type, int classId, int locId, String logData) {
 				Log nl = new Log();
 				nl.nodeId = nodeId;
 				nl.level = type;
 				nl.classId = classId;
 				nl.locId = (byte) locId;
 				nl.logData = logData;
-				logDB.add(nl);
+//				logDB.add(nl);
 				if (CURRENT_LOG_LEVEL > type) {
 						return;
 				}
