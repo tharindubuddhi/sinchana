@@ -9,6 +9,7 @@ package sinchana;
  *
  * @author Hiru
  */
+
 public interface SinchanaStoreInterface {
 
 		public abstract boolean store(String key, String data);
