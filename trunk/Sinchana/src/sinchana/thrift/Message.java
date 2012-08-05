@@ -42,7 +42,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final org.apache.thrift.protocol.TField START_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("startOfRange", org.apache.thrift.protocol.TType.STRING, (short)10);
   private static final org.apache.thrift.protocol.TField END_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("endOfRange", org.apache.thrift.protocol.TType.STRING, (short)11);
   private static final org.apache.thrift.protocol.TField NEIGHBOUR_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("neighbourSet", org.apache.thrift.protocol.TType.SET, (short)12);
-  private static final org.apache.thrift.protocol.TField TO_REMOVE_NODE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("toRemoveNodeSet", org.apache.thrift.protocol.TType.SET, (short)13);
+  private static final org.apache.thrift.protocol.TField FAILED_NODE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("failedNodeSet", org.apache.thrift.protocol.TType.SET, (short)13);
   private static final org.apache.thrift.protocol.TField DATA_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("dataSet", org.apache.thrift.protocol.TType.SET, (short)14);
   private static final org.apache.thrift.protocol.TField SERVICE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("serviceSet", org.apache.thrift.protocol.TType.SET, (short)15);
   private static final org.apache.thrift.protocol.TField TARGET_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("targetKey", org.apache.thrift.protocol.TType.STRING, (short)16);
@@ -71,9 +71,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public String startOfRange; // optional
   public String endOfRange; // optional
   public Set<Node> neighbourSet; // optional
-  public Set<Node> toRemoveNodeSet; // optional
+  public Set<Node> failedNodeSet; // optional
   public Set<DataObject> dataSet; // optional
-  public Set<DataObject> serviceSet; // optional
+  public Set<ServiceObject> serviceSet; // optional
   public String targetKey; // optional
   public int retryCount; // optional
   public long timeStamp; // optional
@@ -96,7 +96,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     START_OF_RANGE((short)10, "startOfRange"),
     END_OF_RANGE((short)11, "endOfRange"),
     NEIGHBOUR_SET((short)12, "neighbourSet"),
-    TO_REMOVE_NODE_SET((short)13, "toRemoveNodeSet"),
+    FAILED_NODE_SET((short)13, "failedNodeSet"),
     DATA_SET((short)14, "dataSet"),
     SERVICE_SET((short)15, "serviceSet"),
     TARGET_KEY((short)16, "targetKey"),
@@ -140,8 +140,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           return END_OF_RANGE;
         case 12: // NEIGHBOUR_SET
           return NEIGHBOUR_SET;
-        case 13: // TO_REMOVE_NODE_SET
-          return TO_REMOVE_NODE_SET;
+        case 13: // FAILED_NODE_SET
+          return FAILED_NODE_SET;
         case 14: // DATA_SET
           return DATA_SET;
         case 15: // SERVICE_SET
@@ -197,7 +197,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final int __RETRYCOUNT_ISSET_ID = 2;
   private static final int __TIMESTAMP_ISSET_ID = 3;
   private BitSet __isset_bit_vector = new BitSet(4);
-  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.TO_REMOVE_NODE_SET,_Fields.DATA_SET,_Fields.SERVICE_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP};
+  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.FAILED_NODE_SET,_Fields.DATA_SET,_Fields.SERVICE_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -226,7 +226,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     tmpMap.put(_Fields.NEIGHBOUR_SET, new org.apache.thrift.meta_data.FieldMetaData("neighbourSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
-    tmpMap.put(_Fields.TO_REMOVE_NODE_SET, new org.apache.thrift.meta_data.FieldMetaData("toRemoveNodeSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.FAILED_NODE_SET, new org.apache.thrift.meta_data.FieldMetaData("failedNodeSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
     tmpMap.put(_Fields.DATA_SET, new org.apache.thrift.meta_data.FieldMetaData("dataSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -234,7 +234,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, DataObject.class))));
     tmpMap.put(_Fields.SERVICE_SET, new org.apache.thrift.meta_data.FieldMetaData("serviceSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
-            new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, DataObject.class))));
+            new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServiceObject.class))));
     tmpMap.put(_Fields.TARGET_KEY, new org.apache.thrift.meta_data.FieldMetaData("targetKey", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.RETRY_COUNT, new org.apache.thrift.meta_data.FieldMetaData("retryCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -302,12 +302,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       this.neighbourSet = __this__neighbourSet;
     }
-    if (other.isSetToRemoveNodeSet()) {
-      Set<Node> __this__toRemoveNodeSet = new HashSet<Node>();
-      for (Node other_element : other.toRemoveNodeSet) {
-        __this__toRemoveNodeSet.add(new Node(other_element));
+    if (other.isSetFailedNodeSet()) {
+      Set<Node> __this__failedNodeSet = new HashSet<Node>();
+      for (Node other_element : other.failedNodeSet) {
+        __this__failedNodeSet.add(new Node(other_element));
       }
-      this.toRemoveNodeSet = __this__toRemoveNodeSet;
+      this.failedNodeSet = __this__failedNodeSet;
     }
     if (other.isSetDataSet()) {
       Set<DataObject> __this__dataSet = new HashSet<DataObject>();
@@ -317,9 +317,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       this.dataSet = __this__dataSet;
     }
     if (other.isSetServiceSet()) {
-      Set<DataObject> __this__serviceSet = new HashSet<DataObject>();
-      for (DataObject other_element : other.serviceSet) {
-        __this__serviceSet.add(new DataObject(other_element));
+      Set<ServiceObject> __this__serviceSet = new HashSet<ServiceObject>();
+      for (ServiceObject other_element : other.serviceSet) {
+        __this__serviceSet.add(new ServiceObject(other_element));
       }
       this.serviceSet = __this__serviceSet;
     }
@@ -350,7 +350,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     this.startOfRange = null;
     this.endOfRange = null;
     this.neighbourSet = null;
-    this.toRemoveNodeSet = null;
+    this.failedNodeSet = null;
     this.dataSet = null;
     this.serviceSet = null;
     this.targetKey = null;
@@ -669,42 +669,42 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
-  public int getToRemoveNodeSetSize() {
-    return (this.toRemoveNodeSet == null) ? 0 : this.toRemoveNodeSet.size();
+  public int getFailedNodeSetSize() {
+    return (this.failedNodeSet == null) ? 0 : this.failedNodeSet.size();
   }
 
-  public java.util.Iterator<Node> getToRemoveNodeSetIterator() {
-    return (this.toRemoveNodeSet == null) ? null : this.toRemoveNodeSet.iterator();
+  public java.util.Iterator<Node> getFailedNodeSetIterator() {
+    return (this.failedNodeSet == null) ? null : this.failedNodeSet.iterator();
   }
 
-  public void addToToRemoveNodeSet(Node elem) {
-    if (this.toRemoveNodeSet == null) {
-      this.toRemoveNodeSet = new HashSet<Node>();
+  public void addToFailedNodeSet(Node elem) {
+    if (this.failedNodeSet == null) {
+      this.failedNodeSet = new HashSet<Node>();
     }
-    this.toRemoveNodeSet.add(elem);
+    this.failedNodeSet.add(elem);
   }
 
-  public Set<Node> getToRemoveNodeSet() {
-    return this.toRemoveNodeSet;
+  public Set<Node> getFailedNodeSet() {
+    return this.failedNodeSet;
   }
 
-  public Message setToRemoveNodeSet(Set<Node> toRemoveNodeSet) {
-    this.toRemoveNodeSet = toRemoveNodeSet;
+  public Message setFailedNodeSet(Set<Node> failedNodeSet) {
+    this.failedNodeSet = failedNodeSet;
     return this;
   }
 
-  public void unsetToRemoveNodeSet() {
-    this.toRemoveNodeSet = null;
+  public void unsetFailedNodeSet() {
+    this.failedNodeSet = null;
   }
 
-  /** Returns true if field toRemoveNodeSet is set (has been assigned a value) and false otherwise */
-  public boolean isSetToRemoveNodeSet() {
-    return this.toRemoveNodeSet != null;
+  /** Returns true if field failedNodeSet is set (has been assigned a value) and false otherwise */
+  public boolean isSetFailedNodeSet() {
+    return this.failedNodeSet != null;
   }
 
-  public void setToRemoveNodeSetIsSet(boolean value) {
+  public void setFailedNodeSetIsSet(boolean value) {
     if (!value) {
-      this.toRemoveNodeSet = null;
+      this.failedNodeSet = null;
     }
   }
 
@@ -751,22 +751,22 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     return (this.serviceSet == null) ? 0 : this.serviceSet.size();
   }
 
-  public java.util.Iterator<DataObject> getServiceSetIterator() {
+  public java.util.Iterator<ServiceObject> getServiceSetIterator() {
     return (this.serviceSet == null) ? null : this.serviceSet.iterator();
   }
 
-  public void addToServiceSet(DataObject elem) {
+  public void addToServiceSet(ServiceObject elem) {
     if (this.serviceSet == null) {
-      this.serviceSet = new HashSet<DataObject>();
+      this.serviceSet = new HashSet<ServiceObject>();
     }
     this.serviceSet.add(elem);
   }
 
-  public Set<DataObject> getServiceSet() {
+  public Set<ServiceObject> getServiceSet() {
     return this.serviceSet;
   }
 
-  public Message setServiceSet(Set<DataObject> serviceSet) {
+  public Message setServiceSet(Set<ServiceObject> serviceSet) {
     this.serviceSet = serviceSet;
     return this;
   }
@@ -954,11 +954,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       break;
 
-    case TO_REMOVE_NODE_SET:
+    case FAILED_NODE_SET:
       if (value == null) {
-        unsetToRemoveNodeSet();
+        unsetFailedNodeSet();
       } else {
-        setToRemoveNodeSet((Set<Node>)value);
+        setFailedNodeSet((Set<Node>)value);
       }
       break;
 
@@ -974,7 +974,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetServiceSet();
       } else {
-        setServiceSet((Set<DataObject>)value);
+        setServiceSet((Set<ServiceObject>)value);
       }
       break;
 
@@ -1043,8 +1043,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     case NEIGHBOUR_SET:
       return getNeighbourSet();
 
-    case TO_REMOVE_NODE_SET:
-      return getToRemoveNodeSet();
+    case FAILED_NODE_SET:
+      return getFailedNodeSet();
 
     case DATA_SET:
       return getDataSet();
@@ -1096,8 +1096,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       return isSetEndOfRange();
     case NEIGHBOUR_SET:
       return isSetNeighbourSet();
-    case TO_REMOVE_NODE_SET:
-      return isSetToRemoveNodeSet();
+    case FAILED_NODE_SET:
+      return isSetFailedNodeSet();
     case DATA_SET:
       return isSetDataSet();
     case SERVICE_SET:
@@ -1233,12 +1233,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return false;
     }
 
-    boolean this_present_toRemoveNodeSet = true && this.isSetToRemoveNodeSet();
-    boolean that_present_toRemoveNodeSet = true && that.isSetToRemoveNodeSet();
-    if (this_present_toRemoveNodeSet || that_present_toRemoveNodeSet) {
-      if (!(this_present_toRemoveNodeSet && that_present_toRemoveNodeSet))
+    boolean this_present_failedNodeSet = true && this.isSetFailedNodeSet();
+    boolean that_present_failedNodeSet = true && that.isSetFailedNodeSet();
+    if (this_present_failedNodeSet || that_present_failedNodeSet) {
+      if (!(this_present_failedNodeSet && that_present_failedNodeSet))
         return false;
-      if (!this.toRemoveNodeSet.equals(that.toRemoveNodeSet))
+      if (!this.failedNodeSet.equals(that.failedNodeSet))
         return false;
     }
 
@@ -1423,12 +1423,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetToRemoveNodeSet()).compareTo(typedOther.isSetToRemoveNodeSet());
+    lastComparison = Boolean.valueOf(isSetFailedNodeSet()).compareTo(typedOther.isSetFailedNodeSet());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetToRemoveNodeSet()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.toRemoveNodeSet, typedOther.toRemoveNodeSet);
+    if (isSetFailedNodeSet()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.failedNodeSet, typedOther.failedNodeSet);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1608,13 +1608,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       first = false;
     }
-    if (isSetToRemoveNodeSet()) {
+    if (isSetFailedNodeSet()) {
       if (!first) sb.append(", ");
-      sb.append("toRemoveNodeSet:");
-      if (this.toRemoveNodeSet == null) {
+      sb.append("failedNodeSet:");
+      if (this.failedNodeSet == null) {
         sb.append("null");
       } else {
-        sb.append(this.toRemoveNodeSet);
+        sb.append(this.failedNodeSet);
       }
       first = false;
     }
@@ -1823,21 +1823,21 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 13: // TO_REMOVE_NODE_SET
+          case 13: // FAILED_NODE_SET
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
                 org.apache.thrift.protocol.TSet _set3 = iprot.readSetBegin();
-                struct.toRemoveNodeSet = new HashSet<Node>(2*_set3.size);
+                struct.failedNodeSet = new HashSet<Node>(2*_set3.size);
                 for (int _i4 = 0; _i4 < _set3.size; ++_i4)
                 {
                   Node _elem5; // required
                   _elem5 = new Node();
                   _elem5.read(iprot);
-                  struct.toRemoveNodeSet.add(_elem5);
+                  struct.failedNodeSet.add(_elem5);
                 }
                 iprot.readSetEnd();
               }
-              struct.setToRemoveNodeSetIsSet(true);
+              struct.setFailedNodeSetIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1865,11 +1865,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
                 org.apache.thrift.protocol.TSet _set9 = iprot.readSetBegin();
-                struct.serviceSet = new HashSet<DataObject>(2*_set9.size);
+                struct.serviceSet = new HashSet<ServiceObject>(2*_set9.size);
                 for (int _i10 = 0; _i10 < _set9.size; ++_i10)
                 {
-                  DataObject _elem11; // required
-                  _elem11 = new DataObject();
+                  ServiceObject _elem11; // required
+                  _elem11 = new ServiceObject();
                   _elem11.read(iprot);
                   struct.serviceSet.add(_elem11);
                 }
@@ -2003,12 +2003,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldEnd();
         }
       }
-      if (struct.toRemoveNodeSet != null) {
-        if (struct.isSetToRemoveNodeSet()) {
-          oprot.writeFieldBegin(TO_REMOVE_NODE_SET_FIELD_DESC);
+      if (struct.failedNodeSet != null) {
+        if (struct.isSetFailedNodeSet()) {
+          oprot.writeFieldBegin(FAILED_NODE_SET_FIELD_DESC);
           {
-            oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.toRemoveNodeSet.size()));
-            for (Node _iter13 : struct.toRemoveNodeSet)
+            oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.failedNodeSet.size()));
+            for (Node _iter13 : struct.failedNodeSet)
             {
               _iter13.write(oprot);
             }
@@ -2036,7 +2036,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldBegin(SERVICE_SET_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.serviceSet.size()));
-            for (DataObject _iter15 : struct.serviceSet)
+            for (ServiceObject _iter15 : struct.serviceSet)
             {
               _iter15.write(oprot);
             }
@@ -2110,7 +2110,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetNeighbourSet()) {
         optionals.set(8);
       }
-      if (struct.isSetToRemoveNodeSet()) {
+      if (struct.isSetFailedNodeSet()) {
         optionals.set(9);
       }
       if (struct.isSetDataSet()) {
@@ -2162,10 +2162,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           }
         }
       }
-      if (struct.isSetToRemoveNodeSet()) {
+      if (struct.isSetFailedNodeSet()) {
         {
-          oprot.writeI32(struct.toRemoveNodeSet.size());
-          for (Node _iter17 : struct.toRemoveNodeSet)
+          oprot.writeI32(struct.failedNodeSet.size());
+          for (Node _iter17 : struct.failedNodeSet)
           {
             _iter17.write(oprot);
           }
@@ -2183,7 +2183,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetServiceSet()) {
         {
           oprot.writeI32(struct.serviceSet.size());
-          for (DataObject _iter19 : struct.serviceSet)
+          for (ServiceObject _iter19 : struct.serviceSet)
           {
             _iter19.write(oprot);
           }
@@ -2264,16 +2264,16 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (incoming.get(9)) {
         {
           org.apache.thrift.protocol.TSet _set23 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.toRemoveNodeSet = new HashSet<Node>(2*_set23.size);
+          struct.failedNodeSet = new HashSet<Node>(2*_set23.size);
           for (int _i24 = 0; _i24 < _set23.size; ++_i24)
           {
             Node _elem25; // required
             _elem25 = new Node();
             _elem25.read(iprot);
-            struct.toRemoveNodeSet.add(_elem25);
+            struct.failedNodeSet.add(_elem25);
           }
         }
-        struct.setToRemoveNodeSetIsSet(true);
+        struct.setFailedNodeSetIsSet(true);
       }
       if (incoming.get(10)) {
         {
@@ -2292,11 +2292,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (incoming.get(11)) {
         {
           org.apache.thrift.protocol.TSet _set29 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.serviceSet = new HashSet<DataObject>(2*_set29.size);
+          struct.serviceSet = new HashSet<ServiceObject>(2*_set29.size);
           for (int _i30 = 0; _i30 < _set29.size; ++_i30)
           {
-            DataObject _elem31; // required
-            _elem31 = new DataObject();
+            ServiceObject _elem31; // required
+            _elem31 = new ServiceObject();
             _elem31.read(iprot);
             struct.serviceSet.add(_elem31);
           }

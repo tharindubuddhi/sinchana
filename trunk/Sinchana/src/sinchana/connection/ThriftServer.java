@@ -13,6 +13,7 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
+import sinchana.CONFIG;
 import sinchana.PortHandler;
 import sinchana.Server;
 import sinchana.test.TesterController;
@@ -29,10 +30,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private Server server;
 		private TServer tServer;
 		private ConnectionPool connectionPool;
-		private static final int MESSAGE_QUEUE_SIZE = 512;
-		private static final int NUM_OF_MAX_SEND_RETRIES = 3;
-		private static final int NUM_OF_MAX_CONNECT_RETRIES = 3;
-		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageQueue.MessageEventHandler() {
+		private MessageQueue messageQueue = new MessageQueue(CONFIG.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
 				@Override
 				public synchronized void process(Message message) {
@@ -44,7 +42,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 								case PortHandler.ACCEPT_ERROR:
 								case PortHandler.LOCAL_SERVER_ERROR:
 										message.retryCount++;
-										if (message.retryCount > NUM_OF_MAX_SEND_RETRIES) {
+										if (message.retryCount > CONFIG.NUM_OF_MAX_SEND_RETRIES) {
 												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 														"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
 										} else {
@@ -55,7 +53,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 										break;
 								case PortHandler.REMOTE_SERVER_ERROR:
 										message.retryCount++;
-										if (message.retryCount > NUM_OF_MAX_CONNECT_RETRIES) {
+										if (message.retryCount > CONFIG.NUM_OF_MAX_CONNECT_RETRIES) {
 												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 														"Node " + message.destination + " is removed from the routing table!");
 												server.getRoutingHandler().removeNode(message.destination);
@@ -91,9 +89,9 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		 */
 		@Override
 		public int transfer(Message message) throws TException {
-				if (TesterController.ROUND_TIP_TIME != 0) {
+				if (CONFIG.ROUND_TIP_TIME != 0) {
 						try {
-								Thread.sleep(TesterController.ROUND_TIP_TIME);
+								Thread.sleep(CONFIG.ROUND_TIP_TIME);
 						} catch (InterruptedException ex) {
 								ex.printStackTrace();
 						}

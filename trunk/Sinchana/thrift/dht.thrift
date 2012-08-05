@@ -53,9 +53,9 @@ struct Message {
     10: optional string startOfRange,
     11: optional string endOfRange,
     12: optional set<Node> neighbourSet,
-    13: optional set<Node> toRemoveNodeSet,
+    13: optional set<Node> failedNodeSet,
     14: optional set<DataObject> dataSet,
-    15: optional set<DataObject> serviceSet,
+    15: optional set<ServiceObject> serviceSet,
     16: optional string targetKey,
     17: optional i32 retryCount,
     18: optional i64 timeStamp

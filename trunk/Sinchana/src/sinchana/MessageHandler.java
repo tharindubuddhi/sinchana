@@ -20,14 +20,10 @@ public class MessageHandler {
 
 		private Server server;
 		/**
-		 * Size of the message buffer.
-		 */
-		private static final int MESSAGE_BUFFER_SIZE = 2048;
-		/**
 		 * Message queue to buffer incoming messages. The size of the queue is 
 		 * determined by MESSAGE_BUFFER_SIZE.
 		 */
-		private final MessageQueue messageQueue = new MessageQueue(MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
+		private final MessageQueue messageQueue = new MessageQueue(CONFIG.INPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
 				@Override
 				public void process(Message message) {
