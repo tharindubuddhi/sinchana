@@ -37,7 +37,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		private boolean running = false;
 		private long numOfTestingMessages = 0;
 		private TestService testService = null;
-
+                private TestDataStore testDataStore = null;
 		/**
 		 * 
 		 * @param serverId

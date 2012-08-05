@@ -4,21 +4,8 @@
  */
 package sinchana.test;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
-import java.util.concurrent.Semaphore;
-import javax.xml.soap.Node;
 import sinchana.Server;
-import sinchana.SinchanaInterface;
 import sinchana.SinchanaServiceInterface;
-import sinchana.chord.FingerTableEntry;
-import sinchana.thrift.Message;
-import sinchana.thrift.MessageType;
-import sinchana.util.logging.Logger;
 
 /**
  *
@@ -30,16 +17,9 @@ public class TestService  {
     private int testId;
     private ServerUI gui = null;
     private TesterController testerController;
-    private Semaphore threadLock = new Semaphore(0);
-    private boolean running = false;
-    private long numOfTestingMessages = 0;
 
-    /**
-     * 
-     * @param serverId
-     * @param anotherNode
-     * @param tc
-     */
+
+
     public TestService(Tester tester,TesterController tc) {
                     
             this.testId = tester.getTestId();
@@ -47,12 +27,12 @@ public class TestService  {
             this.server = tester.getServer();
             this.gui = tester.getGui();
             
-            
+    
             server.registerSinchanaServiceInterface(new SinchanaServiceInterface() {
 
                 @Override
                 public boolean publish(String key, String service) {
-                    System.out.println(service+" published in the key "+key);
+                    System.out.println(service+" published with the key "+key);
                     return true;
                 }
 
