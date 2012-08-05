@@ -9,6 +9,7 @@ package sinchana;
  *
  * @author Hiru
  */
+
 public interface SinchanaServiceInterface {
 		
 		public abstract boolean publish(String key, String service);

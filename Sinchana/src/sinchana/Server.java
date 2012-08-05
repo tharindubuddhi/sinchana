@@ -28,6 +28,7 @@ public class Server extends Node {
 		private SinchanaTestInterface sinchanaTestInterface = null;
 		private SinchanaServiceInterface sinchanaServiceInterface = null;
 		private SinchanaStoreInterface sinchanaStoreInterface = null;
+                
 		/**
 		 * Default life time of a message. At each hop, the lifetime decrements 
 		 * and when it reaches 0, the message is discarded.
