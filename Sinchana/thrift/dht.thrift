@@ -5,6 +5,18 @@ struct Node {
   2: string address
 }
 
+struct DataObject {
+  1: string sourceID,
+  2: string sourceAddress,
+  3: string DataValue
+}
+
+struct ServiceObject {
+  1: string sourceID,
+  2: string sourceAddress,
+  3: string serviceName
+}
+
 enum MessageType {
     STORE_DATA,
     DELETE_DATA,
@@ -42,9 +54,11 @@ struct Message {
     11: optional string endOfRange,
     12: optional set<Node> neighbourSet,
     13: optional set<Node> toRemoveNodeSet,
-    14: optional string targetKey,
-    15: optional i32 retryCount,
-    16: optional i64 timeStamp
+    14: optional set<DataObject> dataSet,
+    15: optional set<DataObject> serviceSet,
+    16: optional string targetKey,
+    17: optional i32 retryCount,
+    18: optional i64 timeStamp
 }
 
 service DHTServer {
