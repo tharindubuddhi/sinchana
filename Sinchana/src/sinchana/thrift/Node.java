@@ -32,7 +32,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
 
   private static final org.apache.thrift.protocol.TField SERVER_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("serverId", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField ADDRESS_FIELD_DESC = new org.apache.thrift.protocol.TField("address", org.apache.thrift.protocol.TType.STRING, (short)2);
-  private static final org.apache.thrift.protocol.TField PORT_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("portId", org.apache.thrift.protocol.TType.I16, (short)3);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -42,13 +41,11 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
 
   public String serverId; // required
   public String address; // required
-  public short portId; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     SERVER_ID((short)1, "serverId"),
-    ADDRESS((short)2, "address"),
-    PORT_ID((short)3, "portId");
+    ADDRESS((short)2, "address");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -67,8 +64,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
           return SERVER_ID;
         case 2: // ADDRESS
           return ADDRESS;
-        case 3: // PORT_ID
-          return PORT_ID;
         default:
           return null;
       }
@@ -109,8 +104,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   }
 
   // isset id assignments
-  private static final int __PORTID_ISSET_ID = 0;
-  private BitSet __isset_bit_vector = new BitSet(1);
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -118,8 +111,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.ADDRESS, new org.apache.thrift.meta_data.FieldMetaData("address", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.PORT_ID, new org.apache.thrift.meta_data.FieldMetaData("portId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Node.class, metaDataMap);
   }
@@ -129,29 +120,23 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
 
   public Node(
     String serverId,
-    String address,
-    short portId)
+    String address)
   {
     this();
     this.serverId = serverId;
     this.address = address;
-    this.portId = portId;
-    setPortIdIsSet(true);
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public Node(Node other) {
-    __isset_bit_vector.clear();
-    __isset_bit_vector.or(other.__isset_bit_vector);
     if (other.isSetServerId()) {
       this.serverId = other.serverId;
     }
     if (other.isSetAddress()) {
       this.address = other.address;
     }
-    this.portId = other.portId;
   }
 
   public Node deepCopy() {
@@ -162,8 +147,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   public void clear() {
     this.serverId = null;
     this.address = null;
-    setPortIdIsSet(false);
-    this.portId = 0;
   }
 
   public String getServerId() {
@@ -214,29 +197,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     }
   }
 
-  public short getPortId() {
-    return this.portId;
-  }
-
-  public Node setPortId(short portId) {
-    this.portId = portId;
-    setPortIdIsSet(true);
-    return this;
-  }
-
-  public void unsetPortId() {
-    __isset_bit_vector.clear(__PORTID_ISSET_ID);
-  }
-
-  /** Returns true if field portId is set (has been assigned a value) and false otherwise */
-  public boolean isSetPortId() {
-    return __isset_bit_vector.get(__PORTID_ISSET_ID);
-  }
-
-  public void setPortIdIsSet(boolean value) {
-    __isset_bit_vector.set(__PORTID_ISSET_ID, value);
-  }
-
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case SERVER_ID:
@@ -255,14 +215,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       }
       break;
 
-    case PORT_ID:
-      if (value == null) {
-        unsetPortId();
-      } else {
-        setPortId((Short)value);
-      }
-      break;
-
     }
   }
 
@@ -273,9 +225,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
 
     case ADDRESS:
       return getAddress();
-
-    case PORT_ID:
-      return Short.valueOf(getPortId());
 
     }
     throw new IllegalStateException();
@@ -292,8 +241,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       return isSetServerId();
     case ADDRESS:
       return isSetAddress();
-    case PORT_ID:
-      return isSetPortId();
     }
     throw new IllegalStateException();
   }
@@ -326,15 +273,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       if (!(this_present_address && that_present_address))
         return false;
       if (!this.address.equals(that.address))
-        return false;
-    }
-
-    boolean this_present_portId = true;
-    boolean that_present_portId = true;
-    if (this_present_portId || that_present_portId) {
-      if (!(this_present_portId && that_present_portId))
-        return false;
-      if (this.portId != that.portId)
         return false;
     }
 
@@ -374,16 +312,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetPortId()).compareTo(typedOther.isSetPortId());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetPortId()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.portId, typedOther.portId);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     return 0;
   }
 
@@ -419,10 +347,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       sb.append(this.address);
     }
     first = false;
-    if (!first) sb.append(", ");
-    sb.append("portId:");
-    sb.append(this.portId);
-    first = false;
     sb.append(")");
     return sb.toString();
   }
@@ -441,8 +365,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
     try {
-      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-      __isset_bit_vector = new BitSet(1);
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
       throw new java.io.IOException(te);
@@ -483,14 +405,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // PORT_ID
-            if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
-              struct.portId = iprot.readI16();
-              struct.setPortIdIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -516,9 +430,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         oprot.writeString(struct.address);
         oprot.writeFieldEnd();
       }
-      oprot.writeFieldBegin(PORT_ID_FIELD_DESC);
-      oprot.writeI16(struct.portId);
-      oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -543,25 +454,19 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       if (struct.isSetAddress()) {
         optionals.set(1);
       }
-      if (struct.isSetPortId()) {
-        optionals.set(2);
-      }
-      oprot.writeBitSet(optionals, 3);
+      oprot.writeBitSet(optionals, 2);
       if (struct.isSetServerId()) {
         oprot.writeString(struct.serverId);
       }
       if (struct.isSetAddress()) {
         oprot.writeString(struct.address);
       }
-      if (struct.isSetPortId()) {
-        oprot.writeI16(struct.portId);
-      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, Node struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(3);
+      BitSet incoming = iprot.readBitSet(2);
       if (incoming.get(0)) {
         struct.serverId = iprot.readString();
         struct.setServerIdIsSet(true);
@@ -569,10 +474,6 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       if (incoming.get(1)) {
         struct.address = iprot.readString();
         struct.setAddressIsSet(true);
-      }
-      if (incoming.get(2)) {
-        struct.portId = iprot.readI16();
-        struct.setPortIdIsSet(true);
       }
     }
   }

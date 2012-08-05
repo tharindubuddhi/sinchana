@@ -16,6 +16,7 @@ import org.apache.thrift.transport.TTransportException;
 import sinchana.PortHandler;
 import sinchana.Server;
 import sinchana.test.TesterController;
+import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.messagequeue.MessageQueue;
 
@@ -28,17 +29,17 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private Server server;
 		private TServer tServer;
 		private ConnectionPool connectionPool;
-		private static final int MESSAGE_QUEUE_SIZE = 4196;
+		private static final int MESSAGE_QUEUE_SIZE = 512;
 		private static final int NUM_OF_MAX_SEND_RETRIES = 3;
 		private static final int NUM_OF_MAX_CONNECT_RETRIES = 3;
 		private MessageQueue messageQueue = new MessageQueue(MESSAGE_QUEUE_SIZE, new MessageQueue.MessageEventHandler() {
 
 				@Override
-				public void process(Message message) {
+				public synchronized void process(Message message) {
 						if (server.getSinchanaTestInterface() != null) {
 								server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 						}
-						int result = send(message.deepCopy());
+						int result = send(message);
 						switch (result) {
 								case PortHandler.ACCEPT_ERROR:
 								case PortHandler.LOCAL_SERVER_ERROR:
@@ -52,16 +53,25 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 												queueMessage(message);
 										}
 										break;
-								case PortHandler.MESSAGE_LIFE_TIME_EXPIRED:
-										Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-												"Messaage is terminated as lifetime expired! :: " + message);
-										break;
 								case PortHandler.REMOTE_SERVER_ERROR:
-										server.getRoutingHandler().removeNode(message.destination);
+										message.retryCount++;
+										if (message.retryCount > NUM_OF_MAX_CONNECT_RETRIES) {
+												Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+														"Node " + message.destination + " is removed from the routing table!");
+												server.getRoutingHandler().removeNode(message.destination);
+												if (message.type != MessageType.DISCOVER_NEIGHBOURS) {
+														message.lifetime++;
+														server.getMessageHandler().queueMessage(message);
+												}
+										} else {
+												Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
+														"Messaage is added back to the queue :: " + message);
+												queueMessage(message);
+										}
 										break;
 						}
 				}
-		});
+		}, 2);
 
 		/**
 		 * 
@@ -98,11 +108,12 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		public void run() {
 				try {
 						DHTServer.Processor processor = new DHTServer.Processor(this);
-						TServerTransport serverTransport = new TServerSocket(this.server.getPortId());
+						int localPortId = Integer.parseInt(this.server.getAddress().split(":")[1]);
+						TServerTransport serverTransport = new TServerSocket(localPortId);
 						tServer = new TThreadPoolServer(
 								new TThreadPoolServer.Args(serverTransport).processor(processor));
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 0,
-								"Starting the server on port " + this.server.getPortId());
+								"Starting the server on port " + localPortId);
 						tServer.serve();
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 								"Server is shutting down...");
@@ -117,7 +128,8 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		@Override
 		public synchronized void startServer() {
 				if (tServer == null || !tServer.isServing()) {
-						new Thread(this).start();
+						Thread thread = new Thread(this);
+						thread.start();
 						while (tServer == null || !tServer.isServing()) {
 								try {
 										Thread.sleep(100);
@@ -142,8 +154,6 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						tServer.stop();
 				}
 				this.connectionPool.closeAllConnections();
-				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
-						"Server is shutting down...");
 				if (this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setServerIsRunning(false);
 				}
@@ -157,51 +167,62 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		@Override
 		public void send(Message message, Node destination) {
 				Message msg = message.deepCopy();
+				msg.lifetime--;
+				if (msg.lifetime < 0) {
+						Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+								"Messaage is terminated as lifetime expired! :: " + message);
+						return;
+				}
 				msg.setDestination(destination.deepCopy());
 				msg.setStation(this.server);
 				msg.setRetryCount(0);
-//				this.send(message);
-				this.queueMessage(msg);
+				boolean done = queueMessage(msg);
+				while (!done && message.type != MessageType.DISCOVER_NEIGHBOURS) {
+						try {
+								Thread.sleep(100);
+						} catch (InterruptedException ex) {
+								ex.printStackTrace();
+						}
+						done = queueMessage(msg);
+				}
 				if (this.server.getSinchanaTestInterface() != null) {
 						this.server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 				}
 		}
 
-		private void queueMessage(Message message) {
+		private boolean queueMessage(Message message) {
 				if (this.messageQueue.queueMessage(message)) {
 						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 1,
 								"Queued in transport buffer: " + message);
+						return true;
 				} else {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
+						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 1,
 								"Message is unacceptable 'cos transport buffer is full! " + message);
+						return false;
 				}
 		}
 
 		private int send(Message message) {
-				message.lifetime--;
-				if (message.lifetime < 0) {
-						return PortHandler.MESSAGE_LIFE_TIME_EXPIRED;
-				}
 				DHTServer.Client client;
 				try {
 						client = connectionPool.getConnection(
-								message.destination.serverId, message.destination.address, message.destination.portId);
+								message.destination.serverId, message.destination.address);
 						if (client == null) {
 								return PortHandler.REMOTE_SERVER_ERROR;
 						}
 						return client.transfer(message);
 
 				} catch (TTransportException ex) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 5,
-								"Error " + ex.getClass().getName() + " - " + message.destination.address + ":" + message.destination.portId);
+						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
+								"Error " + ex.getClass().getName() + " - " + message.destination.address);
 						return PortHandler.REMOTE_SERVER_ERROR;
 				} catch (TException ex) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 5,
-								"Error " + ex.getClass().getName() + " - " + message.destination.address + ":" + message.destination.portId);
+						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
+								"Error " + ex.getClass().getName() + " - " + message.destination.address);
 						return PortHandler.REMOTE_SERVER_ERROR;
 				} catch (Exception ex) {
-						Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 5,
-								"Error " + ex.getClass().getName() + " - " + message.destination.address + ":" + message.destination.portId);
+						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
+								"Error " + ex.getClass().getName() + " - " + message.destination.address);
 						ex.printStackTrace();
 						return PortHandler.REMOTE_SERVER_ERROR;
 				}

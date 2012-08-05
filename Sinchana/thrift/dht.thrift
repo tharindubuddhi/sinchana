@@ -2,8 +2,7 @@ namespace java sinchana.thrift
 
 struct Node {
   1: string serverId,
-  2: string address,
-  3: i16 portId
+  2: string address
 }
 
 enum MessageType {

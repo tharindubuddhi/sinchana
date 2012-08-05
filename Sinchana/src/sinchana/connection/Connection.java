@@ -17,22 +17,20 @@ import sinchana.thrift.DHTServer;
  * @author Hiru
  */
 public class Connection {
-
+		
 		private long lastUsedTime = 0;
 		private long lastOpenTime = 0;
 		private int numOfOpenTries = 0;
-		private String address;
-		private int portId;
+		private String url;
 		private boolean opened;
 		private DHTServer.Client client;
 		private TTransport transport;
 		private TProtocol protocol;
-
-		public Connection(String address, int portId) {
-				this.address = address;
-				this.portId = portId;
+		
+		public Connection(String url) {
+				this.url = url;
 		}
-
+		
 		public DHTServer.Client open() {
 				lastUsedTime = Calendar.getInstance().getTimeInMillis();
 				if (opened) {
@@ -40,7 +38,7 @@ public class Connection {
 				}
 				lastOpenTime = lastUsedTime;
 				try {
-						transport = new TSocket(address, portId);
+						transport = new TSocket(url.split(":")[0], Integer.parseInt(url.split(":")[1]));
 						transport.open();
 						protocol = new TBinaryProtocol(transport);
 						client = new DHTServer.Client(protocol);
@@ -52,14 +50,14 @@ public class Connection {
 						return null;
 				}
 		}
-
+		
 		public void reset() {
 				if (transport != null && transport.isOpen()) {
 						transport.close();
 				}
 				opened = false;
 		}
-
+		
 		public long getLastUsedTime() {
 				return lastUsedTime;
 		}

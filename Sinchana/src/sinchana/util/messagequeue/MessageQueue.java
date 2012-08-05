@@ -20,8 +20,9 @@ public class MessageQueue implements Runnable {
 		private Message[] messageQueue;
 		private Semaphore messagesAvailable = new Semaphore(0);
 		private MessageEventHandler messageEventHandler;
-		private Thread thread = null;
+		private Thread[] threads = null;
 		private boolean started;
+		private int numberOfThreads = 1;
 
 		/**
 		 * Initialize a message queue.
@@ -29,11 +30,33 @@ public class MessageQueue implements Runnable {
 		 * @param meh	MessageEventHandler instance which is used to callback 
 		 * when messages are received.
 		 */
-		public MessageQueue(int size, MessageEventHandler meh) {
+		public MessageQueue(int size, MessageEventHandler meh, int numOfThreads) {
 				this.messageEventHandler = meh;
-				MESSAGE_BUFFER_SIZE = size;
+				this.numberOfThreads = numOfThreads;
+				this.MESSAGE_BUFFER_SIZE = size;
 				this.messageQueue = new Message[MESSAGE_BUFFER_SIZE];
-				thread = new Thread(this);
+				this.threads = new Thread[numOfThreads];
+				for (int i = 0; i < threads.length; i++) {
+						threads[i] = new Thread(new Runnable() {
+
+								@Override
+								public void run() {
+										Message message;
+										while (true) {
+												try {
+														messagesAvailable.acquire();
+														synchronized (messageQueue) {
+																message = messageQueue[tail];
+																tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
+														}
+														messageEventHandler.process(message);
+												} catch (InterruptedException ex) {
+														throw new RuntimeException(ex);
+												}
+										}
+								}
+						});
+				}
 				started = false;
 		}
 
@@ -41,8 +64,12 @@ public class MessageQueue implements Runnable {
 		 * Returns the message queue thread id.
 		 * @return id of the message queue thread.
 		 */
-		public long getThreadId() {
-				return this.thread.getId();
+		public long[] getThreadIds() {
+				long[] ids = new long[numberOfThreads];
+				for (int i = 0; i < ids.length; i++) {
+						ids[i] = threads[i].getId();
+				}
+				return ids;
 		}
 
 		/**
@@ -51,8 +78,10 @@ public class MessageQueue implements Runnable {
 		 */
 		public synchronized void start() {
 				started = true;
-				if (!thread.isAlive()) {
-						thread.start();
+				for (int i = 0; i < threads.length; i++) {
+						if (!threads[i].isAlive()) {
+								threads[i].start();
+						}
 				}
 		}
 
@@ -106,16 +135,6 @@ public class MessageQueue implements Runnable {
 
 		@Override
 		public void run() {
-				while (true) {
-						try {
-								messagesAvailable.acquire();
-								Message message = messageQueue[tail];
-								tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
-								this.messageEventHandler.process(message);
-						} catch (InterruptedException ex) {
-								throw new RuntimeException(ex);
-						}
-				}
 		}
 
 		public interface MessageEventHandler {
