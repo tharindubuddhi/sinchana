@@ -340,7 +340,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
 
 		testerController.send(message.getText(), this.destId.getText(), this.reqId.getText());
-
+                testerController.publishService(10);
 }//GEN-LAST:event_sendButtonActionPerformed
 
 private void startNodeSetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNodeSetButtonActionPerformed
