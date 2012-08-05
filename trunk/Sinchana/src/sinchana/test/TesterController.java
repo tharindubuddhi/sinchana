@@ -251,6 +251,30 @@ public class TesterController {
 				}
 		}
 
+		public void retrieveService() {
+				int randomId;
+				int randomAmount;
+//                            while(noOfServices>0){
+				randomId = (int) (Math.random() * testServers.size());
+				randomAmount = (int) (Math.random() * serviceArray.length);
+				for (int i = 0; i < serviceArray.length; i++) {
+
+						testServers.get(randomId).getServer().getService(keyArray[i]);
+
+
+				}
+
+
+		}
+                
+                public void storeData(){
+                    String data = "Tharindu";
+                    String key = CommonTools.generateId(data).toString();
+                    int randomId = (int) (Math.random() * testServers.size());
+                    testServers.get(randomId).getServer().storeData(key, data);
+                }
+                
+
 		/**
 		 * 
 		 * @param nodeIdsString
