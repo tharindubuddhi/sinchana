@@ -72,6 +72,16 @@ public class MessageQueue implements Runnable {
 				return ids;
 		}
 
+		public void validateThread() {
+				long tid = Thread.currentThread().getId();
+				for (int i = 0; i < threads.length; i++) {
+						if (tid == threads[i].getId()) {
+								return;
+						}
+				}
+				throw new RuntimeException("Invalid thead access!");
+		}
+
 		/**
 		 * Start serving the message queue. A new thread will start and serve when messages are received.
 		 * @return		Id of the thread which is dedicated to the queue.

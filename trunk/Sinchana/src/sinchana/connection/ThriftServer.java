@@ -4,6 +4,7 @@
  */
 package sinchana.connection;
 
+import java.util.concurrent.ConcurrentHashMap;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
@@ -16,6 +17,7 @@ import org.apache.thrift.transport.TTransportException;
 import sinchana.CONFIGURATIONS;
 import sinchana.PortHandler;
 import sinchana.Server;
+import sinchana.test.TesterController;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.messagequeue.MessageQueue;
@@ -32,7 +34,7 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 		private MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
 				@Override
-				public synchronized void process(Message message) {
+				public void process(Message message) {
 						if (server.getSinchanaTestInterface() != null) {
 								server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 						}
@@ -53,7 +55,9 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 										} else {
 												Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
 														"Messaage is added back to the queue :: " + message);
-												queueMessage(message);
+												if (!queueMessage(message)) {
+														throw new RuntimeException("Failed :P");
+												}
 										}
 										break;
 								case PortHandler.REMOTE_SERVER_ERROR:
@@ -66,12 +70,14 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 										} else {
 												Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
 														"Messaage is added back to the queue :: " + message);
-												queueMessage(message);
+												if (!queueMessage(message)) {
+														throw new RuntimeException("Failed :P");
+												}
 										}
 										break;
 						}
 				}
-		}, 1);
+		}, CONFIGURATIONS.NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS);
 
 		/**
 		 * 
@@ -212,17 +218,22 @@ public class ThriftServer implements DHTServer.Iface, Runnable, PortHandler {
 						return false;
 				}
 		}
+		private ConcurrentHashMap<Long, Long> ttmap = new ConcurrentHashMap<Long, Long>();
 
 		private int send(Message message) {
-				DHTServer.Client client;
 				try {
-						client = connectionPool.getConnection(
+						DHTServer.Client client = connectionPool.getConnection(
 								message.destination.serverId, message.destination.address);
 						if (client == null) {
 								return PortHandler.REMOTE_SERVER_ERROR;
 						}
-						return client.transfer(message);
-
+						synchronized (client) {
+								ttmap.put(Thread.currentThread().getId(), Thread.currentThread().getId());
+								TesterController.setMaxCount(ttmap.size());
+								int reply = client.transfer(message);
+								ttmap.remove(Thread.currentThread().getId());
+								return reply;
+						}
 				} catch (TTransportException ex) {
 						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
 								"Error " + ex.getClass().getName() + " - " + message.destination.address);

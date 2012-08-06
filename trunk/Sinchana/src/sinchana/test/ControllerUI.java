@@ -102,8 +102,12 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 jLabel7 = new javax.swing.JLabel();
                 message = new javax.swing.JTextField();
                 sendButton = new javax.swing.JButton();
-                joinJoinPanel = new javax.swing.JPanel();
+                statPanel = new javax.swing.JPanel();
                 statField = new javax.swing.JLabel();
+                servicePanel = new javax.swing.JPanel();
+                egLabel = new javax.swing.JLabel();
+                egButton = new javax.swing.JButton();
+                egTextField = new javax.swing.JTextField();
                 jScrollPane1 = new javax.swing.JScrollPane();
                 table = new javax.swing.JTable();
                 statusField = new javax.swing.JLabel();
@@ -123,7 +127,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
                 getContentPane().setLayout(new java.awt.GridBagLayout());
 
-                jPanel1.setLayout(new java.awt.GridLayout(3, 1, 0, 4));
+                jPanel1.setLayout(new java.awt.GridLayout(4, 1, 0, 4));
 
                 autoTestButtonPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -219,13 +223,36 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
                 jPanel1.add(sendMessagePanel);
 
-                joinJoinPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+                statPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
                 statField.setText("Stat");
                 statField.setPreferredSize(new java.awt.Dimension(520, 24));
-                joinJoinPanel.add(statField);
+                statPanel.add(statField);
 
-                jPanel1.add(joinJoinPanel);
+                jPanel1.add(statPanel);
+
+                servicePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+
+                egLabel.setText("Stat");
+                egLabel.setPreferredSize(new java.awt.Dimension(180, 24));
+                servicePanel.add(egLabel);
+
+                egButton.setText("Send");
+                egButton.setPreferredSize(new java.awt.Dimension(96, 24));
+                egButton.addActionListener(new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent evt) {
+                                egButtonActionPerformed(evt);
+                        }
+                });
+                servicePanel.add(egButton);
+
+                egTextField.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
+                egTextField.setText("12");
+                egTextField.setToolTipText("No of Auto Testing Nodes");
+                egTextField.setPreferredSize(new java.awt.Dimension(32, 24));
+                servicePanel.add(egTextField);
+
+                jPanel1.add(servicePanel);
 
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
@@ -374,6 +401,10 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
 
 
 }//GEN-LAST:event_printLogButtonActionPerformed
+
+private void egButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_egButtonActionPerformed
+// TODO add your handling code here:
+}//GEN-LAST:event_egButtonActionPerformed
 		/**
 		 * @param args the command line arguments
 		 */
@@ -382,6 +413,9 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
         private javax.swing.JPanel autoTestButtonPanel;
         private javax.swing.JTextField contatain;
         private javax.swing.JTextField destId;
+        private javax.swing.JButton egButton;
+        private javax.swing.JLabel egLabel;
+        private javax.swing.JTextField egTextField;
         private javax.swing.JLabel jLabel1;
         private javax.swing.JLabel jLabel2;
         private javax.swing.JLabel jLabel3;
@@ -392,7 +426,6 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
         private javax.swing.JLabel jLabel9;
         private javax.swing.JPanel jPanel1;
         private javax.swing.JScrollPane jScrollPane1;
-        private javax.swing.JPanel joinJoinPanel;
         private javax.swing.JTextField logClass;
         private javax.swing.JTextField logLocation;
         private javax.swing.JTextField logNodeID;
@@ -407,8 +440,10 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
         private javax.swing.JButton ringTestButton;
         private javax.swing.JButton sendButton;
         private javax.swing.JPanel sendMessagePanel;
+        private javax.swing.JPanel servicePanel;
         private javax.swing.JButton startNodeSetButton;
         private javax.swing.JLabel statField;
+        private javax.swing.JPanel statPanel;
         private javax.swing.JLabel statusField;
         private javax.swing.JTable table;
         // End of variables declaration//GEN-END:variables
