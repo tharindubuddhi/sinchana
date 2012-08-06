@@ -279,6 +279,7 @@ public class TesterController {
 				String key = CommonTools.generateId(data).toString();
 				int randomId = (int) (Math.random() * testServers.size());
 				testServers.get(randomId).getServer().storeData(key, data);
+                System.out.println("here..0");
 		}
                 public void retrieveData(){
                      String data = "Tharindu";

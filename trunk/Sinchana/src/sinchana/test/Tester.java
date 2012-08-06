@@ -37,7 +37,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		private boolean running = false;
 		private long numOfTestingMessages = 0;
 		private TestService testService = null;
-                private TestDataStore testDataStore = null;
+        private TestDataStore testDataStore = null;
 		/**
 		 * 
 		 * @param serverId
@@ -77,6 +77,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 						server.registerSinchanaTestInterface(this);
 						server.startServer();
 						testService = new TestService(this, tc);
+                        testDataStore = new TestDataStore(this, tc);
 						if (CONFIGURATIONS.GUI_ON) {
 								this.gui = new ServerUI(this);
 						}
