@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import sinchana.CONFIG;
+import sinchana.CONFIGURATIONS;
 import sinchana.Server;
 import sinchana.thrift.DHTServer;
 import sinchana.thrift.Node;
@@ -48,14 +48,14 @@ public class ConnectionPool {
 						}
 						Connection connection = new Connection(url);
 						pool.put(serverId, connection);
-						if (CONFIG.NUM_OF_MAX_OPENED_CONNECTION < pool.size()) {
+						if (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION < pool.size()) {
 								int level = Logger.LEVEL_INFO;
-								if (CONFIG.NUM_OF_MAX_OPENED_CONNECTION + 1 < pool.size()) {
+								if (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION + 1 < pool.size()) {
 										level = Logger.LEVEL_WARNING;
 								}
 								Logger.log(this.server.serverId, level, Logger.CLASS_CONNECTION_POOL, 1,
 										"Maximum number of connections opened exceeded! ("
-										+ pool.size() + "/" + CONFIG.NUM_OF_MAX_OPENED_CONNECTION + " are opened)");
+										+ pool.size() + "/" + CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION + " are opened)");
 								getSpace();
 						}
 						return connection.open();
@@ -63,15 +63,16 @@ public class ConnectionPool {
 		}
 
 		private void getSpace() {
-				Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
+				Map<String, Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
+				Set<String> keySetN = neighbourSet.keySet();
 				Set<String> keySet = pool.keySet();
 				boolean terminate;
 				String idToTerminate = null;
 				long oldestTime = Long.MAX_VALUE;
 				for (String sid : keySet) {
 						terminate = true;
-						for (Node node : neighbourSet) {
-								if (node.serverId.equals(sid)) {
+						for (String sidn : keySetN) {
+								if (sidn.equals(sid)) {
 										terminate = false;
 										break;
 								}

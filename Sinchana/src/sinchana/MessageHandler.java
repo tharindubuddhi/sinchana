@@ -26,7 +26,7 @@ public class MessageHandler {
 		 * Message queue to buffer incoming messages. The size of the queue is 
 		 * determined by MESSAGE_BUFFER_SIZE.
 		 */
-		private final MessageQueue messageQueue = new MessageQueue(CONFIG.INPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
+		private final MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
 				@Override
 				public void process(Message message) {
@@ -145,8 +145,9 @@ public class MessageHandler {
 								this.processDiscoverNeighbours(message);
 								break;
 						case FIND_SUCCESSOR:
-								this.processFindSuccessors(message);
-								break;
+								throw new RuntimeException("Hit FIND_SUCCESSOR");
+//								this.processFindSuccessors(message);
+//								break;
 						case TEST_RING:
 								this.processTestRing(message);
 								break;
@@ -185,10 +186,11 @@ public class MessageHandler {
 						this.server.getRoutingHandler().updateTable(message.successor);
 				}
 				if (message.isSetNeighbourSet()) {
-						Set<Node> neighbourSet = message.getNeighbourSet();
-						for (Node node : neighbourSet) {
-								if (!this.server.serverId.equals(node.serverId)) {
-										this.server.getRoutingHandler().updateTable(node);
+						Map<String, Node> neighbourSet = message.getNeighbourSet();
+						Set<String> keySet = neighbourSet.keySet();
+						for (String nodeId : keySet) {
+								if (!this.server.serverId.equals(nodeId)) {
+										this.server.getRoutingHandler().updateTable(neighbourSet.get(nodeId));
 								}
 						}
 				}
@@ -232,16 +234,17 @@ public class MessageHandler {
 						BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
 						Node nextSuccessor = this.server;
 						Node nextPredecessor = this.server;
-						Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
-						for (Node node : neighbourSet) {
-								tempNodeOffset = getOffset(node.serverId);
+						Map<String, Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
+						Set<String> keySet = neighbourSet.keySet();
+						for (String nodeId : keySet) {
+								tempNodeOffset = getOffset(nodeId);
 								nextPredecessorOffset = getOffset(nextPredecessor.serverId);
 								nextSuccessorOffset = getOffset(nextSuccessor.serverId);
 
 								Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 										"NewNode:" + message.source.serverId
 										+ "\tPrevStat:" + message.station.serverId
-										+ "\tTempNode:" + node.serverId
+										+ "\tTempNode:" + nodeId
 										+ "\tnextPDO:" + nextPredecessor.serverId
 										+ "\tnextSCO:" + nextSuccessor.serverId);
 
@@ -249,13 +252,13 @@ public class MessageHandler {
 										&& (nextSuccessorOffset.compareTo(tempNodeOffset) == -1
 										|| nextSuccessorOffset.equals(new BigInteger("0", 16)))
 										&& tempNodeOffset.compareTo(newServerIdOffset) == -1) {
-										nextSuccessor = node;
+										nextSuccessor = neighbourSet.get(nodeId);
 								}
 								if (prevStationIdOffset.compareTo(newServerIdOffset) != 1
 										&& (tempNodeOffset.compareTo(nextPredecessorOffset) == -1
 										|| nextPredecessorOffset.equals(new BigInteger("0", 16)))
 										&& newServerIdOffset.compareTo(tempNodeOffset) == -1) {
-										nextPredecessor = node;
+										nextPredecessor = neighbourSet.get(nodeId);
 								}
 						}
 						Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
@@ -285,6 +288,9 @@ public class MessageHandler {
 
 		private void processDiscoverNeighbours(Message message) {
 				if (!message.source.serverId.equals(this.server.serverId)) {
+						if (message.isSetFailedNodeSet()) {
+								this.server.getRoutingHandler().removeNode(message.getFailedNodeSet());
+						}
 						message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 						this.server.getPortHandler().send(message, message.source);
 				} else {

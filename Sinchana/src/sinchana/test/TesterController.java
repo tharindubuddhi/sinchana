@@ -4,9 +4,6 @@
  */
 package sinchana.test;
 
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -17,7 +14,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sinchana.CONFIG;
+import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.util.tools.CommonTools;
@@ -44,7 +41,9 @@ public class TesterController {
 		 * @param args
 		 */
 		public static void main(String[] args) {
-				LocalCacheServer.clear();
+				if (CONFIGURATIONS.CLEAR_CACHE_SERVER) {
+						LocalCacheServer.clear();
+				}
 				new TesterController();
 		}
 

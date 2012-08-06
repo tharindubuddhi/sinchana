@@ -4,8 +4,8 @@
  */
 package sinchana;
 
+import java.util.Map;
 import sinchana.thrift.Node;
-import java.util.Set;
 import sinchana.thrift.Message;
 
 /**
@@ -47,7 +47,8 @@ public interface RoutingHandler {
 		 * table entries.
 		 * @return Set of neighbor nodes.
 		 */
-		public abstract Set<Node> getNeighbourSet();
+		public abstract Map<String, Node> getNeighbourSet();
+		public abstract Map<String, Node> getFailedNodeSet();
 		
 		/**
 		 * Triggers the routing table optimization functions.
@@ -69,6 +70,7 @@ public interface RoutingHandler {
 		 * @param node Node to remove from the routing table.
 		 */
 		public abstract void removeNode(Node node);
+		public abstract void removeNode(Map<String, Node> nodes);
 		
 		/**
 		 * Updates the table, successor and predecessor with the new node.
