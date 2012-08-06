@@ -14,18 +14,18 @@ import sinchana.thrift.DataObject;
  * @author DELL
  */
 public class TestDataStore {
-    private Server server;
-    private int testId;
-    private ServerUI gui = null;
-    private TesterController testerController;
+	private Server server;
+	private int testId;
+	private ServerUI gui = null;
+	private TesterController testerController;
 
     public TestDataStore(Tester tester,TesterController tc) {
-        
-        this.testId = tester.getTestId();
-            this.testerController = tc;
-            this.server = tester.getServer();
-            this.gui = tester.getGui();
-            
+
+		this.testId = tester.getTestId();
+		this.testerController = tc;
+		this.server = tester.getServer();
+		this.gui = tester.getGui();
+
             server.registerSinchanaStoreInterface(new SinchanaStoreInterface() {
 
             @Override
@@ -42,22 +42,22 @@ public class TestDataStore {
                 System.out.println("");
             }
 
-            @Override
-            public void remove(DataObject dataObject) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+			@Override
+			public void remove(DataObject dataObject) {
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
 
-            @Override
-            public void isStored(Boolean success) {
+			@Override
+			public void isStored(Boolean success) {
                 System.out.println("Stored "+success);
-            }
+			}
 
-            @Override
-            public void isRemoved(Boolean success) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        });
-    }
+			@Override
+			public void isRemoved(Boolean success) {
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
+		});
+	}    
     
     
 }

@@ -15,17 +15,15 @@ import sinchana.thrift.DataObject;
  * @author DELL
  */
 public class SinchanaDataStore {
-    
-    private Map<String, Set<DataObject>> rootObjects = new HashMap<String, Set<DataObject>>();
-    private Set<String> storedObject = new HashSet<String>();
 
-    public void setrootObjects(Map<String, Set<DataObject>> rootObjects) {
-        this.rootObjects = rootObjects;
-    }
+	private Map<String, Set<DataObject>> rootObjects = new HashMap<String, Set<DataObject>>();
+	private Set<String> storedObject = new HashSet<String>();
 
-    public Map<String, Set<DataObject>> getrootObjects() {
-        return rootObjects;
-    }
-    
-    
+	public void setrootObjects(Map<String, Set<DataObject>> rootObjects) {
+		this.rootObjects = rootObjects;
+	}
+
+	public Map<String, Set<DataObject>> getrootObjects() {
+		return rootObjects;
+	}
 }
