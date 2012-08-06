@@ -371,34 +371,39 @@ public class MessageHandler {
 
 						case STORE_DATA:
 								if (this.server.getSinchanaStoreInterface() != null) {
-                                                                                DataObject dataObject = new DataObject(message.source.serverId, message.source.address, message.message);
-                                                                                processStore(message.targetKey, dataObject);
-										this.server.getSinchanaStoreInterface().store(dataObject);
-								}
-								break;
+                    DataObject dataObject = new DataObject(message.source.serverId, message.source.address, message.dataValue);
+                    success = processStore(message.targetKey, dataObject,message);
+                    this.server.getSinchanaStoreInterface().store(dataObject);
+                }
+                break;
 						case DELETE_DATA:
 								if (this.server.getSinchanaStoreInterface() != null) {
 //										success = this.server.getSinchanaStoreInterface().delete(message.targetKey);
 								}
 								break;
 						case GET_DATA:
-								if (this.server.getSinchanaStoreInterface() != null) {
-										returnMessage = new Message();
-										returnMessage.setLifetime(1);
-										message.setType(MessageType.RESPONSE_DATA);
-//										message.setMessage(this.server.getSinchanaStoreInterface().get(message.targetKey));
-								}
-								break;
+														
+                if (this.server.getSinchanaStoreInterface() != null) {
+                    Set<DataObject> objectSources = processGetStore(message.targetKey, message.source.serverId,message);
+
+                }
+                break;
 						case FAILURE_DATA:
 								break;
 						case ACKNOWLEDGE_DATA:
-                                                       if(message.message.equals("success")){
-                                                                success=true;
-                                                                }
-                                                                this.server.getSinchanaStoreInterface().isStored(success);                                                  
-								break;
+                                                   if (this.server.getSinchanaStoreInterface() != null) {
+                    if (message.message.equals("success")) {
+                        success = true;
+                    }
+                    this.server.getSinchanaStoreInterface().isStored(success);
+                }
+                break;
 						case RESPONSE_DATA:
-								break;
+								 if (this.server.getSinchanaStoreInterface() != null) {
+                    this.server.getSinchanaStoreInterface().get(message.getDataSet());
+                }
+                break;
+
 
 						case PUBLISH_SERVICE:
 								if (this.server.getSinchanaServiceInterface() != null) {
@@ -432,69 +437,60 @@ public class MessageHandler {
 				}
 		}
                 
-                 private boolean processStore(String objectKey, DataObject dataObject){
+                 
+    private boolean processStore(String objectKey, DataObject dataObject,Message msg) {
 
-                     Map <String, Set <DataObject> > rootObjects = this.server.getSinchanaDataStore().getrootObjects();
-                     Set <DataObject> sourceServers = rootObjects.get(objectKey);
+        Map<String, Set<DataObject>> rootObjects = this.server.getSinchanaDataStore().getrootObjects();
+        Set<DataObject> sourceServers = rootObjects.get(objectKey);
 
-                     if(sourceServers==null){
-                         sourceServers= new HashSet <DataObject> ();
-                     }
-                     sourceServers.add(dataObject);
-                     this.server.getSinchanaDataStore().setrootObjects(rootObjects);
-                     Message msg = new Message(this.server, MessageType.ACKNOWLEDGE_DATA, 10);
-                     msg.setTargetKey(dataObject.sourceID);
-                     msg.setMessage("success");
-                     msg.setStation(this.server);
-                     this.server.getMessageHandler().queueMessage(msg);                                                         
-                     return true;
+        if (sourceServers == null) {
+            sourceServers = new HashSet<DataObject>();
+            System.out.println("source servers null");
+        }
+        sourceServers.add(dataObject);
+        rootObjects.put(objectKey, sourceServers);
+        this.server.getSinchanaDataStore().setrootObjects(rootObjects);
+        msg.setType(MessageType.ACKNOWLEDGE_DATA);
+        msg.setMessage("success");
+        msg.setStation(this.server);
+        this.server.getPortHandler().send(msg, msg.source);
+        return true;
 
-                }
+    }
 
-                private Set<DataObject> processStoreGet(String objectKey, String sourceKey){
+    private Set<DataObject> processGetStore(String objectKey, String sourceKey,Message msg) {
 
-                     Map <String, Set <DataObject> > rootObjects=this.server.getSinchanaDataStore().getrootObjects();
-                     Set <DataObject> sourceServers= rootObjects.get(objectKey);
+        Map<String, Set<DataObject>> rootObjects = this.server.getSinchanaDataStore().getrootObjects();
+        Set<DataObject> sourceServers = rootObjects.get(objectKey);
 
-                     if(sourceServers==null){
+        if (sourceServers == null) {
+            msg.setType(MessageType.RESPONSE_DATA);
+            msg.setMessage("does not exist");
+            this.server.getPortHandler().send(msg, msg.source);
+        } else {
+            msg.setMessage("exist");
+            msg.setDataSet(sourceServers);
+//            msg.setStation(this.server);
+            this.server.getPortHandler().send(msg, msg.source);
+        }
 
-                         System.out.println("error");
+        return sourceServers;
 
-                          Message msg = new Message(this.server, MessageType.RESPONSE_DATA, 10);
-                           msg.setTargetKey(sourceKey);
-                          msg.setMessage("no such object is stored");
-                          msg.setStation(this.server);
-                          this.server.getMessageHandler().queueMessage(msg);
-                         return null;
+    }
 
-                     }
-                    else{
-                    
-                        return sourceServers;
-                    }
-                    
-                }
+    private boolean processRemove(String objectKey, String sourceKey) {
 
-                private boolean processremove(String objectKey, String sourceKey ){
+        Map<String, Set<DataObject>> rootObjects = this.server.getSinchanaDataStore().getrootObjects();
+        Set<DataObject> sourceServers = rootObjects.get(objectKey);
 
-                     Map <String, Set <DataObject> > rootObjects=this.server.getSinchanaDataStore().getrootObjects();
-                     Set <DataObject> sourceServers= rootObjects.get(objectKey);
-
-                     if(sourceServers==null){
-
-                         System.out.println("no objects for that key");
-
-                     }
-                    else if(!sourceServers.contains(sourceKey)){
-                     
-                         System.out.println("no objects published from that source for this object");
-                    }
-                    else{
-
-                         sourceServers.remove(sourceKey);
-                         return true;
-
-                    }
-                     return false;
-                }
+        if (sourceServers == null) {
+            System.out.println("no objects for that key");
+        } else if (!sourceServers.contains(sourceKey)) {
+            System.out.println("no objects published from that source for this object");
+        } else {
+            sourceServers.remove(sourceKey);
+            return true;
+        }
+        return false;
+    }
 }

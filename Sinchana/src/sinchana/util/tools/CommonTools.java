@@ -22,7 +22,7 @@ public class CommonTools {
 						cript.update(address.getBytes("utf8"));
 						byte[] digest = cript.digest();
 						BigInteger bi = new BigInteger(1, digest);
-						check(bi);
+//						check(bi);
 						return bi;
 				} catch (Exception ex) {
 						throw new RuntimeException("Error calculating hash value", ex);

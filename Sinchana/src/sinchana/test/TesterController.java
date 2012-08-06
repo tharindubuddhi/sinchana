@@ -280,7 +280,13 @@ public class TesterController {
 				int randomId = (int) (Math.random() * testServers.size());
 				testServers.get(randomId).getServer().storeData(key, data);
 		}
-
+                public void retrieveData(){
+                     String data = "Tharindu";
+                    String key = CommonTools.generateId(data).toString();
+                    System.out.println(key);
+                    int randomId = (int) (Math.random() * testServers.size());
+                    testServers.get(randomId).getServer().getData(key);
+                }
 		/**
 		 * 
 		 * @param nodeIdsString

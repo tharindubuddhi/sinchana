@@ -35,7 +35,11 @@ public class TestDataStore {
 
             @Override
             public void get(Set<DataObject> dataObjectSet) {
-                throw new UnsupportedOperationException("Not supported yet.");
+                System.out.print("data set retrieved : ");
+                for (DataObject dataObject : dataObjectSet) {
+                    System.out.print(dataObject.DataValue+" ");
+                }
+                System.out.println("");
             }
 
             @Override
@@ -45,7 +49,7 @@ public class TestDataStore {
 
             @Override
             public void isStored(Boolean success) {
-                throw new UnsupportedOperationException("Not supported yet.");
+                System.out.println("Stored "+success);
             }
 
             @Override

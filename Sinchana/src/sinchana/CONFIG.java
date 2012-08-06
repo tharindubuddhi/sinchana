@@ -24,7 +24,7 @@ public class CONFIG {
 		/**Test Configurations**/
 		
 		public static final boolean GUI_ON = false;
-		public static final boolean USE_REMOTE_CACHE_SERVER = true;
+		public static final boolean USE_REMOTE_CACHE_SERVER = false;
 		public static final boolean CLEAR_CACHE_SERVER = false;
 		public static final int ROUND_TIP_TIME = 50;	
 		

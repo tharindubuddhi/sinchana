@@ -237,7 +237,7 @@ public class Server extends Node {
 		public void storeData(String key, String data) {
 				Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
-				msg.setMessage(data);
+				msg.setDataValue(data);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
