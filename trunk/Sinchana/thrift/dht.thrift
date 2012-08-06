@@ -58,7 +58,9 @@ struct Message {
     15: optional set<ServiceObject> serviceSet,
     16: optional string targetKey,
     17: optional i32 retryCount,
-    18: optional i64 timeStamp
+    18: optional i64 timeStamp,
+    19: optional string dataValue,
+    20: optional string serviceValue
 }
 
 service DHTServer {

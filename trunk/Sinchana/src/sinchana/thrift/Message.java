@@ -48,6 +48,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final org.apache.thrift.protocol.TField TARGET_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("targetKey", org.apache.thrift.protocol.TType.STRING, (short)16);
   private static final org.apache.thrift.protocol.TField RETRY_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("retryCount", org.apache.thrift.protocol.TType.I32, (short)17);
   private static final org.apache.thrift.protocol.TField TIME_STAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStamp", org.apache.thrift.protocol.TType.I64, (short)18);
+  private static final org.apache.thrift.protocol.TField DATA_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("dataValue", org.apache.thrift.protocol.TType.STRING, (short)19);
+  private static final org.apache.thrift.protocol.TField SERVICE_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("serviceValue", org.apache.thrift.protocol.TType.STRING, (short)20);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -77,6 +79,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public String targetKey; // optional
   public int retryCount; // optional
   public long timeStamp; // optional
+  public String dataValue; // optional
+  public String serviceValue; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -101,7 +105,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     SERVICE_SET((short)15, "serviceSet"),
     TARGET_KEY((short)16, "targetKey"),
     RETRY_COUNT((short)17, "retryCount"),
-    TIME_STAMP((short)18, "timeStamp");
+    TIME_STAMP((short)18, "timeStamp"),
+    DATA_VALUE((short)19, "dataValue"),
+    SERVICE_VALUE((short)20, "serviceValue");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -152,6 +158,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           return RETRY_COUNT;
         case 18: // TIME_STAMP
           return TIME_STAMP;
+        case 19: // DATA_VALUE
+          return DATA_VALUE;
+        case 20: // SERVICE_VALUE
+          return SERVICE_VALUE;
         default:
           return null;
       }
@@ -197,7 +207,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final int __RETRYCOUNT_ISSET_ID = 2;
   private static final int __TIMESTAMP_ISSET_ID = 3;
   private BitSet __isset_bit_vector = new BitSet(4);
-  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.FAILED_NODE_SET,_Fields.DATA_SET,_Fields.SERVICE_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP};
+  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.FAILED_NODE_SET,_Fields.DATA_SET,_Fields.SERVICE_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP,_Fields.DATA_VALUE,_Fields.SERVICE_VALUE};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -243,6 +253,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.TIME_STAMP, new org.apache.thrift.meta_data.FieldMetaData("timeStamp", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.DATA_VALUE, new org.apache.thrift.meta_data.FieldMetaData("dataValue", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.SERVICE_VALUE, new org.apache.thrift.meta_data.FieldMetaData("serviceValue", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Message.class, metaDataMap);
   }
@@ -346,6 +360,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
     this.retryCount = other.retryCount;
     this.timeStamp = other.timeStamp;
+    if (other.isSetDataValue()) {
+      this.dataValue = other.dataValue;
+    }
+    if (other.isSetServiceValue()) {
+      this.serviceValue = other.serviceValue;
+    }
   }
 
   public Message deepCopy() {
@@ -376,6 +396,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     this.retryCount = 0;
     setTimeStampIsSet(false);
     this.timeStamp = 0;
+    this.dataValue = null;
+    this.serviceValue = null;
   }
 
   public long getId() {
@@ -866,6 +888,54 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     __isset_bit_vector.set(__TIMESTAMP_ISSET_ID, value);
   }
 
+  public String getDataValue() {
+    return this.dataValue;
+  }
+
+  public Message setDataValue(String dataValue) {
+    this.dataValue = dataValue;
+    return this;
+  }
+
+  public void unsetDataValue() {
+    this.dataValue = null;
+  }
+
+  /** Returns true if field dataValue is set (has been assigned a value) and false otherwise */
+  public boolean isSetDataValue() {
+    return this.dataValue != null;
+  }
+
+  public void setDataValueIsSet(boolean value) {
+    if (!value) {
+      this.dataValue = null;
+    }
+  }
+
+  public String getServiceValue() {
+    return this.serviceValue;
+  }
+
+  public Message setServiceValue(String serviceValue) {
+    this.serviceValue = serviceValue;
+    return this;
+  }
+
+  public void unsetServiceValue() {
+    this.serviceValue = null;
+  }
+
+  /** Returns true if field serviceValue is set (has been assigned a value) and false otherwise */
+  public boolean isSetServiceValue() {
+    return this.serviceValue != null;
+  }
+
+  public void setServiceValueIsSet(boolean value) {
+    if (!value) {
+      this.serviceValue = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case ID:
@@ -1012,6 +1082,22 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       break;
 
+    case DATA_VALUE:
+      if (value == null) {
+        unsetDataValue();
+      } else {
+        setDataValue((String)value);
+      }
+      break;
+
+    case SERVICE_VALUE:
+      if (value == null) {
+        unsetServiceValue();
+      } else {
+        setServiceValue((String)value);
+      }
+      break;
+
     }
   }
 
@@ -1071,6 +1157,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     case TIME_STAMP:
       return Long.valueOf(getTimeStamp());
 
+    case DATA_VALUE:
+      return getDataValue();
+
+    case SERVICE_VALUE:
+      return getServiceValue();
+
     }
     throw new IllegalStateException();
   }
@@ -1118,6 +1210,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       return isSetRetryCount();
     case TIME_STAMP:
       return isSetTimeStamp();
+    case DATA_VALUE:
+      return isSetDataValue();
+    case SERVICE_VALUE:
+      return isSetServiceValue();
     }
     throw new IllegalStateException();
   }
@@ -1294,6 +1390,24 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (!(this_present_timeStamp && that_present_timeStamp))
         return false;
       if (this.timeStamp != that.timeStamp)
+        return false;
+    }
+
+    boolean this_present_dataValue = true && this.isSetDataValue();
+    boolean that_present_dataValue = true && that.isSetDataValue();
+    if (this_present_dataValue || that_present_dataValue) {
+      if (!(this_present_dataValue && that_present_dataValue))
+        return false;
+      if (!this.dataValue.equals(that.dataValue))
+        return false;
+    }
+
+    boolean this_present_serviceValue = true && this.isSetServiceValue();
+    boolean that_present_serviceValue = true && that.isSetServiceValue();
+    if (this_present_serviceValue || that_present_serviceValue) {
+      if (!(this_present_serviceValue && that_present_serviceValue))
+        return false;
+      if (!this.serviceValue.equals(that.serviceValue))
         return false;
     }
 
@@ -1493,6 +1607,26 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetDataValue()).compareTo(typedOther.isSetDataValue());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetDataValue()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.dataValue, typedOther.dataValue);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetServiceValue()).compareTo(typedOther.isSetServiceValue());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetServiceValue()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.serviceValue, typedOther.serviceValue);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1668,6 +1802,26 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (!first) sb.append(", ");
       sb.append("timeStamp:");
       sb.append(this.timeStamp);
+      first = false;
+    }
+    if (isSetDataValue()) {
+      if (!first) sb.append(", ");
+      sb.append("dataValue:");
+      if (this.dataValue == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.dataValue);
+      }
+      first = false;
+    }
+    if (isSetServiceValue()) {
+      if (!first) sb.append(", ");
+      sb.append("serviceValue:");
+      if (this.serviceValue == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.serviceValue);
+      }
       first = false;
     }
     sb.append(")");
@@ -1918,6 +2072,22 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 19: // DATA_VALUE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.dataValue = iprot.readString();
+              struct.setDataValueIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 20: // SERVICE_VALUE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.serviceValue = iprot.readString();
+              struct.setServiceValueIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -2078,6 +2248,20 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         oprot.writeI64(struct.timeStamp);
         oprot.writeFieldEnd();
       }
+      if (struct.dataValue != null) {
+        if (struct.isSetDataValue()) {
+          oprot.writeFieldBegin(DATA_VALUE_FIELD_DESC);
+          oprot.writeString(struct.dataValue);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.serviceValue != null) {
+        if (struct.isSetServiceValue()) {
+          oprot.writeFieldBegin(SERVICE_VALUE_FIELD_DESC);
+          oprot.writeString(struct.serviceValue);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -2144,7 +2328,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetTimeStamp()) {
         optionals.set(14);
       }
-      oprot.writeBitSet(optionals, 15);
+      if (struct.isSetDataValue()) {
+        optionals.set(15);
+      }
+      if (struct.isSetServiceValue()) {
+        optionals.set(16);
+      }
+      oprot.writeBitSet(optionals, 17);
       if (struct.isSetId()) {
         oprot.writeI64(struct.id);
       }
@@ -2216,6 +2406,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetTimeStamp()) {
         oprot.writeI64(struct.timeStamp);
       }
+      if (struct.isSetDataValue()) {
+        oprot.writeString(struct.dataValue);
+      }
+      if (struct.isSetServiceValue()) {
+        oprot.writeString(struct.serviceValue);
+      }
     }
 
     @Override
@@ -2228,7 +2424,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       struct.setTypeIsSet(true);
       struct.lifetime = iprot.readI32();
       struct.setLifetimeIsSet(true);
-      BitSet incoming = iprot.readBitSet(15);
+      BitSet incoming = iprot.readBitSet(17);
       if (incoming.get(0)) {
         struct.id = iprot.readI64();
         struct.setIdIsSet(true);
@@ -2336,6 +2532,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (incoming.get(14)) {
         struct.timeStamp = iprot.readI64();
         struct.setTimeStampIsSet(true);
+      }
+      if (incoming.get(15)) {
+        struct.dataValue = iprot.readString();
+        struct.setDataValueIsSet(true);
+      }
+      if (incoming.get(16)) {
+        struct.serviceValue = iprot.readString();
+        struct.setServiceValueIsSet(true);
       }
     }
   }
