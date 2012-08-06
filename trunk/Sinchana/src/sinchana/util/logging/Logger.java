@@ -8,13 +8,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
+import sinchana.CONFIGURATIONS;
 
 /**
  * 
  * @author Hiru
  */
 public final class Logger {
-		
+
 		private static List<Log> logDB = new LinkedList<Log>();
 		/**
 		 * 
@@ -58,7 +59,7 @@ public final class Logger {
 		 * 
 		 */
 		public static final int CURRENT_LOG_LEVEL = 2;
-		
+
 		private Logger() {
 		}
 
@@ -71,13 +72,15 @@ public final class Logger {
 		 * @param logData
 		 */
 		public static void log(String nodeId, int type, int classId, int locId, String logData) {
-				Log nl = new Log();
-				nl.nodeId = nodeId;
-				nl.level = type;
-				nl.classId = classId;
-				nl.locId = (byte) locId;
-				nl.logData = logData;
-//				logDB.add(nl);
+				if (CONFIGURATIONS.DO_LOG) {
+						Log nl = new Log();
+						nl.nodeId = nodeId;
+						nl.level = type;
+						nl.classId = classId;
+						nl.locId = (byte) locId;
+						nl.logData = logData;
+						logDB.add(nl);
+				}
 				if (CURRENT_LOG_LEVEL > type) {
 						return;
 				}
@@ -123,8 +126,8 @@ public final class Logger {
 				}
 				java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
 						className, "Server " + nodeId, logData);
-				
-				
+
+
 		}
 
 		/**

@@ -21,7 +21,7 @@ import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
-import sinchana.CONFIG;
+import sinchana.CONFIGURATIONS;
 
 /**
  *
@@ -77,7 +77,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 						server.registerSinchanaTestInterface(this);
 						server.startServer();
 						testService = new TestService(this, tc);
-						if (CONFIG.GUI_ON) {
+						if (CONFIGURATIONS.GUI_ON) {
 								this.gui = new ServerUI(this);
 						}
 				} catch (UnknownHostException ex) {
@@ -114,7 +114,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		 * 
 		 */
 		public void startRingTest() {
-				Message msg = new Message(this.server, MessageType.TEST_RING, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this.server, MessageType.TEST_RING, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setMessage("");
 				this.server.send(msg);
 		}

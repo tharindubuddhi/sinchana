@@ -41,8 +41,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final org.apache.thrift.protocol.TField SUCCESSOR_FIELD_DESC = new org.apache.thrift.protocol.TField("successor", org.apache.thrift.protocol.TType.STRUCT, (short)9);
   private static final org.apache.thrift.protocol.TField START_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("startOfRange", org.apache.thrift.protocol.TType.STRING, (short)10);
   private static final org.apache.thrift.protocol.TField END_OF_RANGE_FIELD_DESC = new org.apache.thrift.protocol.TField("endOfRange", org.apache.thrift.protocol.TType.STRING, (short)11);
-  private static final org.apache.thrift.protocol.TField NEIGHBOUR_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("neighbourSet", org.apache.thrift.protocol.TType.SET, (short)12);
-  private static final org.apache.thrift.protocol.TField FAILED_NODE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("failedNodeSet", org.apache.thrift.protocol.TType.SET, (short)13);
+  private static final org.apache.thrift.protocol.TField NEIGHBOUR_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("neighbourSet", org.apache.thrift.protocol.TType.MAP, (short)12);
+  private static final org.apache.thrift.protocol.TField FAILED_NODE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("failedNodeSet", org.apache.thrift.protocol.TType.MAP, (short)13);
   private static final org.apache.thrift.protocol.TField DATA_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("dataSet", org.apache.thrift.protocol.TType.SET, (short)14);
   private static final org.apache.thrift.protocol.TField SERVICE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("serviceSet", org.apache.thrift.protocol.TType.SET, (short)15);
   private static final org.apache.thrift.protocol.TField TARGET_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("targetKey", org.apache.thrift.protocol.TType.STRING, (short)16);
@@ -70,8 +70,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public Node successor; // optional
   public String startOfRange; // optional
   public String endOfRange; // optional
-  public Set<Node> neighbourSet; // optional
-  public Set<Node> failedNodeSet; // optional
+  public Map<String,Node> neighbourSet; // optional
+  public Map<String,Node> failedNodeSet; // optional
   public Set<DataObject> dataSet; // optional
   public Set<ServiceObject> serviceSet; // optional
   public String targetKey; // optional
@@ -224,10 +224,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     tmpMap.put(_Fields.END_OF_RANGE, new org.apache.thrift.meta_data.FieldMetaData("endOfRange", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.NEIGHBOUR_SET, new org.apache.thrift.meta_data.FieldMetaData("neighbourSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
+        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
     tmpMap.put(_Fields.FAILED_NODE_SET, new org.apache.thrift.meta_data.FieldMetaData("failedNodeSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
+        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
     tmpMap.put(_Fields.DATA_SET, new org.apache.thrift.meta_data.FieldMetaData("dataSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
@@ -296,16 +298,32 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       this.endOfRange = other.endOfRange;
     }
     if (other.isSetNeighbourSet()) {
-      Set<Node> __this__neighbourSet = new HashSet<Node>();
-      for (Node other_element : other.neighbourSet) {
-        __this__neighbourSet.add(new Node(other_element));
+      Map<String,Node> __this__neighbourSet = new HashMap<String,Node>();
+      for (Map.Entry<String, Node> other_element : other.neighbourSet.entrySet()) {
+
+        String other_element_key = other_element.getKey();
+        Node other_element_value = other_element.getValue();
+
+        String __this__neighbourSet_copy_key = other_element_key;
+
+        Node __this__neighbourSet_copy_value = new Node(other_element_value);
+
+        __this__neighbourSet.put(__this__neighbourSet_copy_key, __this__neighbourSet_copy_value);
       }
       this.neighbourSet = __this__neighbourSet;
     }
     if (other.isSetFailedNodeSet()) {
-      Set<Node> __this__failedNodeSet = new HashSet<Node>();
-      for (Node other_element : other.failedNodeSet) {
-        __this__failedNodeSet.add(new Node(other_element));
+      Map<String,Node> __this__failedNodeSet = new HashMap<String,Node>();
+      for (Map.Entry<String, Node> other_element : other.failedNodeSet.entrySet()) {
+
+        String other_element_key = other_element.getKey();
+        Node other_element_value = other_element.getValue();
+
+        String __this__failedNodeSet_copy_key = other_element_key;
+
+        Node __this__failedNodeSet_copy_value = new Node(other_element_value);
+
+        __this__failedNodeSet.put(__this__failedNodeSet_copy_key, __this__failedNodeSet_copy_value);
       }
       this.failedNodeSet = __this__failedNodeSet;
     }
@@ -634,22 +652,18 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     return (this.neighbourSet == null) ? 0 : this.neighbourSet.size();
   }
 
-  public java.util.Iterator<Node> getNeighbourSetIterator() {
-    return (this.neighbourSet == null) ? null : this.neighbourSet.iterator();
-  }
-
-  public void addToNeighbourSet(Node elem) {
+  public void putToNeighbourSet(String key, Node val) {
     if (this.neighbourSet == null) {
-      this.neighbourSet = new HashSet<Node>();
+      this.neighbourSet = new HashMap<String,Node>();
     }
-    this.neighbourSet.add(elem);
+    this.neighbourSet.put(key, val);
   }
 
-  public Set<Node> getNeighbourSet() {
+  public Map<String,Node> getNeighbourSet() {
     return this.neighbourSet;
   }
 
-  public Message setNeighbourSet(Set<Node> neighbourSet) {
+  public Message setNeighbourSet(Map<String,Node> neighbourSet) {
     this.neighbourSet = neighbourSet;
     return this;
   }
@@ -673,22 +687,18 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     return (this.failedNodeSet == null) ? 0 : this.failedNodeSet.size();
   }
 
-  public java.util.Iterator<Node> getFailedNodeSetIterator() {
-    return (this.failedNodeSet == null) ? null : this.failedNodeSet.iterator();
-  }
-
-  public void addToFailedNodeSet(Node elem) {
+  public void putToFailedNodeSet(String key, Node val) {
     if (this.failedNodeSet == null) {
-      this.failedNodeSet = new HashSet<Node>();
+      this.failedNodeSet = new HashMap<String,Node>();
     }
-    this.failedNodeSet.add(elem);
+    this.failedNodeSet.put(key, val);
   }
 
-  public Set<Node> getFailedNodeSet() {
+  public Map<String,Node> getFailedNodeSet() {
     return this.failedNodeSet;
   }
 
-  public Message setFailedNodeSet(Set<Node> failedNodeSet) {
+  public Message setFailedNodeSet(Map<String,Node> failedNodeSet) {
     this.failedNodeSet = failedNodeSet;
     return this;
   }
@@ -950,7 +960,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetNeighbourSet();
       } else {
-        setNeighbourSet((Set<Node>)value);
+        setNeighbourSet((Map<String,Node>)value);
       }
       break;
 
@@ -958,7 +968,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetFailedNodeSet();
       } else {
-        setFailedNodeSet((Set<Node>)value);
+        setFailedNodeSet((Map<String,Node>)value);
       }
       break;
 
@@ -1805,18 +1815,20 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
             }
             break;
           case 12: // NEIGHBOUR_SET
-            if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
+            if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TSet _set0 = iprot.readSetBegin();
-                struct.neighbourSet = new HashSet<Node>(2*_set0.size);
-                for (int _i1 = 0; _i1 < _set0.size; ++_i1)
+                org.apache.thrift.protocol.TMap _map0 = iprot.readMapBegin();
+                struct.neighbourSet = new HashMap<String,Node>(2*_map0.size);
+                for (int _i1 = 0; _i1 < _map0.size; ++_i1)
                 {
-                  Node _elem2; // required
-                  _elem2 = new Node();
-                  _elem2.read(iprot);
-                  struct.neighbourSet.add(_elem2);
+                  String _key2; // required
+                  Node _val3; // required
+                  _key2 = iprot.readString();
+                  _val3 = new Node();
+                  _val3.read(iprot);
+                  struct.neighbourSet.put(_key2, _val3);
                 }
-                iprot.readSetEnd();
+                iprot.readMapEnd();
               }
               struct.setNeighbourSetIsSet(true);
             } else { 
@@ -1824,18 +1836,20 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
             }
             break;
           case 13: // FAILED_NODE_SET
-            if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
+            if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TSet _set3 = iprot.readSetBegin();
-                struct.failedNodeSet = new HashSet<Node>(2*_set3.size);
-                for (int _i4 = 0; _i4 < _set3.size; ++_i4)
+                org.apache.thrift.protocol.TMap _map4 = iprot.readMapBegin();
+                struct.failedNodeSet = new HashMap<String,Node>(2*_map4.size);
+                for (int _i5 = 0; _i5 < _map4.size; ++_i5)
                 {
-                  Node _elem5; // required
-                  _elem5 = new Node();
-                  _elem5.read(iprot);
-                  struct.failedNodeSet.add(_elem5);
+                  String _key6; // required
+                  Node _val7; // required
+                  _key6 = iprot.readString();
+                  _val7 = new Node();
+                  _val7.read(iprot);
+                  struct.failedNodeSet.put(_key6, _val7);
                 }
-                iprot.readSetEnd();
+                iprot.readMapEnd();
               }
               struct.setFailedNodeSetIsSet(true);
             } else { 
@@ -1845,14 +1859,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           case 14: // DATA_SET
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
-                org.apache.thrift.protocol.TSet _set6 = iprot.readSetBegin();
-                struct.dataSet = new HashSet<DataObject>(2*_set6.size);
-                for (int _i7 = 0; _i7 < _set6.size; ++_i7)
+                org.apache.thrift.protocol.TSet _set8 = iprot.readSetBegin();
+                struct.dataSet = new HashSet<DataObject>(2*_set8.size);
+                for (int _i9 = 0; _i9 < _set8.size; ++_i9)
                 {
-                  DataObject _elem8; // required
-                  _elem8 = new DataObject();
-                  _elem8.read(iprot);
-                  struct.dataSet.add(_elem8);
+                  DataObject _elem10; // required
+                  _elem10 = new DataObject();
+                  _elem10.read(iprot);
+                  struct.dataSet.add(_elem10);
                 }
                 iprot.readSetEnd();
               }
@@ -1864,14 +1878,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           case 15: // SERVICE_SET
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
-                org.apache.thrift.protocol.TSet _set9 = iprot.readSetBegin();
-                struct.serviceSet = new HashSet<ServiceObject>(2*_set9.size);
-                for (int _i10 = 0; _i10 < _set9.size; ++_i10)
+                org.apache.thrift.protocol.TSet _set11 = iprot.readSetBegin();
+                struct.serviceSet = new HashSet<ServiceObject>(2*_set11.size);
+                for (int _i12 = 0; _i12 < _set11.size; ++_i12)
                 {
-                  ServiceObject _elem11; // required
-                  _elem11 = new ServiceObject();
-                  _elem11.read(iprot);
-                  struct.serviceSet.add(_elem11);
+                  ServiceObject _elem13; // required
+                  _elem13 = new ServiceObject();
+                  _elem13.read(iprot);
+                  struct.serviceSet.add(_elem13);
                 }
                 iprot.readSetEnd();
               }
@@ -1993,12 +2007,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         if (struct.isSetNeighbourSet()) {
           oprot.writeFieldBegin(NEIGHBOUR_SET_FIELD_DESC);
           {
-            oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.neighbourSet.size()));
-            for (Node _iter12 : struct.neighbourSet)
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, struct.neighbourSet.size()));
+            for (Map.Entry<String, Node> _iter14 : struct.neighbourSet.entrySet())
             {
-              _iter12.write(oprot);
+              oprot.writeString(_iter14.getKey());
+              _iter14.getValue().write(oprot);
             }
-            oprot.writeSetEnd();
+            oprot.writeMapEnd();
           }
           oprot.writeFieldEnd();
         }
@@ -2007,12 +2022,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         if (struct.isSetFailedNodeSet()) {
           oprot.writeFieldBegin(FAILED_NODE_SET_FIELD_DESC);
           {
-            oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.failedNodeSet.size()));
-            for (Node _iter13 : struct.failedNodeSet)
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, struct.failedNodeSet.size()));
+            for (Map.Entry<String, Node> _iter15 : struct.failedNodeSet.entrySet())
             {
-              _iter13.write(oprot);
+              oprot.writeString(_iter15.getKey());
+              _iter15.getValue().write(oprot);
             }
-            oprot.writeSetEnd();
+            oprot.writeMapEnd();
           }
           oprot.writeFieldEnd();
         }
@@ -2022,9 +2038,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldBegin(DATA_SET_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.dataSet.size()));
-            for (DataObject _iter14 : struct.dataSet)
+            for (DataObject _iter16 : struct.dataSet)
             {
-              _iter14.write(oprot);
+              _iter16.write(oprot);
             }
             oprot.writeSetEnd();
           }
@@ -2036,9 +2052,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldBegin(SERVICE_SET_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.serviceSet.size()));
-            for (ServiceObject _iter15 : struct.serviceSet)
+            for (ServiceObject _iter17 : struct.serviceSet)
             {
-              _iter15.write(oprot);
+              _iter17.write(oprot);
             }
             oprot.writeSetEnd();
           }
@@ -2156,36 +2172,38 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetNeighbourSet()) {
         {
           oprot.writeI32(struct.neighbourSet.size());
-          for (Node _iter16 : struct.neighbourSet)
+          for (Map.Entry<String, Node> _iter18 : struct.neighbourSet.entrySet())
           {
-            _iter16.write(oprot);
+            oprot.writeString(_iter18.getKey());
+            _iter18.getValue().write(oprot);
           }
         }
       }
       if (struct.isSetFailedNodeSet()) {
         {
           oprot.writeI32(struct.failedNodeSet.size());
-          for (Node _iter17 : struct.failedNodeSet)
+          for (Map.Entry<String, Node> _iter19 : struct.failedNodeSet.entrySet())
           {
-            _iter17.write(oprot);
+            oprot.writeString(_iter19.getKey());
+            _iter19.getValue().write(oprot);
           }
         }
       }
       if (struct.isSetDataSet()) {
         {
           oprot.writeI32(struct.dataSet.size());
-          for (DataObject _iter18 : struct.dataSet)
+          for (DataObject _iter20 : struct.dataSet)
           {
-            _iter18.write(oprot);
+            _iter20.write(oprot);
           }
         }
       }
       if (struct.isSetServiceSet()) {
         {
           oprot.writeI32(struct.serviceSet.size());
-          for (ServiceObject _iter19 : struct.serviceSet)
+          for (ServiceObject _iter21 : struct.serviceSet)
           {
-            _iter19.write(oprot);
+            _iter21.write(oprot);
           }
         }
       }
@@ -2249,56 +2267,60 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       if (incoming.get(8)) {
         {
-          org.apache.thrift.protocol.TSet _set20 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.neighbourSet = new HashSet<Node>(2*_set20.size);
-          for (int _i21 = 0; _i21 < _set20.size; ++_i21)
+          org.apache.thrift.protocol.TMap _map22 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.neighbourSet = new HashMap<String,Node>(2*_map22.size);
+          for (int _i23 = 0; _i23 < _map22.size; ++_i23)
           {
-            Node _elem22; // required
-            _elem22 = new Node();
-            _elem22.read(iprot);
-            struct.neighbourSet.add(_elem22);
+            String _key24; // required
+            Node _val25; // required
+            _key24 = iprot.readString();
+            _val25 = new Node();
+            _val25.read(iprot);
+            struct.neighbourSet.put(_key24, _val25);
           }
         }
         struct.setNeighbourSetIsSet(true);
       }
       if (incoming.get(9)) {
         {
-          org.apache.thrift.protocol.TSet _set23 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.failedNodeSet = new HashSet<Node>(2*_set23.size);
-          for (int _i24 = 0; _i24 < _set23.size; ++_i24)
+          org.apache.thrift.protocol.TMap _map26 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.failedNodeSet = new HashMap<String,Node>(2*_map26.size);
+          for (int _i27 = 0; _i27 < _map26.size; ++_i27)
           {
-            Node _elem25; // required
-            _elem25 = new Node();
-            _elem25.read(iprot);
-            struct.failedNodeSet.add(_elem25);
+            String _key28; // required
+            Node _val29; // required
+            _key28 = iprot.readString();
+            _val29 = new Node();
+            _val29.read(iprot);
+            struct.failedNodeSet.put(_key28, _val29);
           }
         }
         struct.setFailedNodeSetIsSet(true);
       }
       if (incoming.get(10)) {
         {
-          org.apache.thrift.protocol.TSet _set26 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.dataSet = new HashSet<DataObject>(2*_set26.size);
-          for (int _i27 = 0; _i27 < _set26.size; ++_i27)
+          org.apache.thrift.protocol.TSet _set30 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.dataSet = new HashSet<DataObject>(2*_set30.size);
+          for (int _i31 = 0; _i31 < _set30.size; ++_i31)
           {
-            DataObject _elem28; // required
-            _elem28 = new DataObject();
-            _elem28.read(iprot);
-            struct.dataSet.add(_elem28);
+            DataObject _elem32; // required
+            _elem32 = new DataObject();
+            _elem32.read(iprot);
+            struct.dataSet.add(_elem32);
           }
         }
         struct.setDataSetIsSet(true);
       }
       if (incoming.get(11)) {
         {
-          org.apache.thrift.protocol.TSet _set29 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.serviceSet = new HashSet<ServiceObject>(2*_set29.size);
-          for (int _i30 = 0; _i30 < _set29.size; ++_i30)
+          org.apache.thrift.protocol.TSet _set33 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.serviceSet = new HashSet<ServiceObject>(2*_set33.size);
+          for (int _i34 = 0; _i34 < _set33.size; ++_i34)
           {
-            ServiceObject _elem31; // required
-            _elem31 = new ServiceObject();
-            _elem31.read(iprot);
-            struct.serviceSet.add(_elem31);
+            ServiceObject _elem35; // required
+            _elem35 = new ServiceObject();
+            _elem35.read(iprot);
+            struct.serviceSet.add(_elem35);
           }
         }
         struct.setServiceSetIsSet(true);

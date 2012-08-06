@@ -87,7 +87,7 @@ public class Server extends Node {
 
 		public void join() {
 				if (this.remoteNodeAddress != null) {
-						Message msg = new Message(this, MessageType.JOIN, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+						Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 						Node remoteNode = new Node("n/a", remoteNodeAddress);
 						this.portHandler.send(msg, remoteNode);
 				} else {
@@ -205,7 +205,7 @@ public class Server extends Node {
 		 * @param message		Message string.
 		 */
 		public void send(String destination, String message) {
-				Message msg = new Message(this, MessageType.REQUEST, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.REQUEST, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(destination);
 				msg.setMessage(message);
 				msg.setStation(this);
@@ -213,7 +213,7 @@ public class Server extends Node {
 		}
 
 		public void publishService(String key, String service) {
-				Message msg = new Message(this, MessageType.PUBLISH_SERVICE, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.PUBLISH_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setMessage(service);
 				msg.setStation(this);
@@ -221,21 +221,21 @@ public class Server extends Node {
 		}
 
 		public void removeService(String key) {
-				Message msg = new Message(this, MessageType.REMOVE_SERVICE, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.REMOVE_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
 
 		public void getService(String key) {
-				Message msg = new Message(this, MessageType.GET_SERVICE, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.GET_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
 
 		public void storeData(String key, String data) {
-				Message msg = new Message(this, MessageType.STORE_DATA, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setMessage(data);
 				msg.setStation(this);
@@ -243,14 +243,14 @@ public class Server extends Node {
 		}
 
 		public void deleteData(String key) {
-				Message msg = new Message(this, MessageType.DELETE_DATA, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
 
 		public void getData(String key) {
-				Message msg = new Message(this, MessageType.GET_DATA, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+				Message msg = new Message(this, MessageType.GET_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);

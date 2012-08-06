@@ -5,6 +5,7 @@
 package sinchana.tapastry;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.logging.Level;
 import sinchana.PortHandler;
 import sinchana.RoutingHandler;
@@ -13,16 +14,16 @@ import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import sinchana.CONFIG;
+import sinchana.CONFIGURATIONS;
 
 /**
  *
  * @author Hiru
  */
 public class TapestryTable implements RoutingHandler, Runnable {
-
+		
 		public static final int TABLE_SIZE = 37;
 		private Server server;
 		private Node successor = null;
@@ -87,7 +88,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				for (Node[] nodes : fingerTable) {
 						for (Node node : nodes) {
 								if (node != null && !node.serverId.equals(this.serverId)) {
-										msg = new Message(this.server, MessageType.FIND_SUCCESSOR, CONFIG.DEFAUILT_MESSAGE_LIFETIME);
+										msg = new Message(this.server, MessageType.FIND_SUCCESSOR, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 										ph.send(msg, node);
 								}
 						}
@@ -104,20 +105,20 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBOURS, 256);
 				this.server.getPortHandler().send(msg, neighbour);
 		}
-
+		
 		@Override
 		public Node getSuccessor() {
 				return successor;
 		}
-
+		
 		@Override
 		public Node getPredecessor() {
 				return predecessor;
 		}
-
+		
 		@Override
 		public Node getNextNode(String destination) {
-
+				
 				int raw = getRaw(this.serverId, destination);
 				if (raw == -1) {
 //						System.out.println(this.serverId + ": next node for " + destination + " is this server.");
@@ -127,9 +128,9 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				if (fingerTable[raw][column] != null) {
 						return fingerTable[raw][column];
 				}
-
+				
 				int tColumn, iRaw, iColumn;
-
+				
 				iRaw = raw;
 				iColumn = column;
 				tColumn = getColumn(this.serverId, raw);
@@ -140,7 +141,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				if (raw == TABLE_SIZE - 1) {
 						traverseDown = true;
 				}
-
+				
 				while (true) {
 						try {
 								if (fingerTable[raw][column] != null) {
@@ -170,7 +171,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 								traverseDown = raw >= TapestryTable.TABLE_SIZE - 1;
 								column = getColumn(this.serverId, raw);
 						}
-
+						
 						column = (column + 1) % 10;
 						if (iRaw == raw && iColumn == column) {
 								System.out.println(this.serverId + ": No result found!");
@@ -179,11 +180,11 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				}
 				return fingerTable[raw][column];
 		}
-
+		
 		@Override
-		public Set<Node> getNeighbourSet() {
+		public Map<String, Node> getNeighbourSet() {
 				//initializes an empty node set.
-				Set<Node> neighbourSet = new HashSet<Node>();
+				Map<String, Node> neighbourSet = new HashMap<String, Node>();
 				for (Node[] nodes : fingerTable) {
 						for (Node node : nodes) {
 								/**
@@ -192,27 +193,27 @@ public class TapestryTable implements RoutingHandler, Runnable {
 								 * about this server, so sending it again is a waste.
 								 */
 								if (node != null && !node.serverId.equals(this.serverId)) {
-										neighbourSet.add(node);
+										neighbourSet.put(node.serverId, node);
 								}
 						}
-
+						
 				}
 				//adds the predecessor.
 				if (this.predecessor != null && !this.predecessor.serverId.equals(this.serverId)) {
-						neighbourSet.add(this.predecessor);
+						neighbourSet.put(this.predecessor.serverId, this.predecessor);
 				}
 				//adds the successor.
 				if (this.successor != null && !this.successor.serverId.equals(this.serverId)) {
-						neighbourSet.add(this.successor);
+						neighbourSet.put(this.successor.serverId, this.successor);
 				}
 				//returns the node set.
 				return neighbourSet;
 		}
-
+		
 		@Override
 		public void getOptimalSuccessor(Message message) {
 		}
-
+		
 		@Override
 		public void updateTable(Node node) {
 				if (node.serverId.equals(this.serverId)) {
@@ -264,7 +265,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 										this.server.getSinchanaTestInterface().setPredecessor(predecessor);
 								}
 						}
-
+						
 						int raw = getRaw(this.serverId, node.serverId);
 						int column = getColumn(node.serverId, raw);
 						fingerTable[raw][column] = node.deepCopy();
@@ -286,7 +287,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 						neighboursImported = true;
 				}
 		}
-
+		
 		@Override
 		public void run() {
 				while (true) {
@@ -309,18 +310,19 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		@Override
 		public void removeNode(Node nodeToRemove) {
 				//gets the known node set.
-				Set<Node> neighbourSet = getNeighbourSet();
+				Map<String, Node> neighbourSet = getNeighbourSet();
+				Set<String> keySet = neighbourSet.keySet();
 				//reset the predecessor, successor and finger table entries.
 				synchronized (this) {
 						initFingerTable();
-						for (Node node : neighbourSet) {
+						for (String nodeId : keySet) {
 								/**
 								 * updates predecessor, successor and finger table entries
 								 * back, with the known node set, if the node is not equal 
 								 * to the node which is to be remove.
 								 */
-								if (!node.serverId.equals(nodeToRemove.serverId)) {
-										updateTable(node);
+								if (!nodeId.equals(nodeToRemove.serverId)) {
+										updateTable(neighbourSet.get(nodeId));
 								}
 						}
 				}
@@ -335,7 +337,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		private BigInteger getOffset(String id) {
 				return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
 		}
-
+		
 		private int getRaw(String id, String newId) {
 				BigInteger factor, t1, t2;
 				for (int i = TABLE_SIZE - 1; i >= 0; i--) {
@@ -348,8 +350,18 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				}
 				return -1;
 		}
-
+		
 		private int getColumn(String id, int raw) {
 				return (new BigInteger(id, 16).mod(new BigInteger("10", 16).pow(raw + 1)).divide(new BigInteger("10", 16).pow(raw))).intValue();
+		}
+
+		@Override
+		public Map<String, Node> getFailedNodeSet() {
+				throw new UnsupportedOperationException("Not supported yet.");
+		}
+
+		@Override
+		public void removeNode(Map<String, Node> nodes) {
+				throw new UnsupportedOperationException("Not supported yet.");
 		}
 }
