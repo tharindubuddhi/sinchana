@@ -403,7 +403,8 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
 }//GEN-LAST:event_printLogButtonActionPerformed
 
 private void egButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_egButtonActionPerformed
-// TODO add your handling code here:
+    testerController.retrieveData();
+    
 }//GEN-LAST:event_egButtonActionPerformed
 		/**
 		 * @param args the command line arguments
