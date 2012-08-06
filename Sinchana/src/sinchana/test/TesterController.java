@@ -188,6 +188,14 @@ public class TesterController {
 				}
 
 		}
+		public static int count = 0;
+
+		public static synchronized void setMaxCount(int c) {
+				if (c > count) {
+						count = c;
+						System.out.println("max: " + count);
+				}
+		}
 
 		/**
 		 * 
@@ -265,14 +273,13 @@ public class TesterController {
 
 
 		}
-                
-                public void storeData(){
-                    String data = "Tharindu";
-                    String key = CommonTools.generateId(data).toString();
-                    int randomId = (int) (Math.random() * testServers.size());
-                    testServers.get(randomId).getServer().storeData(key, data);
-                }
-                
+
+		public void storeData() {
+				String data = "Tharindu";
+				String key = CommonTools.generateId(data).toString();
+				int randomId = (int) (Math.random() * testServers.size());
+				testServers.get(randomId).getServer().storeData(key, data);
+		}
 
 		/**
 		 * 
