@@ -13,45 +13,45 @@ import sinchana.thrift.Node;
  */
 public interface SinchanaTestInterface {
 
-		/**
-		 * 
-		 * @param isStable
-		 */
-		public abstract void setStable(boolean isStable);
+	/**
+	 * 
+	 * @param isStable
+	 */
+	public abstract void setStable(boolean isStable);
 
-		/**
-		 * 
-		 * @param predecessor
-		 */
-		public abstract void setPredecessor(Node predecessor);
+	/**
+	 * 
+	 * @param predecessor
+	 */
+	public abstract void setPredecessor(Node predecessor);
 
-		/**
-		 * 
-		 * @param successor
-		 */
-		public abstract void setSuccessor(Node successor);
+	/**
+	 * 
+	 * @param successor
+	 */
+	public abstract void setSuccessor(Node successor);
 
-		/**
-		 * 
-		 * @param fingerTableEntrys
-		 */
-		public abstract void setRoutingTable(FingerTableEntry[] fingerTableEntrys);
+	/**
+	 * 
+	 * @param fingerTableEntrys
+	 */
+	public abstract void setRoutingTable(FingerTableEntry[] fingerTableEntrys);
 
-		/**
-		 * 
-		 * @param status
-		 */
-		public abstract void setStatus(String status);
+	/**
+	 * 
+	 * @param status
+	 */
+	public abstract void setStatus(String status);
 
-		/**
-		 * 
-		 * @param isRunning
-		 */
-		public abstract void setServerIsRunning(boolean isRunning);
+	/**
+	 * 
+	 * @param isRunning
+	 */
+	public abstract void setServerIsRunning(boolean isRunning);
 
-		public abstract void incIncomingMessageCount();
+	public abstract void incIncomingMessageCount();
 
-		public abstract void setMessageQueueSize(int size);
+	public abstract void setMessageQueueSize(int size);
 
-		public abstract void setOutMessageQueueSize(int size);
+	public abstract void setOutMessageQueueSize(int size);
 }

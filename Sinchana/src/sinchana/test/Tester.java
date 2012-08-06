@@ -4,12 +4,8 @@
  */
 package sinchana.test;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.util.Random;
 import sinchana.Server;
@@ -29,287 +25,287 @@ import sinchana.CONFIGURATIONS;
  */
 public class Tester implements SinchanaTestInterface, Runnable {
 
-		private Server server;
-		private int testId;
-		private ServerUI gui = null;
-		private TesterController testerController;
-		private Semaphore threadLock = new Semaphore(0);
-		private boolean running = false;
-		private long numOfTestingMessages = 0;
-		private TestService testService = null;
-        private TestDataStore testDataStore = null;
-		/**
-		 * 
-		 * @param serverId
-		 * @param anotherNode
-		 * @param tc
-		 */
-		public Tester(int testId, int portId, TesterController tc) {
-				try {
-						this.testId = testId;
-						this.testerController = tc;
-						InetAddress[] ip = InetAddress.getAllByName("localhost");
-						String address = ip[0].getHostAddress();
-						String remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
-						server = new Server(address + ":" + portId, remoteNodeAddress);
-						server.registerSinchanaInterface(new SinchanaInterface() {
+	private Server server;
+	private int testId;
+	private ServerUI gui = null;
+	private TesterController testerController;
+	private Semaphore threadLock = new Semaphore(0);
+	private boolean running = false;
+	private long numOfTestingMessages = 0;
+	private TestService testService = null;
+	private TestDataStore testDataStore = null;
 
-								@Override
-								public synchronized Message request(Message message) {
-										Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
-												"Recieved REQUEST message : " + message);
-										requestCount++;
-										requestLifetime += message.lifetime;
-										return null;
-								}
+	/**
+	 * 
+	 * @param serverId
+	 * @param anotherNode
+	 * @param tc
+	 */
+	public Tester(int testId, int portId, TesterController tc) {
+		try {
+			this.testId = testId;
+			this.testerController = tc;
+			InetAddress[] ip = InetAddress.getAllByName("localhost");
+			String address = ip[0].getHostAddress();
+			String remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
+			server = new Server(address + ":" + portId, remoteNodeAddress);
+			server.registerSinchanaInterface(new SinchanaInterface() {
 
-								@Override
-								public void error(Message message) {
-										Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
-												"Recieved ERROR message : " + message);
-								}
-
-								@Override
-								public void response(Message message) {
-										throw new UnsupportedOperationException("Not supported yet.");
-								}
-						});
-						server.registerSinchanaTestInterface(this);
-						server.startServer();
-						testService = new TestService(this, tc);
-                        testDataStore = new TestDataStore(this, tc);
-						if (CONFIGURATIONS.GUI_ON) {
-								this.gui = new ServerUI(this);
-						}
-				} catch (UnknownHostException ex) {
-						ex.printStackTrace();
+				@Override
+				public synchronized Message request(Message message) {
+					Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+							"Recieved REQUEST message : " + message);
+					requestCount++;
+					requestLifetime += message.lifetime;
+					return null;
 				}
-		}
 
-		/**
-		 * 
-		 */
-		public void startServer() {
-				Thread thread = new Thread(this);
-				thread.start();
-				this.running = true;
-		}
-
-		/**
-		 * 
-		 */
-		public void stopServer() {
-				server.stopServer();
-				this.running = false;
-		}
-
-		/**
-		 * 
-		 */
-		public void startTest(long numOfTestingMessages) {
-				this.numOfTestingMessages = numOfTestingMessages;
-				threadLock.release();
-		}
-
-		/**
-		 * 
-		 */
-		public void startRingTest() {
-				Message msg = new Message(this.server, MessageType.TEST_RING, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-				msg.setMessage("");
-				this.server.send(msg);
-		}
-		public long temp;
-
-		@Override
-		public void run() {
-				try {
-						if (this.gui != null) {
-								this.gui.setServerId(server.serverId);
-								this.gui.setVisible(true);
-						}
-						server.join();
-						while (true) {
-								threadLock.acquire();
-								String randomDestination;
-								while (numOfTestingMessages > 0) {
-										randomDestination = new BigInteger(160, new Random()).toString(16);
-										server.send(randomDestination, "where are you?");
-										numOfTestingMessages--;
-								}
-						}
-				} catch (InterruptedException ex) {
-						ex.printStackTrace();
+				@Override
+				public void error(Message message) {
+					Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
+							"Recieved ERROR message : " + message);
 				}
-		}
 
-		/**
-		 * 
-		 * @param isStable
-		 */
-		@Override
-		public void setStable(boolean isStable) {
-				if (isStable) {
-						Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
-								this.server.serverId + " is now stable!");
-						if (this.gui != null) {
-								this.gui.setMessage("stabilized!");
-						}
-						testerController.incrementCompletedCount(this.testId);
+				@Override
+				public void response(Message message) {
+					throw new UnsupportedOperationException("Not supported yet.");
 				}
+			});
+			server.registerSinchanaTestInterface(this);
+			server.startServer();
+			testService = new TestService(this, tc);
+			if (CONFIGURATIONS.GUI_ON) {
+				this.gui = new ServerUI(this);
+			}
+		} catch (UnknownHostException ex) {
+			ex.printStackTrace();
 		}
+	}
 
-		/**
-		 * 
-		 * @param predecessor
-		 */
-		@Override
-		public void setPredecessor(Node predecessor) {
-				if (this.gui != null) {
-						this.gui.setPredecessorId(predecessor != null ? predecessor.serverId : "n/a");
+	/**
+	 * 
+	 */
+	public void startServer() {
+		Thread thread = new Thread(this);
+		thread.start();
+		this.running = true;
+	}
+
+	/**
+	 * 
+	 */
+	public void stopServer() {
+		server.stopServer();
+		this.running = false;
+	}
+
+	/**
+	 * 
+	 */
+	public void startTest(long numOfTestingMessages) {
+		this.numOfTestingMessages = numOfTestingMessages;
+		threadLock.release();
+	}
+
+	/**
+	 * 
+	 */
+	public void startRingTest() {
+		Message msg = new Message(this.server, MessageType.TEST_RING, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		msg.setMessage("");
+		this.server.send(msg);
+	}
+	public long temp;
+
+	@Override
+	public void run() {
+		try {
+			if (this.gui != null) {
+				this.gui.setServerId(server.serverId);
+				this.gui.setVisible(true);
+			}
+			server.join();
+			while (true) {
+				threadLock.acquire();
+				String randomDestination;
+				while (numOfTestingMessages > 0) {
+					randomDestination = new BigInteger(160, new Random()).toString(16);
+					server.send(randomDestination, "where are you?");
+					numOfTestingMessages--;
 				}
+			}
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
 		}
+	}
 
-		/**
-		 * 
-		 * @param successor
-		 */
-		@Override
-		public void setSuccessor(Node successor) {
-				if (this.gui != null) {
-						this.gui.setSuccessorId(successor != null ? successor.serverId : "n/a");
-				}
+	/**
+	 * 
+	 * @param isStable
+	 */
+	@Override
+	public void setStable(boolean isStable) {
+		if (isStable) {
+			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
+					this.server.serverId + " is now stable!");
+			if (this.gui != null) {
+				this.gui.setMessage("stabilized!");
+			}
+			testerController.incrementCompletedCount(this.testId);
 		}
+	}
 
-		/**
-		 * 
-		 * @param fingerTableEntrys
-		 */
-		@Override
-		public void setRoutingTable(FingerTableEntry[] fingerTableEntrys) {
-				if (this.gui != null) {
-						this.gui.setTableInfo(fingerTableEntrys);
-				}
+	/**
+	 * 
+	 * @param predecessor
+	 */
+	@Override
+	public void setPredecessor(Node predecessor) {
+		if (this.gui != null) {
+			this.gui.setPredecessorId(predecessor != null ? predecessor.serverId : "n/a");
 		}
+	}
 
-		/**
-		 * 
-		 * @param status
-		 */
-		@Override
-		public void setStatus(String status) {
-				if (this.gui != null) {
-						this.gui.setMessage(status);
-				}
+	/**
+	 * 
+	 * @param successor
+	 */
+	@Override
+	public void setSuccessor(Node successor) {
+		if (this.gui != null) {
+			this.gui.setSuccessorId(successor != null ? successor.serverId : "n/a");
 		}
+	}
 
-		/**
-		 * 
-		 * @return
-		 */
-		public String getServerId() {
-				return server.serverId;
+	/**
+	 * 
+	 * @param fingerTableEntrys
+	 */
+	@Override
+	public void setRoutingTable(FingerTableEntry[] fingerTableEntrys) {
+		if (this.gui != null) {
+			this.gui.setTableInfo(fingerTableEntrys);
 		}
+	}
 
-		public int getTestId() {
-				return testId;
+	/**
+	 * 
+	 * @param status
+	 */
+	@Override
+	public void setStatus(String status) {
+		if (this.gui != null) {
+			this.gui.setMessage(status);
 		}
+	}
 
-		/**
-		 * 
-		 * @return
-		 */
-		public Server getServer() {
-				return server;
-		}
+	/**
+	 * 
+	 * @return
+	 */
+	public String getServerId() {
+		return server.serverId;
+	}
 
-		public boolean isRunning() {
-				return running;
-		}
+	public int getTestId() {
+		return testId;
+	}
 
-		public ServerUI getGui() {
-				return gui;
-		}
+	/**
+	 * 
+	 * @return
+	 */
+	public Server getServer() {
+		return server;
+	}
 
-		/**
-		 * 
-		 * @param isRunning
-		 */
-		@Override
-		public void setServerIsRunning(boolean isRunning) {
-				if (this.gui != null) {
-						this.gui.setServerRunning(isRunning);
-				}
-		}
+	public boolean isRunning() {
+		return running;
+	}
 
-		public void send(String dest, String msg) {
-				this.server.send(dest, msg);
-		}
+	public ServerUI getGui() {
+		return gui;
+	}
 
-		@Override
-		public boolean equals(Object obj) {
-				return this.testId == ((Tester) obj).testId;
+	/**
+	 * 
+	 * @param isRunning
+	 */
+	@Override
+	public void setServerIsRunning(boolean isRunning) {
+		if (this.gui != null) {
+			this.gui.setServerRunning(isRunning);
 		}
+	}
 
-		@Override
-		public int hashCode() {
-				return this.server.serverId.hashCode();
-		}
+	public void send(String dest, String msg) {
+		this.server.send(dest, msg);
+	}
 
-		void trigger() {
-				this.server.trigger();
-		}
-		private long inputMessageCount = 0;
-		private long avarageInputMessageQueueSize = 0;
-		private long maxInputMessageQueueSize = 0;
-		private long inputMessageQueueTimesCount = 0;
-		private long avarageOutputMessageQueueSize = 0;
-		private long maxOutputMessageQueueSize = 0;
-		private long outputMessageQueueTimesCount = 0;
-		private long requestCount = 0;
-		private long requestLifetime = 0;
+	@Override
+	public boolean equals(Object obj) {
+		return this.testId == ((Tester) obj).testId;
+	}
 
-		@Override
-		public synchronized void incIncomingMessageCount() {
-				inputMessageCount++;
-		}
+	@Override
+	public int hashCode() {
+		return this.server.serverId.hashCode();
+	}
 
-		@Override
-		public synchronized void setMessageQueueSize(int size) {
-				if (maxInputMessageQueueSize < size) {
-						maxInputMessageQueueSize = size;
-				}
-				avarageInputMessageQueueSize += size;
-				inputMessageQueueTimesCount++;
-		}
+	void trigger() {
+		this.server.trigger();
+	}
+	private long inputMessageCount = 0;
+	private long avarageInputMessageQueueSize = 0;
+	private long maxInputMessageQueueSize = 0;
+	private long inputMessageQueueTimesCount = 0;
+	private long avarageOutputMessageQueueSize = 0;
+	private long maxOutputMessageQueueSize = 0;
+	private long outputMessageQueueTimesCount = 0;
+	private long requestCount = 0;
+	private long requestLifetime = 0;
 
-		@Override
-		public synchronized void setOutMessageQueueSize(int size) {
-				if (maxOutputMessageQueueSize < size) {
-						maxOutputMessageQueueSize = size;
-				}
-				avarageOutputMessageQueueSize += size;
-				outputMessageQueueTimesCount++;
-		}
+	@Override
+	public synchronized void incIncomingMessageCount() {
+		inputMessageCount++;
+	}
 
-		public long[] getTestData() {
-				long[] data = new long[7];
-				data[0] = inputMessageCount;
-				data[1] = inputMessageQueueTimesCount == 0 ? 0 : (avarageInputMessageQueueSize / inputMessageQueueTimesCount);
-				data[2] = outputMessageQueueTimesCount == 0 ? 0 : (avarageOutputMessageQueueSize / outputMessageQueueTimesCount);
-				data[3] = maxInputMessageQueueSize;
-				data[4] = maxOutputMessageQueueSize;
-				data[5] = requestCount;
-				data[6] = requestLifetime;
-				inputMessageCount = 0;
-				avarageInputMessageQueueSize = 0;
-				inputMessageQueueTimesCount = 0;
-				avarageOutputMessageQueueSize = 0;
-				outputMessageQueueTimesCount = 0;
-				maxInputMessageQueueSize = 0;
-				maxOutputMessageQueueSize = 0;
-				requestCount = 0;
-				requestLifetime = 0;
-				return data;
+	@Override
+	public synchronized void setMessageQueueSize(int size) {
+		if (maxInputMessageQueueSize < size) {
+			maxInputMessageQueueSize = size;
 		}
+		avarageInputMessageQueueSize += size;
+		inputMessageQueueTimesCount++;
+	}
+
+	@Override
+	public synchronized void setOutMessageQueueSize(int size) {
+		if (maxOutputMessageQueueSize < size) {
+			maxOutputMessageQueueSize = size;
+		}
+		avarageOutputMessageQueueSize += size;
+		outputMessageQueueTimesCount++;
+	}
+
+	public long[] getTestData() {
+		long[] data = new long[7];
+		data[0] = inputMessageCount;
+		data[1] = inputMessageQueueTimesCount == 0 ? 0 : (avarageInputMessageQueueSize / inputMessageQueueTimesCount);
+		data[2] = outputMessageQueueTimesCount == 0 ? 0 : (avarageOutputMessageQueueSize / outputMessageQueueTimesCount);
+		data[3] = maxInputMessageQueueSize;
+		data[4] = maxOutputMessageQueueSize;
+		data[5] = requestCount;
+		data[6] = requestLifetime;
+		inputMessageCount = 0;
+		avarageInputMessageQueueSize = 0;
+		inputMessageQueueTimesCount = 0;
+		avarageOutputMessageQueueSize = 0;
+		outputMessageQueueTimesCount = 0;
+		maxInputMessageQueueSize = 0;
+		maxOutputMessageQueueSize = 0;
+		requestCount = 0;
+		requestLifetime = 0;
+		return data;
+	}
 }
