@@ -234,13 +234,23 @@ public class Server extends Node {
 	}
 
 		public void storeData(String key, String data) {
+//                this.getSinchanaDataStore().addStoredObjects(null);
 				Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 				msg.setTargetKey(key);
 				msg.setDataValue(data);
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
+
 		}
 
+        public void storeData(String data) {
+				String key = CommonTools.generateId(data).toString();
+                Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+				msg.setTargetKey(key);
+				msg.setDataValue(data);
+				msg.setStation(this);
+				this.getMessageHandler().queueMessage(msg);
+		}
 	public void deleteData(String key) {
 		Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);

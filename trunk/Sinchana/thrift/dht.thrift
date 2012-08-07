@@ -6,9 +6,10 @@ struct Node {
 }
 
 struct DataObject {
-  1: string sourceID,
-  2: string sourceAddress,
-  3: string DataValue
+  1: optional string sourceID,
+  2: optional string sourceAddress,
+  3: optional string dataValue,
+  4: optional string dataKey
 }
 
 struct ServiceObject {
@@ -23,7 +24,7 @@ enum MessageType {
     GET_DATA,
     RESPONSE_DATA,
     ACKNOWLEDGE_DATA,
-    FAILURE_DATA,
+    ACKNOWLEDGE_REMOVE,
     PUBLISH_SERVICE,
     GET_SERVICE,
     REMOVE_SERVICE,

@@ -32,7 +32,8 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
 
   private static final org.apache.thrift.protocol.TField SOURCE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("sourceID", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField SOURCE_ADDRESS_FIELD_DESC = new org.apache.thrift.protocol.TField("sourceAddress", org.apache.thrift.protocol.TType.STRING, (short)2);
-  private static final org.apache.thrift.protocol.TField DATA_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("DataValue", org.apache.thrift.protocol.TType.STRING, (short)3);
+  private static final org.apache.thrift.protocol.TField DATA_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("dataValue", org.apache.thrift.protocol.TType.STRING, (short)3);
+  private static final org.apache.thrift.protocol.TField DATA_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("dataKey", org.apache.thrift.protocol.TType.STRING, (short)4);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -40,15 +41,17 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
     schemes.put(TupleScheme.class, new DataObjectTupleSchemeFactory());
   }
 
-  public String sourceID; // required
-  public String sourceAddress; // required
-  public String DataValue; // required
+  public String sourceID; // optional
+  public String sourceAddress; // optional
+  public String dataValue; // optional
+  public String dataKey; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     SOURCE_ID((short)1, "sourceID"),
     SOURCE_ADDRESS((short)2, "sourceAddress"),
-    DATA_VALUE((short)3, "DataValue");
+    DATA_VALUE((short)3, "dataValue"),
+    DATA_KEY((short)4, "dataKey");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -69,6 +72,8 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
           return SOURCE_ADDRESS;
         case 3: // DATA_VALUE
           return DATA_VALUE;
+        case 4: // DATA_KEY
+          return DATA_KEY;
         default:
           return null;
       }
@@ -109,31 +114,23 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
   }
 
   // isset id assignments
+  private _Fields optionals[] = {_Fields.SOURCE_ID,_Fields.SOURCE_ADDRESS,_Fields.DATA_VALUE,_Fields.DATA_KEY};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.SOURCE_ID, new org.apache.thrift.meta_data.FieldMetaData("sourceID", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.SOURCE_ID, new org.apache.thrift.meta_data.FieldMetaData("sourceID", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.SOURCE_ADDRESS, new org.apache.thrift.meta_data.FieldMetaData("sourceAddress", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.SOURCE_ADDRESS, new org.apache.thrift.meta_data.FieldMetaData("sourceAddress", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.DATA_VALUE, new org.apache.thrift.meta_data.FieldMetaData("DataValue", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.DATA_VALUE, new org.apache.thrift.meta_data.FieldMetaData("dataValue", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.DATA_KEY, new org.apache.thrift.meta_data.FieldMetaData("dataKey", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(DataObject.class, metaDataMap);
   }
 
   public DataObject() {
-  }
-
-  public DataObject(
-    String sourceID,
-    String sourceAddress,
-    String DataValue)
-  {
-    this();
-    this.sourceID = sourceID;
-    this.sourceAddress = sourceAddress;
-    this.DataValue = DataValue;
   }
 
   /**
@@ -147,7 +144,10 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
       this.sourceAddress = other.sourceAddress;
     }
     if (other.isSetDataValue()) {
-      this.DataValue = other.DataValue;
+      this.dataValue = other.dataValue;
+    }
+    if (other.isSetDataKey()) {
+      this.dataKey = other.dataKey;
     }
   }
 
@@ -159,7 +159,8 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
   public void clear() {
     this.sourceID = null;
     this.sourceAddress = null;
-    this.DataValue = null;
+    this.dataValue = null;
+    this.dataKey = null;
   }
 
   public String getSourceID() {
@@ -211,26 +212,50 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
   }
 
   public String getDataValue() {
-    return this.DataValue;
+    return this.dataValue;
   }
 
-  public DataObject setDataValue(String DataValue) {
-    this.DataValue = DataValue;
+  public DataObject setDataValue(String dataValue) {
+    this.dataValue = dataValue;
     return this;
   }
 
   public void unsetDataValue() {
-    this.DataValue = null;
+    this.dataValue = null;
   }
 
-  /** Returns true if field DataValue is set (has been assigned a value) and false otherwise */
+  /** Returns true if field dataValue is set (has been assigned a value) and false otherwise */
   public boolean isSetDataValue() {
-    return this.DataValue != null;
+    return this.dataValue != null;
   }
 
   public void setDataValueIsSet(boolean value) {
     if (!value) {
-      this.DataValue = null;
+      this.dataValue = null;
+    }
+  }
+
+  public String getDataKey() {
+    return this.dataKey;
+  }
+
+  public DataObject setDataKey(String dataKey) {
+    this.dataKey = dataKey;
+    return this;
+  }
+
+  public void unsetDataKey() {
+    this.dataKey = null;
+  }
+
+  /** Returns true if field dataKey is set (has been assigned a value) and false otherwise */
+  public boolean isSetDataKey() {
+    return this.dataKey != null;
+  }
+
+  public void setDataKeyIsSet(boolean value) {
+    if (!value) {
+      this.dataKey = null;
     }
   }
 
@@ -260,6 +285,14 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
       }
       break;
 
+    case DATA_KEY:
+      if (value == null) {
+        unsetDataKey();
+      } else {
+        setDataKey((String)value);
+      }
+      break;
+
     }
   }
 
@@ -273,6 +306,9 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
 
     case DATA_VALUE:
       return getDataValue();
+
+    case DATA_KEY:
+      return getDataKey();
 
     }
     throw new IllegalStateException();
@@ -291,6 +327,8 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
       return isSetSourceAddress();
     case DATA_VALUE:
       return isSetDataValue();
+    case DATA_KEY:
+      return isSetDataKey();
     }
     throw new IllegalStateException();
   }
@@ -307,7 +345,7 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
   public boolean equals(DataObject that) {
     if (that == null)
       return false;
-
+    
     boolean this_present_sourceID = true && this.isSetSourceID();
     boolean that_present_sourceID = true && that.isSetSourceID();
     if (this_present_sourceID || that_present_sourceID) {
@@ -326,12 +364,21 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
         return false;
     }
 
-    boolean this_present_DataValue = true && this.isSetDataValue();
-    boolean that_present_DataValue = true && that.isSetDataValue();
-    if (this_present_DataValue || that_present_DataValue) {
-      if (!(this_present_DataValue && that_present_DataValue))
+    boolean this_present_dataValue = true && this.isSetDataValue();
+    boolean that_present_dataValue = true && that.isSetDataValue();
+    if (this_present_dataValue || that_present_dataValue) {
+      if (!(this_present_dataValue && that_present_dataValue))
         return false;
-      if (!this.DataValue.equals(that.DataValue))
+      if (!this.dataValue.equals(that.dataValue))
+        return false;
+    }
+
+    boolean this_present_dataKey = true && this.isSetDataKey();
+    boolean that_present_dataKey = true && that.isSetDataKey();
+    if (this_present_dataKey || that_present_dataKey) {
+      if (!(this_present_dataKey && that_present_dataKey))
+        return false;
+      if (!this.dataKey.equals(that.dataKey))
         return false;
     }
 
@@ -376,7 +423,17 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
       return lastComparison;
     }
     if (isSetDataValue()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.DataValue, typedOther.DataValue);
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.dataValue, typedOther.dataValue);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetDataKey()).compareTo(typedOther.isSetDataKey());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetDataKey()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.dataKey, typedOther.dataKey);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -401,29 +458,45 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
     StringBuilder sb = new StringBuilder("DataObject(");
     boolean first = true;
 
-    sb.append("sourceID:");
-    if (this.sourceID == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.sourceID);
+    if (isSetSourceID()) {
+      sb.append("sourceID:");
+      if (this.sourceID == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.sourceID);
+      }
+      first = false;
     }
-    first = false;
-    if (!first) sb.append(", ");
-    sb.append("sourceAddress:");
-    if (this.sourceAddress == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.sourceAddress);
+    if (isSetSourceAddress()) {
+      if (!first) sb.append(", ");
+      sb.append("sourceAddress:");
+      if (this.sourceAddress == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.sourceAddress);
+      }
+      first = false;
     }
-    first = false;
-    if (!first) sb.append(", ");
-    sb.append("DataValue:");
-    if (this.DataValue == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.DataValue);
+    if (isSetDataValue()) {
+      if (!first) sb.append(", ");
+      sb.append("dataValue:");
+      if (this.dataValue == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.dataValue);
+      }
+      first = false;
     }
-    first = false;
+    if (isSetDataKey()) {
+      if (!first) sb.append(", ");
+      sb.append("dataKey:");
+      if (this.dataKey == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.dataKey);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -484,8 +557,16 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
             break;
           case 3: // DATA_VALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.DataValue = iprot.readString();
+              struct.dataValue = iprot.readString();
               struct.setDataValueIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 4: // DATA_KEY
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.dataKey = iprot.readString();
+              struct.setDataKeyIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -506,19 +587,32 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
 
       oprot.writeStructBegin(STRUCT_DESC);
       if (struct.sourceID != null) {
-        oprot.writeFieldBegin(SOURCE_ID_FIELD_DESC);
-        oprot.writeString(struct.sourceID);
-        oprot.writeFieldEnd();
+        if (struct.isSetSourceID()) {
+          oprot.writeFieldBegin(SOURCE_ID_FIELD_DESC);
+          oprot.writeString(struct.sourceID);
+          oprot.writeFieldEnd();
+        }
       }
       if (struct.sourceAddress != null) {
-        oprot.writeFieldBegin(SOURCE_ADDRESS_FIELD_DESC);
-        oprot.writeString(struct.sourceAddress);
-        oprot.writeFieldEnd();
+        if (struct.isSetSourceAddress()) {
+          oprot.writeFieldBegin(SOURCE_ADDRESS_FIELD_DESC);
+          oprot.writeString(struct.sourceAddress);
+          oprot.writeFieldEnd();
+        }
       }
-      if (struct.DataValue != null) {
-        oprot.writeFieldBegin(DATA_VALUE_FIELD_DESC);
-        oprot.writeString(struct.DataValue);
-        oprot.writeFieldEnd();
+      if (struct.dataValue != null) {
+        if (struct.isSetDataValue()) {
+          oprot.writeFieldBegin(DATA_VALUE_FIELD_DESC);
+          oprot.writeString(struct.dataValue);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.dataKey != null) {
+        if (struct.isSetDataKey()) {
+          oprot.writeFieldBegin(DATA_KEY_FIELD_DESC);
+          oprot.writeString(struct.dataKey);
+          oprot.writeFieldEnd();
+        }
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -547,7 +641,10 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
       if (struct.isSetDataValue()) {
         optionals.set(2);
       }
-      oprot.writeBitSet(optionals, 3);
+      if (struct.isSetDataKey()) {
+        optionals.set(3);
+      }
+      oprot.writeBitSet(optionals, 4);
       if (struct.isSetSourceID()) {
         oprot.writeString(struct.sourceID);
       }
@@ -555,14 +652,17 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
         oprot.writeString(struct.sourceAddress);
       }
       if (struct.isSetDataValue()) {
-        oprot.writeString(struct.DataValue);
+        oprot.writeString(struct.dataValue);
+      }
+      if (struct.isSetDataKey()) {
+        oprot.writeString(struct.dataKey);
       }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, DataObject struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(3);
+      BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
         struct.sourceID = iprot.readString();
         struct.setSourceIDIsSet(true);
@@ -572,8 +672,12 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
         struct.setSourceAddressIsSet(true);
       }
       if (incoming.get(2)) {
-        struct.DataValue = iprot.readString();
+        struct.dataValue = iprot.readString();
         struct.setDataValueIsSet(true);
+      }
+      if (incoming.get(3)) {
+        struct.dataKey = iprot.readString();
+        struct.setDataKeyIsSet(true);
       }
     }
   }

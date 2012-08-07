@@ -17,7 +17,7 @@ import sinchana.thrift.DataObject;
 public class SinchanaDataStore {
 
 	private Map<String, Set<DataObject>> rootObjects = new HashMap<String, Set<DataObject>>();
-	private Set<String> storedObject = new HashSet<String>();
+	private Set<String> storedObjects = new HashSet<String>();
 
 	public void setrootObjects(Map<String, Set<DataObject>> rootObjects) {
 		this.rootObjects = rootObjects;
@@ -26,4 +26,14 @@ public class SinchanaDataStore {
 	public Map<String, Set<DataObject>> getrootObjects() {
 		return rootObjects;
 	}
+
+    public void addStoredObjects(Set<String> storedObjects) {
+        this.storedObjects = storedObjects;
+    }
+
+    public Set<String> getStoredObjects() {
+        return storedObjects;
+    }
+    
+    
 }
