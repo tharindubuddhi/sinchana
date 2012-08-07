@@ -74,6 +74,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			server.registerSinchanaTestInterface(this);
 			server.startServer();
 			testService = new TestService(this, tc);
+            testDataStore = new TestDataStore(this, tc);
 			if (CONFIGURATIONS.GUI_ON) {
 				this.gui = new ServerUI(this);
 			}

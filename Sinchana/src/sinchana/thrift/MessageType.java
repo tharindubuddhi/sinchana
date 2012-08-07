@@ -17,7 +17,7 @@ public enum MessageType implements org.apache.thrift.TEnum {
   GET_DATA(2),
   RESPONSE_DATA(3),
   ACKNOWLEDGE_DATA(4),
-  FAILURE_DATA(5),
+  ACKNOWLEDGE_REMOVE(5),
   PUBLISH_SERVICE(6),
   GET_SERVICE(7),
   REMOVE_SERVICE(8),
@@ -63,7 +63,7 @@ public enum MessageType implements org.apache.thrift.TEnum {
       case 4:
         return ACKNOWLEDGE_DATA;
       case 5:
-        return FAILURE_DATA;
+        return ACKNOWLEDGE_REMOVE;
       case 6:
         return PUBLISH_SERVICE;
       case 7:

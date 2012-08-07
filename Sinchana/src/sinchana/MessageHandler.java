@@ -147,7 +147,7 @@ public class MessageHandler {
 			case RESPONSE:
 			case RESPONSE_DATA:
 			case RESPONSE_SERVICE:
-			case FAILURE_DATA:
+			case ACKNOWLEDGE_REMOVE:
 			case FAILURE_SERVICE:
 			case ACKNOWLEDGE_DATA:
 			case ACKNOWLEDGE_SERVICE:
@@ -361,17 +361,16 @@ public class MessageHandler {
 				break;
 
 			case STORE_DATA:
-				if (this.server.getSinchanaStoreInterface() != null) {
-
-					DataObject dataObject = new DataObject(message.source.serverId, message.source.address, message.dataValue);
-					success = processStore(message.targetKey, dataObject, message);
+				if (this.server.getSinchanaStoreInterface() != null) {					
+					DataObject dataObject = processStore(message);
 					this.server.getSinchanaStoreInterface().store(dataObject);
 				}
 				break;
 			case DELETE_DATA:
 				if (this.server.getSinchanaStoreInterface() != null) {
 //                                                                              success = this.server.getSinchanaStoreInterface().delete(message.targetKey);
-				}
+				
+                }
 				break;
 			case GET_DATA:
 
@@ -380,13 +379,13 @@ public class MessageHandler {
 
 				}
 				break;
-			case FAILURE_DATA:
+			case ACKNOWLEDGE_REMOVE:
 				break;
 			case ACKNOWLEDGE_DATA:
 				if (this.server.getSinchanaStoreInterface() != null) {
 					if (message.message.equals("success")) {
 						success = true;
-					}
+					}else{success = false;}
 					this.server.getSinchanaStoreInterface().isStored(success);
 				}
 				break;
@@ -429,45 +428,50 @@ public class MessageHandler {
 		}
 	}
 
-	private boolean processStore(String objectKey, DataObject dataObject, Message msg) {
+	private DataObject processStore(Message msg) {
 
+        String objectKey = msg.targetKey; 
+        DataObject dataObject = new DataObject();
+        dataObject.setSourceID(msg.source.serverId);
+        dataObject.setSourceAddress(msg.source.address);
+        dataObject.setDataValue(msg.dataValue);
+        
 		Map<String, Set<DataObject>> rootObjects = this.server.getSinchanaDataStore().getrootObjects();
-		Set<DataObject> sourceServers = rootObjects.get(objectKey);
+		Set<DataObject> sourceServers = rootObjects.get(objectKey);   
 
-		if (sourceServers == null) {
-			sourceServers = new HashSet<DataObject>();
-			System.out.println("source servers null");
-		}
-		sourceServers.add(dataObject);
-		rootObjects.put(objectKey, sourceServers);
-		this.server.getSinchanaDataStore().setrootObjects(rootObjects);
-		msg.setType(MessageType.ACKNOWLEDGE_DATA);
-		msg.setMessage("success");
-		msg.setStation(this.server);
-//        msg.setLifetime(1);
+        if (sourceServers == null) {
+            sourceServers = new HashSet<DataObject>();
+        }
+        if(sourceServers.add(dataObject)){
+            msg.setMessage("success");
+        }else{
+            msg.setMessage("failure");
+        }
+        rootObjects.put(objectKey, sourceServers);
+        this.server.getSinchanaDataStore().setrootObjects(rootObjects);
+        msg.setType(MessageType.ACKNOWLEDGE_DATA);      
+        msg.setStation(this.server);
 		this.server.getPortHandler().send(msg, msg.source);
-		return true;
+		return dataObject;
 
 	}
 
 	private Set<DataObject> processGetStore(String objectKey, String sourceKey, Message msg) {
 
-		Map<String, Set<DataObject>> rootObjects = this.server.getSinchanaDataStore().getrootObjects();
-		Set<DataObject> sourceServers = rootObjects.get(objectKey);
-		System.out.println("here...1");
-		if (sourceServers == null) {
-			msg.setType(MessageType.RESPONSE_DATA);
-			msg.setMessage("does not exist");
-			msg.setLifetime(1);
-			this.server.getPortHandler().send(msg, msg.source);
-		} else {
-			msg.setMessage("exist");
-			msg.setDataSet(sourceServers);
-//            msg.setStation(this.server);
-			msg.setLifetime(1);
-			this.server.getPortHandler().send(msg, msg.source);
-			System.out.println("here..2");
-		}
+        Map<String, Set<DataObject>> rootObjects = this.server.getSinchanaDataStore().getrootObjects();
+        Set<DataObject> sourceServers = rootObjects.get(objectKey);
+        if (sourceServers == null) {
+            msg.setType(MessageType.RESPONSE_DATA);
+            msg.setMessage("does not exist");
+            msg.setLifetime(1);
+            this.server.getPortHandler().send(msg, msg.source);
+        } else {
+             msg.setType(MessageType.RESPONSE_DATA);
+            msg.setMessage("exist");
+            msg.setDataSet(sourceServers);
+            msg.setLifetime(1);
+            this.server.getPortHandler().send(msg, msg.source);
+        }
 
 		return sourceServers;
 

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
@@ -37,6 +38,10 @@ public class TesterController {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+//        Uncomment when you have a proxy network        
+//        Properties props = System.getProperties();
+//        props.put("http.proxyHost", "cache.mrt.ac.lk");
+//        props.put("http.proxyPort", "3128");
 		if (CONFIGURATIONS.CLEAR_CACHE_SERVER) {
 			LocalCacheServer.clear();
 		}
@@ -234,40 +239,56 @@ public class TesterController {
 		int x = 0;
 		while (noOfServices > 0) {
 
-			randomId = (int) (Math.random() * testServers.size());
-			randomAmount = (int) (Math.random() * noOfServices);
-			noOfServices = noOfServices - randomAmount;
-			while (randomAmount > 0) {
-				testServers.get(randomId).getServer().publishService(keyArray[x], serviceArray[x]);
-				x++;
-				randomAmount--;
-			}
+						randomId = (int) (Math.random() * testServers.size());
+						randomAmount = (int) (Math.random() * noOfServices);
+						noOfServices = noOfServices - randomAmount;
+                        
+						while (randomAmount > 0) {
+								testServers.get(randomId).getServer().publishService(keyArray[x], serviceArray[x]);
+								x++;
+								randomAmount--;
+						}
+				}
 		}
-	}
+	
 
 	public void retrieveService() {
 		int randomId;
 		int randomAmount;
-//                            while(noOfServices>0){
 		randomId = (int) (Math.random() * testServers.size());
 		randomAmount = (int) (Math.random() * serviceArray.length);
 		for (int i = 0; i < serviceArray.length; i++) {
-
 			testServers.get(randomId).getServer().getService(keyArray[i]);
-
-
 		}
 
 
 	}
 
-		public void storeData() {
-				String data = "Tharindu";
-				String key = CommonTools.generateId(data).toString();
-				int randomId = (int) (Math.random() * testServers.size());
-				testServers.get(randomId).getServer().storeData(key, data);
-                System.out.println("here..0");
+        String[] dataArray = null;
+		String[] datakeyArray = null;
+		int dataID = 1;
+        
+		public void storeData(int noOfData) {
+            
+                dataArray = new String[noOfData];
+				datakeyArray = new String[noOfData];
+
+				for (int i = 0; i < noOfData; i++) {
+						dataArray[i] = String.valueOf("Data " + dataID);
+						datakeyArray[i] = CommonTools.generateId(dataArray[i]).toString();
+						dataID++;
+				}
+                int randomId = (int) (Math.random() * testServers.size());
+                
+                for (int i = 0; i < noOfData; i++) {
+                testServers.get(randomId).getServer().storeData(datakeyArray[i], dataArray[i]);
+                
+            }
+   
 		}
+        
+        
+        
                 public void retrieveData(){
                      String data = "Tharindu";
                     String key = CommonTools.generateId(data).toString();
