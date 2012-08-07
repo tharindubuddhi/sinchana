@@ -195,6 +195,7 @@ public class Server extends Node {
 	public void send(Message message) {
 		message.setSource(this);
 		message.setStation(this);
+		message.setLifetime(CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		this.getMessageHandler().queueMessage(message);
 	}
 

@@ -67,3 +67,13 @@ struct Message {
 service DHTServer {
     i32 transfer(1: Message message)
 }
+
+service SinchanaClient {
+    bool publishService(1: ServiceObject services);
+    bool removeService(1: string serviceKey);
+    set<ServiceObject> getService(1: string serviceKey);
+    bool publishData(1: DataObject data);
+    bool removeData(1: string dataKey);
+    set<DataObject> getData(1: string dataKey);
+    string request(1: string destination);
+}
