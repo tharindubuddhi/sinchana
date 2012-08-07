@@ -53,7 +53,7 @@ public final class Logger {
 	 * 
 	 */
 	public static final int CLASS_CONNECTION_POOL = 4;
-//		public static final int CLASS_THRIFT_SERVER = 5;
+	public static final int CLASS_CLIENT_HANDLER = 5;
 //		public static final int CLASS_THRIFT_SERVER = 6;
 	/**
 	 * 

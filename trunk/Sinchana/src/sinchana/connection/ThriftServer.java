@@ -5,8 +5,6 @@
 package sinchana.connection;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.AbstractQueuedLongSynchronizer.ConditionObject;
-import java.util.concurrent.locks.Condition;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;

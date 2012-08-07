@@ -197,7 +197,6 @@ public class MessageHandler {
 		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(new BigInteger("0", 16))) {
 			deliverMessage(message);
 		} else {
-			message.message += " " + this.server.serverId;
 			if (!prevStationOffset.equals(new BigInteger("0", 16))
 					&& prevStationOffset.compareTo(targetKeyOffset) == -1) {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,

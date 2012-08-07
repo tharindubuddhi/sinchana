@@ -4,14 +4,17 @@
  */
 package sinchana.test;
 
+import java.math.BigInteger;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
@@ -88,7 +91,8 @@ public class TesterController {
 
 				}
 				newTime = Calendar.getInstance().getTimeInMillis();
-
+				verifiedCount = 0;
+				retrieveCount = 0;
 				if (completedCount != 0) {
 					cui.setStat("IC: " + (totalMessageIncome / completedCount)
 							+ "    IB: " + (totalInputMessageQueue / completedCount)
@@ -97,14 +101,17 @@ public class TesterController {
 							+ "    MO: " + maxOutputMessageQueueSize
 							+ "    TR: " + totalResolves
 							+ "    TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S"
-							+ "    AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA"));
+							+ "    AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA")
+							+ "    MS: " + dataMap.size()
+							+ "    " + verifiedCount
+							+ "    " + retrieveCount);
 				}
 				oldTime = newTime;
 				if (mxaTester != -1) {
 //										System.out.println(mxaTester + ": " + testServers.get(mxaTester).temp);
 				}
 			}
-		}, 1000, 1000);
+		}, 1000, 2000);
 		timer2.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
@@ -155,6 +162,9 @@ public class TesterController {
 	public void startAutoTest(long numOfTestMessages) {
 		this.numOfTestMessages = numOfTestMessages;
 	}
+	private ConcurrentHashMap<String, TestData> dataMap = new ConcurrentHashMap<String, TestData>();
+	private int verifiedCount = 0, retrieveCount = 0;
+	private boolean verified = false;
 
 	public void testMessages(long numOfTestMessages) {
 		int numOfTestServers = testServers.size();
@@ -171,6 +181,56 @@ public class TesterController {
 			}
 			testServers.get(randomId).startTest(randomAmount);
 		}
+	}
+
+	synchronized TestData getNextData() {
+		verified = ((int) (Math.random() * dataMap.size())) % 2 != 0;
+		if (verified) {
+			while (true) {
+				int rn = (int) (Math.random() * dataMap.size());
+				Set<String> keySet = dataMap.keySet();
+				for (String id : keySet) {
+					if (rn-- == 0 && dataMap.get(id).verified && !dataMap.get(id).requested) {
+						dataMap.get(id).requested = true;
+						return dataMap.get(id);
+					}
+				}
+			}
+		} else {
+			BigInteger bi = new BigInteger(160, new Random());
+			while (dataMap.containsKey(bi.toString(16))) {
+				bi = new BigInteger(160, new Random());
+			}
+			TestData td = new TestData();
+			td.key = bi.toString(16);
+			td.data = td.key;
+			td.verified = false;
+			td.requested = false;
+			dataMap.put(td.key, td);
+			return td;
+		}
+	}
+
+	synchronized void setResponse(String targetKey) {
+		if (dataMap.containsKey(targetKey)) {
+			dataMap.get(targetKey).verified = true;
+		} else {
+			System.out.println("This is not acceptable!");
+		}
+	}
+
+	synchronized void setResponse(String targetKey, String data) {
+		if (!dataMap.remove(targetKey).data.equals(data)) {
+			System.out.println("Failed :P");
+		}
+	}
+
+	class TestData {
+
+		String key;
+		String data;
+		boolean verified;
+		boolean requested;
 	}
 
 	/**

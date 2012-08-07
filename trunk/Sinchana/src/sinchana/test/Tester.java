@@ -7,11 +7,14 @@ package sinchana.test;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import sinchana.Server;
 import sinchana.SinchanaInterface;
 import sinchana.SinchanaTestInterface;
 import sinchana.chord.FingerTableEntry;
+import sinchana.test.TesterController.TestData;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -51,13 +54,34 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			server = new Server(address + ":" + portId, remoteNodeAddress);
 			server.registerSinchanaInterface(new SinchanaInterface() {
 
+				private Map<String, String> localDataMap = new HashMap<String, String>();
+
 				@Override
 				public synchronized Message request(Message message) {
+					Message returnMsg = new Message();
+					returnMsg.setLifetime(1);
+					returnMsg.setTargetKey(message.getTargetKey());
+					returnMsg.setType(MessageType.RESPONSE);
+					if (message.message.equals("GET")) {
+						if (localDataMap.containsKey(message.targetKey)) {
+							String data = localDataMap.remove(message.targetKey);
+							returnMsg.setMessage(data);
+						} else {
+							System.out.println("* * * ------- * * * :P");
+							localDataMap.put(message.targetKey, ":P");
+						}
+					} else {
+						if (!localDataMap.containsKey(message.targetKey)) {
+							localDataMap.put(message.targetKey, message.message);
+						} else {
+							System.out.println(localDataMap.get(message.targetKey));
+						}
+					}
 					Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
 							"Recieved REQUEST message : " + message);
 					requestCount++;
 					requestLifetime += message.lifetime;
-					return null;
+					return returnMsg;
 				}
 
 				@Override
@@ -68,7 +92,11 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 				@Override
 				public void response(Message message) {
-					throw new UnsupportedOperationException("Not supported yet.");
+					if (message.message == null) {
+						testerController.setResponse(message.targetKey);
+					} else {
+						testerController.setResponse(message.targetKey, message.message);
+					}
 				}
 			});
 			server.registerSinchanaTestInterface(this);
@@ -128,10 +156,14 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			server.join();
 			while (true) {
 				threadLock.acquire();
-				String randomDestination;
 				while (numOfTestingMessages > 0) {
-					randomDestination = new BigInteger(160, new Random()).toString(16);
-					server.send(randomDestination, "where are you?");
+					TestData nextData = testerController.getNextData();
+					if (nextData.verified) {
+						server.send(nextData.key, "GET");
+
+					} else {
+						server.send(nextData.key, nextData.data);
+					}
 					numOfTestingMessages--;
 				}
 			}
