@@ -50,6 +50,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final org.apache.thrift.protocol.TField TIME_STAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStamp", org.apache.thrift.protocol.TType.I64, (short)18);
   private static final org.apache.thrift.protocol.TField DATA_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("dataValue", org.apache.thrift.protocol.TType.STRING, (short)19);
   private static final org.apache.thrift.protocol.TField SERVICE_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("serviceValue", org.apache.thrift.protocol.TType.STRING, (short)20);
+  private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)21);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -81,6 +82,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public long timeStamp; // optional
   public String dataValue; // optional
   public String serviceValue; // optional
+  public boolean success; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -107,7 +109,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     RETRY_COUNT((short)17, "retryCount"),
     TIME_STAMP((short)18, "timeStamp"),
     DATA_VALUE((short)19, "dataValue"),
-    SERVICE_VALUE((short)20, "serviceValue");
+    SERVICE_VALUE((short)20, "serviceValue"),
+    SUCCESS((short)21, "success");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -162,6 +165,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           return DATA_VALUE;
         case 20: // SERVICE_VALUE
           return SERVICE_VALUE;
+        case 21: // SUCCESS
+          return SUCCESS;
         default:
           return null;
       }
@@ -206,8 +211,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   private static final int __LIFETIME_ISSET_ID = 1;
   private static final int __RETRYCOUNT_ISSET_ID = 2;
   private static final int __TIMESTAMP_ISSET_ID = 3;
-  private BitSet __isset_bit_vector = new BitSet(4);
-  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.FAILED_NODE_SET,_Fields.DATA_SET,_Fields.SERVICE_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP,_Fields.DATA_VALUE,_Fields.SERVICE_VALUE};
+  private static final int __SUCCESS_ISSET_ID = 4;
+  private BitSet __isset_bit_vector = new BitSet(5);
+  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.MESSAGE,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.START_OF_RANGE,_Fields.END_OF_RANGE,_Fields.NEIGHBOUR_SET,_Fields.FAILED_NODE_SET,_Fields.DATA_SET,_Fields.SERVICE_SET,_Fields.TARGET_KEY,_Fields.RETRY_COUNT,_Fields.TIME_STAMP,_Fields.DATA_VALUE,_Fields.SERVICE_VALUE,_Fields.SUCCESS};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -255,6 +261,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.SERVICE_VALUE, new org.apache.thrift.meta_data.FieldMetaData("serviceValue", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Message.class, metaDataMap);
   }
@@ -348,6 +356,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     if (other.isSetServiceValue()) {
       this.serviceValue = other.serviceValue;
     }
+    this.success = other.success;
   }
 
   public Message deepCopy() {
@@ -380,6 +389,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     this.timeStamp = 0;
     this.dataValue = null;
     this.serviceValue = null;
+    setSuccessIsSet(false);
+    this.success = false;
   }
 
   public long getId() {
@@ -926,6 +937,29 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
+  public boolean isSuccess() {
+    return this.success;
+  }
+
+  public Message setSuccess(boolean success) {
+    this.success = success;
+    setSuccessIsSet(true);
+    return this;
+  }
+
+  public void unsetSuccess() {
+    __isset_bit_vector.clear(__SUCCESS_ISSET_ID);
+  }
+
+  /** Returns true if field success is set (has been assigned a value) and false otherwise */
+  public boolean isSetSuccess() {
+    return __isset_bit_vector.get(__SUCCESS_ISSET_ID);
+  }
+
+  public void setSuccessIsSet(boolean value) {
+    __isset_bit_vector.set(__SUCCESS_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case ID:
@@ -1088,6 +1122,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       break;
 
+    case SUCCESS:
+      if (value == null) {
+        unsetSuccess();
+      } else {
+        setSuccess((Boolean)value);
+      }
+      break;
+
     }
   }
 
@@ -1153,6 +1195,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     case SERVICE_VALUE:
       return getServiceValue();
 
+    case SUCCESS:
+      return Boolean.valueOf(isSuccess());
+
     }
     throw new IllegalStateException();
   }
@@ -1204,6 +1249,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       return isSetDataValue();
     case SERVICE_VALUE:
       return isSetServiceValue();
+    case SUCCESS:
+      return isSetSuccess();
     }
     throw new IllegalStateException();
   }
@@ -1398,6 +1445,15 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (!(this_present_serviceValue && that_present_serviceValue))
         return false;
       if (!this.serviceValue.equals(that.serviceValue))
+        return false;
+    }
+
+    boolean this_present_success = true && this.isSetSuccess();
+    boolean that_present_success = true && that.isSetSuccess();
+    if (this_present_success || that_present_success) {
+      if (!(this_present_success && that_present_success))
+        return false;
+      if (this.success != that.success)
         return false;
     }
 
@@ -1617,6 +1673,16 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetSuccess()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, typedOther.success);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1812,6 +1878,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       } else {
         sb.append(this.serviceValue);
       }
+      first = false;
+    }
+    if (isSetSuccess()) {
+      if (!first) sb.append(", ");
+      sb.append("success:");
+      sb.append(this.success);
       first = false;
     }
     sb.append(")");
@@ -2074,6 +2146,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 21: // SUCCESS
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.success = iprot.readBool();
+              struct.setSuccessIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -2246,6 +2326,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldEnd();
         }
       }
+      if (struct.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        oprot.writeBool(struct.success);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -2318,7 +2403,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetServiceValue()) {
         optionals.set(16);
       }
-      oprot.writeBitSet(optionals, 17);
+      if (struct.isSetSuccess()) {
+        optionals.set(17);
+      }
+      oprot.writeBitSet(optionals, 18);
       if (struct.isSetId()) {
         oprot.writeI64(struct.id);
       }
@@ -2394,6 +2482,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetServiceValue()) {
         oprot.writeString(struct.serviceValue);
       }
+      if (struct.isSetSuccess()) {
+        oprot.writeBool(struct.success);
+      }
     }
 
     @Override
@@ -2406,7 +2497,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       struct.setTypeIsSet(true);
       struct.lifetime = iprot.readI32();
       struct.setLifetimeIsSet(true);
-      BitSet incoming = iprot.readBitSet(17);
+      BitSet incoming = iprot.readBitSet(18);
       if (incoming.get(0)) {
         struct.id = iprot.readI64();
         struct.setIdIsSet(true);
@@ -2518,6 +2609,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (incoming.get(16)) {
         struct.serviceValue = iprot.readString();
         struct.setServiceValueIsSet(true);
+      }
+      if (incoming.get(17)) {
+        struct.success = iprot.readBool();
+        struct.setSuccessIsSet(true);
       }
     }
   }

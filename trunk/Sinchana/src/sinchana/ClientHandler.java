@@ -45,12 +45,12 @@ public class ClientHandler {
 			case RESPONSE_DATA:
 				clientData.data = message.getDataSet();
 				break;
-			case ACKNOWLEDGE_SERVICE:
-			case ACKNOWLEDGE_DATA:
+			case ACKNOWLEDGE_SERVICE_PUBLISH:
+			case ACKNOWLEDGE_DATA_STORE:
 				clientData.success = true;
 				break;
-			case FAILURE_SERVICE:
-			case ACKNOWLEDGE_REMOVE:
+			case ACKNOWLEDGE_DATA_REMOVE:
+			case ACKNOWLEDGE_SERVICE_REMOVE:
 				clientData.success = false;
 				break;
 			case RESPONSE:

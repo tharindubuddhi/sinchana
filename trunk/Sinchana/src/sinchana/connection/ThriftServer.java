@@ -111,10 +111,10 @@ public class ThriftServer implements PortHandler {
 			case RESPONSE:
 			case RESPONSE_DATA:
 			case RESPONSE_SERVICE:
-			case ACKNOWLEDGE_REMOVE:
-			case FAILURE_SERVICE:
-			case ACKNOWLEDGE_DATA:
-			case ACKNOWLEDGE_SERVICE:
+			case ACKNOWLEDGE_DATA_STORE:
+			case ACKNOWLEDGE_SERVICE_PUBLISH:
+			case ACKNOWLEDGE_DATA_REMOVE:
+			case ACKNOWLEDGE_SERVICE_REMOVE:
 				break;
 		}
 	}

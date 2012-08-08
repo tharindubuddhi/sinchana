@@ -16,14 +16,14 @@ public enum MessageType implements org.apache.thrift.TEnum {
   DELETE_DATA(1),
   GET_DATA(2),
   RESPONSE_DATA(3),
-  ACKNOWLEDGE_DATA(4),
-  ACKNOWLEDGE_REMOVE(5),
+  ACKNOWLEDGE_DATA_STORE(4),
+  ACKNOWLEDGE_DATA_REMOVE(5),
   PUBLISH_SERVICE(6),
   GET_SERVICE(7),
   REMOVE_SERVICE(8),
   RESPONSE_SERVICE(9),
-  ACKNOWLEDGE_SERVICE(10),
-  FAILURE_SERVICE(11),
+  ACKNOWLEDGE_SERVICE_PUBLISH(10),
+  ACKNOWLEDGE_SERVICE_REMOVE(11),
   REQUEST(12),
   RESPONSE(13),
   ERROR(14),
@@ -61,9 +61,9 @@ public enum MessageType implements org.apache.thrift.TEnum {
       case 3:
         return RESPONSE_DATA;
       case 4:
-        return ACKNOWLEDGE_DATA;
+        return ACKNOWLEDGE_DATA_STORE;
       case 5:
-        return ACKNOWLEDGE_REMOVE;
+        return ACKNOWLEDGE_DATA_REMOVE;
       case 6:
         return PUBLISH_SERVICE;
       case 7:
@@ -73,9 +73,9 @@ public enum MessageType implements org.apache.thrift.TEnum {
       case 9:
         return RESPONSE_SERVICE;
       case 10:
-        return ACKNOWLEDGE_SERVICE;
+        return ACKNOWLEDGE_SERVICE_PUBLISH;
       case 11:
-        return FAILURE_SERVICE;
+        return ACKNOWLEDGE_SERVICE_REMOVE;
       case 12:
         return REQUEST;
       case 13:
