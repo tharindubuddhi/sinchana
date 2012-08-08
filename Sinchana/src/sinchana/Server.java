@@ -7,6 +7,8 @@ package sinchana;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sinchana.connection.ThriftServer;
 import sinchana.chord.ChordTable;
 import sinchana.thrift.Message;
@@ -31,6 +33,7 @@ public class Server extends Node {
 	private SinchanaDataStore sinchanaDataStore = new SinchanaDataStore();
 	private String remoteNodeAddress = null;
 	private BigInteger serverIdAsBigInt;
+	private boolean joined = false;
 
 	/**
 	 * Start a new node with the given server ID and next hop.
@@ -89,7 +92,15 @@ public class Server extends Node {
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
 			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			Node remoteNode = new Node("n/a", remoteNodeAddress);
-			this.portHandler.send(msg, remoteNode);
+			while (!joined) {
+				try {
+					System.out.println("Connecting to " + remoteNodeAddress);
+					this.portHandler.send(msg, remoteNode);
+					Thread.sleep(5000);
+				} catch (InterruptedException ex) {
+					ex.printStackTrace();
+				}
+			}
 		} else {
 			this.messageHandler.startAsRootNode();
 			if (this.sinchanaTestInterface != null) {
@@ -253,7 +264,6 @@ public class Server extends Node {
 		this.getMessageHandler().queueMessage(msg);
 	}
 
-        
 	public void deleteData(String key) {
 		Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
@@ -270,5 +280,9 @@ public class Server extends Node {
 
 	public void trigger() {
 		this.routingHandler.optimize();
+	}
+
+	public void setJoined(boolean joined) {
+		this.joined = joined;
 	}
 }

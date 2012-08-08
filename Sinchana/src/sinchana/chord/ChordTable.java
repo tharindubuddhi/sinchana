@@ -264,6 +264,7 @@ public class ChordTable implements RoutingHandler {
 		}
 		boolean tableChanged = false;
 		boolean updated = false;
+		ignorePrevFailures = false;
 		synchronized (failedNodes) {
 			if (failedNodes.containsKey(node.serverId)) {
 				if (ignorePrevFailures || (failedNodes.get(node.serverId).time + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT)
@@ -271,7 +272,9 @@ public class ChordTable implements RoutingHandler {
 					failedNodes.remove(node.serverId);
 					System.out.println("Adding back " + node);
 				} else {
-//					System.out.println("Not accepted " + node);
+					System.out.println("Not accepted till " + 
+							(failedNodes.get(node.serverId).time + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT - Calendar.getInstance().getTimeInMillis()) 
+							+ "ms -- " + node);
 					return;
 				}
 			}
