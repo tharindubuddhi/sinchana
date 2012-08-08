@@ -364,14 +364,16 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
         return false;
     }
 
-    boolean this_present_dataValue = true && this.isSetDataValue();
-    boolean that_present_dataValue = true && that.isSetDataValue();
-    if (this_present_dataValue || that_present_dataValue) {
-      if (!(this_present_dataValue && that_present_dataValue))
-        return false;
-      if (!this.dataValue.equals(that.dataValue))
-        return false;
-    }
+// this part has been commented as it does not need to check the equals of two Dataobjects
+    
+//    boolean this_present_dataValue = true && this.isSetDataValue();
+//    boolean that_present_dataValue = true && that.isSetDataValue();
+//    if (this_present_dataValue || that_present_dataValue) {
+//      if (!(this_present_dataValue && that_present_dataValue))
+//        return false;
+//      if (!this.dataValue.equals(that.dataValue))
+//        return false;
+//    }
 
     boolean this_present_dataKey = true && this.isSetDataKey();
     boolean that_present_dataKey = true && that.isSetDataKey();
