@@ -86,7 +86,7 @@ public class Server extends Node {
 	}
 
 	public void join() {
-		if (this.remoteNodeAddress != null) {
+		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
 			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			Node remoteNode = new Node("n/a", remoteNodeAddress);
 			this.portHandler.send(msg, remoteNode);
@@ -234,24 +234,25 @@ public class Server extends Node {
 		this.getMessageHandler().queueMessage(msg);
 	}
 
-		public void storeData(String key, String data) {
+	public void storeData(String key, String data) {
 //                this.getSinchanaDataStore().addStoredObjects(null);
-				Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-				msg.setTargetKey(key);
-				msg.setDataValue(data);
-				msg.setStation(this);
-				this.getMessageHandler().queueMessage(msg);
+		Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		msg.setTargetKey(key);
+		msg.setDataValue(data);
+		msg.setStation(this);
+		this.getMessageHandler().queueMessage(msg);
 
-		}
+	}
 
-        public void storeData(String data) {
-				String key = CommonTools.generateId(data).toString();
-                Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-				msg.setTargetKey(key);
-				msg.setDataValue(data);
-				msg.setStation(this);
-				this.getMessageHandler().queueMessage(msg);
-		}
+	public void storeData(String data) {
+		String key = CommonTools.generateId(data).toString();
+		Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		msg.setTargetKey(key);
+		msg.setDataValue(data);
+		msg.setStation(this);
+		this.getMessageHandler().queueMessage(msg);
+	}
+
         
 	public void deleteData(String key) {
 		Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);

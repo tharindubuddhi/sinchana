@@ -6,6 +6,7 @@ package sinchana.tapastry;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.logging.Level;
 import sinchana.PortHandler;
 import sinchana.RoutingHandler;
@@ -25,9 +26,10 @@ import sinchana.CONFIGURATIONS;
 public class TapestryTable implements RoutingHandler, Runnable {
 
 	public static final int TABLE_SIZE = 37;
+	private static final int SUCCESSOR_LEVEL = 3;
 	private Server server;
-	private Node successor = null;
-	private Node predecessor = null;
+	private Node[] successor = new Node[SUCCESSOR_LEVEL];
+	private Node[] predecessor = new Node[SUCCESSOR_LEVEL];
 	private String serverId;
 	private BigInteger serverIdAsBigInt;
 	private Node[][] fingerTable = new Node[TABLE_SIZE][10];
@@ -68,11 +70,11 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		/**
 		 * initializes by setting this server it self as the predecessor and successor.
 		 */
-		this.predecessor = this.server.deepCopy();
-		this.successor = this.server.deepCopy();
+		this.predecessor[0] = this.server.deepCopy();
+		this.successor[0] = this.server.deepCopy();
 		if (this.server.getSinchanaTestInterface() != null) {
-			this.server.getSinchanaTestInterface().setPredecessor(predecessor);
-			this.server.getSinchanaTestInterface().setSuccessor(successor);
+			this.server.getSinchanaTestInterface().setPredecessor(predecessor[0]);
+			this.server.getSinchanaTestInterface().setSuccessor(successor[0]);
 //						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
 		}
 	}
@@ -102,17 +104,17 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	private void importNeighbours(Node neighbour) {
 		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 3,
 				"Importing neighbour set from " + neighbour.serverId);
-		Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBOURS, 256);
+		Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, 256);
 		this.server.getPortHandler().send(msg, neighbour);
 	}
 
 	@Override
-	public Node getSuccessor() {
+	public Node[] getSuccessors() {
 		return successor;
 	}
 
 	@Override
-	public Node getPredecessor() {
+	public Node[] getPredecessors() {
 		return predecessor;
 	}
 
@@ -182,9 +184,9 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	}
 
 	@Override
-	public Map<String, Node> getNeighbourSet() {
+	public Set<Node> getNeighbourSet() {
 		//initializes an empty node set.
-		Map<String, Node> neighbourSet = new HashMap<String, Node>();
+		Set<Node> neighbourSet = new HashSet<Node>();
 		for (Node[] nodes : fingerTable) {
 			for (Node node : nodes) {
 				/**
@@ -193,18 +195,18 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				 * about this server, so sending it again is a waste.
 				 */
 				if (node != null && !node.serverId.equals(this.serverId)) {
-					neighbourSet.put(node.serverId, node);
+					neighbourSet.add(node);
 				}
 			}
 
 		}
 		//adds the predecessor.
-		if (this.predecessor != null && !this.predecessor.serverId.equals(this.serverId)) {
-			neighbourSet.put(this.predecessor.serverId, this.predecessor);
+		if (this.predecessor != null && !this.predecessor[0].serverId.equals(this.serverId)) {
+			neighbourSet.add(this.predecessor[0]);
 		}
 		//adds the successor.
-		if (this.successor != null && !this.successor.serverId.equals(this.serverId)) {
-			neighbourSet.put(this.successor.serverId, this.successor);
+		if (this.successor != null && !this.successor[0].serverId.equals(this.serverId)) {
+			neighbourSet.add(this.successor[0]);
 		}
 		//returns the node set.
 		return neighbourSet;
@@ -215,7 +217,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	}
 
 	@Override
-	public void updateTable(Node node) {
+	public void updateTable(Node node, boolean ignorePrevFailures) {
 		if (node.serverId.equals(this.serverId)) {
 			return;
 		}
@@ -223,9 +225,9 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		BigInteger newNodeOffset = getOffset(node.serverId);
 		boolean tableChanged = false;
 		synchronized (this) {
-			BigInteger successorOffset = getOffset(this.successor.serverId);
+			BigInteger successorOffset = getOffset(this.successor[0].serverId);
 			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 7,
-					"Updating table: S:" + this.successor.serverId + " P:" + this.predecessor.serverId
+					"Updating table: S:" + this.successor[0].serverId + " P:" + this.predecessor[0].serverId
 					+ " N:" + node.serverId);
 			/**
 			 * Checks whether the new node should be set as the successor or not. 
@@ -239,10 +241,10 @@ public class TapestryTable implements RoutingHandler, Runnable {
 					|| (!newNodeOffset.equals(new BigInteger("0", 16))
 					&& newNodeOffset.compareTo(successorOffset) == -1)) {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
-						"Node " + node + " is set as successor overriding " + this.successor);
-				this.successor = node.deepCopy();
+						"Node " + node + " is set as successor overriding " + this.successor[0]);
+				this.successor[0] = node.deepCopy();
 				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().setSuccessor(successor);
+					this.server.getSinchanaTestInterface().setSuccessor(successor[0]);
 				}
 			}
 
@@ -254,15 +256,15 @@ public class TapestryTable implements RoutingHandler, Runnable {
 			 * the new node will be set as the predecessor.
 			 * 0-----existing.predecessor.id------new.server.id-------this.server.id----------End.of.Grid
 			 */
-			BigInteger predecessorOffset = getOffset(this.predecessor.serverId);
+			BigInteger predecessorOffset = getOffset(this.predecessor[0].serverId);
 			if (predecessorOffset.equals(new BigInteger("0", 16))
 					|| (!newNodeOffset.equals(new BigInteger("0", 16))
 					&& predecessorOffset.compareTo(newNodeOffset) == -1)) {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
-						"Node " + node + " is set as predecessor overriding " + this.predecessor);
-				this.predecessor = node.deepCopy();
+						"Node " + node + " is set as predecessor overriding " + this.predecessor[0]);
+				this.predecessor[0] = node.deepCopy();
 				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().setPredecessor(predecessor);
+					this.server.getSinchanaTestInterface().setPredecessor(predecessor[0]);
 				}
 			}
 
@@ -282,8 +284,8 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		 * if the neighbor set has not imported, imports it from the predecessor.
 		 * This will happens only once after the node successfully joined to the grid.
 		 */
-		if (!neighboursImported && !this.serverId.equals(this.predecessor.serverId)) {
-			importNeighbours(this.predecessor);
+		if (!neighboursImported && !this.serverId.equals(this.predecessor[0].serverId)) {
+			importNeighbours(this.predecessor[0]);
 			neighboursImported = true;
 		}
 	}
@@ -310,19 +312,18 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	@Override
 	public void removeNode(Node nodeToRemove) {
 		//gets the known node set.
-		Map<String, Node> neighbourSet = getNeighbourSet();
-		Set<String> keySet = neighbourSet.keySet();
+		Set<Node> neighbourSet = getNeighbourSet();
 		//reset the predecessor, successor and finger table entries.
 		synchronized (this) {
 			initFingerTable();
-			for (String nodeId : keySet) {
+			for (Node node : neighbourSet) {
 				/**
 				 * updates predecessor, successor and finger table entries
 				 * back, with the known node set, if the node is not equal 
 				 * to the node which is to be remove.
 				 */
-				if (!nodeId.equals(nodeToRemove.serverId)) {
-					updateTable(neighbourSet.get(nodeId));
+				if (!node.serverId.equals(nodeToRemove.serverId)) {
+					updateTable(node, false);
 				}
 			}
 		}
@@ -356,12 +357,12 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	}
 
 	@Override
-	public Map<String, Node> getFailedNodeSet() {
+	public Set<Node> getFailedNodeSet() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	@Override
-	public void removeNode(Map<String, Node> nodes) {
+	public void removeNode(Set<Node> nodes) {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 }
