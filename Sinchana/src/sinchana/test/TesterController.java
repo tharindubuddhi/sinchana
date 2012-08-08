@@ -312,9 +312,10 @@ public class TesterController {
 	}
 
 	public void retrieveService() {
-		int randomId;
+		int randomId = 4;
 		int randomAmount;
-		randomId = (int) (Math.random() * testServers.size());
+//		randomId = (int) (Math.random() * testServers.size());
+        
 		randomAmount = (int) (Math.random() * serviceArray.length);
 		for (int i = 0; i < serviceArray.length; i++) {
 			testServers.get(randomId).getServer().getService(keyArray[i]);
@@ -326,33 +327,50 @@ public class TesterController {
 	String[] datakeyArray = null;
 	int dataID = 1;
 
-	public void storeData(int noOfData) {
-
-		dataArray = new String[noOfData];
-		datakeyArray = new String[noOfData];
-
-		for (int i = 0; i < noOfData; i++) {
-			dataArray[i] = String.valueOf("Data " + dataID);
-			datakeyArray[i] = CommonTools.generateId(dataArray[i]).toString();
-			dataID++;
+        
+		public void storeData(int noOfData) {
+                dataArray = new String[noOfData];
+				datakeyArray = new String[noOfData];
+                TestDataStore.storeCount = 0;
+                TestDataStore.storeStartTime = System.currentTimeMillis();
+				for (int i = 0; i < noOfData; i++) {
+						dataArray[i] = String.valueOf("Data " + dataID);
+						datakeyArray[i] = CommonTools.generateId(dataArray[i]).toString();
+						dataID++;
+				}
+//                int randomId = (int) (Math.random() * testServers.size());
+                int randomId = 4;
+                
+                for (int i = 0; i < noOfData; i++) {
+                testServers.get(randomId).getServer().storeData(datakeyArray[i], dataArray[i]);
+                
+            }
+   
 		}
-		int randomId = (int) (Math.random() * testServers.size());
+        
+        
+        
+                public void retrieveData(){                  
+                    TestDataStore.retrieveStartTime = System.currentTimeMillis();
+                    int randomId = (int) (Math.random() * testServers.size());
+                    for (int i = 0; i < datakeyArray.length; i++) {
+                        testServers.get(randomId).getServer().getData(datakeyArray[i]);
+                        
+                    }
 
-		for (int i = 0; i < noOfData; i++) {
-			testServers.get(randomId).getServer().storeData(datakeyArray[i], dataArray[i]);
-
-		}
-
-	}
-
-	public void retrieveData() {
-		String data = "Tharindu";
-		String key = CommonTools.generateId(data).toString();
-		System.out.println(key);
-		int randomId = (int) (Math.random() * testServers.size());
-		testServers.get(randomId).getServer().getData(key);
-	}
-
+                }
+                
+                
+                public void removeData(int randomAmount){
+//                    int randomId = (int) (Math.random() * testServers.size());
+                    TestDataStore.removeStartTime = System.currentTimeMillis();
+                    int randomId = 4;
+//                    int randomAmount = (int) (Math.random() * datakeyArray.length);
+//                    System.out.println("random amount "+randomAmount);
+                    for (int i = 0; i < randomAmount; i++) {
+                        testServers.get(randomId).getServer().deleteData(datakeyArray[i]);                       
+                    }
+                }
 	/**
 	 * 
 	 * @param nodeIdsString

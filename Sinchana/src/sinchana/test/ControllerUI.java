@@ -108,7 +108,9 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         egLabel = new javax.swing.JLabel();
         dataCountTextField = new javax.swing.JTextField();
         storeButton = new javax.swing.JButton();
-        jButton1 = new javax.swing.JButton();
+        retrieveButton = new javax.swing.JButton();
+        removeAmountTextField = new javax.swing.JTextField();
+        dataRemoveButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
         statusField = new javax.swing.JLabel();
@@ -235,18 +237,18 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         servicePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
         egLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        egLabel.setText("Stat");
-        egLabel.setPreferredSize(new java.awt.Dimension(150, 24));
+        egLabel.setText("No.of Data");
+        egLabel.setPreferredSize(new java.awt.Dimension(60, 24));
         servicePanel.add(egLabel);
 
         dataCountTextField.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        dataCountTextField.setText("12");
+        dataCountTextField.setText("50");
         dataCountTextField.setToolTipText("No of Auto Testing Nodes");
         dataCountTextField.setPreferredSize(new java.awt.Dimension(32, 24));
         servicePanel.add(dataCountTextField);
 
         storeButton.setText("Store");
-        storeButton.setPreferredSize(new java.awt.Dimension(70, 24));
+        storeButton.setPreferredSize(new java.awt.Dimension(65, 24));
         storeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 storeButtonActionPerformed(evt);
@@ -254,8 +256,26 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         });
         servicePanel.add(storeButton);
 
-        jButton1.setText("Retrieve");
-        servicePanel.add(jButton1);
+        retrieveButton.setText("Retrieve");
+        retrieveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                retrieveButtonActionPerformed(evt);
+            }
+        });
+        servicePanel.add(retrieveButton);
+
+        removeAmountTextField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        removeAmountTextField.setText("20");
+        removeAmountTextField.setPreferredSize(new java.awt.Dimension(32, 24));
+        servicePanel.add(removeAmountTextField);
+
+        dataRemoveButton.setText("Remove");
+        dataRemoveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dataRemoveButtonActionPerformed(evt);
+            }
+        });
+        servicePanel.add(dataRemoveButton);
 
         jPanel1.add(servicePanel);
 
@@ -411,6 +431,14 @@ private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     testerController.storeData(Integer.parseInt(dataCountTextField.getText()));
     
 }//GEN-LAST:event_storeButtonActionPerformed
+
+private void retrieveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_retrieveButtonActionPerformed
+testerController.retrieveData();
+}//GEN-LAST:event_retrieveButtonActionPerformed
+
+private void dataRemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataRemoveButtonActionPerformed
+testerController.removeData(Integer.parseInt(removeAmountTextField.getText()));
+}//GEN-LAST:event_dataRemoveButtonActionPerformed
 	/**
 	 * @param args the command line arguments
 	 */
@@ -419,9 +447,9 @@ private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     private javax.swing.JPanel autoTestButtonPanel;
     private javax.swing.JTextField contatain;
     private javax.swing.JTextField dataCountTextField;
+    private javax.swing.JButton dataRemoveButton;
     private javax.swing.JTextField destId;
     private javax.swing.JLabel egLabel;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -442,7 +470,9 @@ private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     private javax.swing.JTextField numOfTesters;
     private javax.swing.JTextField portRange;
     private javax.swing.JButton printLogButton;
+    private javax.swing.JTextField removeAmountTextField;
     private javax.swing.JTextField reqId;
+    private javax.swing.JButton retrieveButton;
     private javax.swing.JButton ringTestButton;
     private javax.swing.JButton sendButton;
     private javax.swing.JPanel sendMessagePanel;

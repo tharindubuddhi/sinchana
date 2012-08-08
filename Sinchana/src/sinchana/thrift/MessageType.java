@@ -31,7 +31,7 @@ public enum MessageType implements org.apache.thrift.TEnum {
   DISCOVER_NEIGHBOURS(16),
   FIND_SUCCESSOR(17),
   VERIFY_RING(18),
-  TEST_RING(19);
+  TEST_RING(19), ;
 
   private final int value;
 

@@ -252,6 +252,7 @@ public class Server extends Node {
 				msg.setStation(this);
 				this.getMessageHandler().queueMessage(msg);
 		}
+        
 	public void deleteData(String key) {
 		Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
