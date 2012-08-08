@@ -146,10 +146,10 @@ public class MessageHandler {
 			case RESPONSE:
 			case RESPONSE_DATA:
 			case RESPONSE_SERVICE:
-			case ACKNOWLEDGE_REMOVE:
-			case FAILURE_SERVICE:
-			case ACKNOWLEDGE_DATA:
-			case ACKNOWLEDGE_SERVICE:
+			case ACKNOWLEDGE_DATA_STORE:
+			case ACKNOWLEDGE_DATA_REMOVE:
+			case ACKNOWLEDGE_SERVICE_PUBLISH:
+			case ACKNOWLEDGE_SERVICE_REMOVE:
 				deliverMessage(message);
 				break;
 		}
@@ -377,29 +377,19 @@ public class MessageHandler {
 					Set<DataObject> objectSources = processGetStore(message);
 				}
 				break;
-			case ACKNOWLEDGE_REMOVE:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					if (message.message.equals("success")) {
-						success = true;
-					} else {
-						success = false;
-					}
-					this.server.getSinchanaStoreInterface().isRemoved(success);
+			case ACKNOWLEDGE_DATA_REMOVE:
+				if (this.server.getSinchanaStoreInterface() != null) {					
+					this.server.getSinchanaStoreInterface().isRemoved(message.success);
 				}
 				break;
-			case ACKNOWLEDGE_DATA:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					if (message.message.equals("success")) {
-						success = true;
-					} else {
-						success = false;
-					}
-					this.server.getSinchanaStoreInterface().isStored(success);
+			case ACKNOWLEDGE_DATA_STORE:
+				if (this.server.getSinchanaStoreInterface() != null) {					
+					this.server.getSinchanaStoreInterface().isStored(message.success);
 				}
 				break;
 			case RESPONSE_DATA:
 				if (this.server.getSinchanaStoreInterface() != null) {
-					this.server.getSinchanaStoreInterface().get(message.getDataSet());
+                    this.server.getSinchanaStoreInterface().get(message.getDataSet());
 				}
 				break;
 
@@ -422,9 +412,9 @@ public class MessageHandler {
 					message.setMessage(this.server.getSinchanaServiceInterface().get(message.targetKey));
 				}
 				break;
-			case FAILURE_SERVICE:
+			case ACKNOWLEDGE_SERVICE_PUBLISH:
 				break;
-			case ACKNOWLEDGE_SERVICE:
+			case ACKNOWLEDGE_SERVICE_REMOVE:
 				break;
 			case RESPONSE_SERVICE:
 				break;
@@ -444,13 +434,9 @@ public class MessageHandler {
 		dataObject.setDataValue(msg.dataValue);
 		dataObject.setDataKey(msg.targetKey);
 
-		boolean success = this.server.getSinchanaDataStore().store(dataObject);
-		if (success) {
-			msg.setMessage("success");
-		} else {
-			msg.setMessage("failure");
-		}
-		msg.setType(MessageType.ACKNOWLEDGE_DATA);
+		boolean success = this.server.getSinchanaDataStore().store(dataObject);		
+        msg.setSuccess(success);		
+		msg.setType(MessageType.ACKNOWLEDGE_DATA_STORE);
 		msg.setStation(this.server);
 		this.server.getPortHandler().send(msg, msg.source);
 		return dataObject;
@@ -463,18 +449,17 @@ public class MessageHandler {
 		String sourceKey = msg.source.serverId;
 		Set<DataObject> sourceServers = this.server.getSinchanaDataStore().getrootObjects().get(objectKey);
 		if (sourceServers == null) {
-			msg.setType(MessageType.RESPONSE_DATA);
+            msg.setSuccess(false);
 			msg.setMessage("does not exist");
-			msg.setLifetime(1);
-			this.server.getPortHandler().send(msg, msg.source);
-		} else {
-			msg.setType(MessageType.RESPONSE_DATA);
+			msg.setLifetime(1);			
+		} else {		
+            msg.setSuccess(true);
 			msg.setMessage("exist");
 			msg.setDataSet(sourceServers);
-			msg.setLifetime(1);
-			this.server.getPortHandler().send(msg, msg.source);
+			msg.setLifetime(1);			
 		}
-
+        msg.setType(MessageType.RESPONSE_DATA);
+        this.server.getPortHandler().send(msg, msg.source);
 		return sourceServers;
 
 	}
@@ -484,17 +469,11 @@ public class MessageHandler {
 		DataObject dataObject = new DataObject();
 		dataObject.setSourceID(msg.source.serverId);
 		dataObject.setSourceAddress(msg.source.address);
-//        dataObject.setDataValue(msg.dataValue);
 		dataObject.setDataKey(msg.targetKey);
 
 		boolean success = this.server.getSinchanaDataStore().removeData(dataObject);
-		msg.setType(MessageType.ACKNOWLEDGE_REMOVE);
-		if (success) {
-			msg.setMessage("success");
-		} else {
-			msg.setMessage("failure");
-		}
-
+		msg.setType(MessageType.ACKNOWLEDGE_DATA_REMOVE);	
+        msg.setSuccess(success);	
 		msg.setLifetime(1);
 		this.server.getPortHandler().send(msg, msg.source);
 		return dataObject;

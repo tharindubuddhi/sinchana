@@ -23,14 +23,14 @@ enum MessageType {
     DELETE_DATA,
     GET_DATA,
     RESPONSE_DATA,
-    ACKNOWLEDGE_DATA,
-    ACKNOWLEDGE_REMOVE,
+    ACKNOWLEDGE_DATA_STORE,
+    ACKNOWLEDGE_DATA_REMOVE,
     PUBLISH_SERVICE,
     GET_SERVICE,
     REMOVE_SERVICE,
     RESPONSE_SERVICE,
-    ACKNOWLEDGE_SERVICE,
-    FAILURE_SERVICE,
+    ACKNOWLEDGE_SERVICE_PUBLISH,
+    ACKNOWLEDGE_SERVICE_REMOVE,
     REQUEST,
     RESPONSE,
     ERROR,
@@ -61,7 +61,8 @@ struct Message {
     17: optional i32 retryCount,
     18: optional i64 timeStamp,
     19: optional string dataValue,
-    20: optional string serviceValue
+    20: optional string serviceValue,
+    21: optional bool success
 }
 
 service DHTServer {

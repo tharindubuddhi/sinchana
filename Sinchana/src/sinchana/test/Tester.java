@@ -49,9 +49,9 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			this.testId = testId;
 			this.testerController = tc;
 			String address, remoteNodeAddress;
-			address = "192.168.139.51";
+            address = InetAddress.getLocalHost().getHostAddress();
 			remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
-			remoteNodeAddress = "192.168.139.51:8000";
+//			remoteNodeAddress = "192.168.139.51:8000";
 			server = new Server(address + ":" + portId, remoteNodeAddress);
 			server.registerSinchanaInterface(new SinchanaInterface() {
 
