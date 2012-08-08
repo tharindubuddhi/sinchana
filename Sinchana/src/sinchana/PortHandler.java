@@ -31,11 +31,11 @@ public interface PortHandler {
 	 * Indicates a local server error. This is because the number of maximum 
 	 * connections opened is reached.
 	 */
-	public static final int LOCAL_SERVER_ERROR = 3;
+	public static final int REMOTE_SERVER_ERROR_FAILURE = 3;
 	/**
 	 * Indicates that the message is terminated because it's life time is expired.
 	 */
-	public static final int MESSAGE_LIFE_TIME_EXPIRED = 4;
+	public static final int LOCAL_SERVER_ERROR = 4;
 
 	/**
 	 * Start the server.

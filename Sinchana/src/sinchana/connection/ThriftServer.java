@@ -38,8 +38,10 @@ public class ThriftServer implements PortHandler {
 			if (server.getSinchanaTestInterface() != null) {
 				server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 			}
-			if (server.getRoutingHandler().getFailedNodeSet().containsKey(message.destination.serverId)) {
+			if (server.getRoutingHandler().getFailedNodeSet().contains(message.destination)) {
+//				System.out.println(server.serverId + ": " + message);
 				addBackToQueue(message);
+				return;
 			}
 			Node prevStation = message.getStation();
 			message.setStation(server);
@@ -53,23 +55,21 @@ public class ThriftServer implements PortHandler {
 						Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 								"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
 					} else {
-						Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
-								"Messaage is added back to the queue :: " + message);
+//						Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
+//								"Messaage is added back to the queue :: " + message);
 						queueMessage(message);
 					}
 					break;
 				case PortHandler.REMOTE_SERVER_ERROR:
-					message.retryCount++;
-					if (message.retryCount > CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-						Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-								"Node " + message.destination + " is removed from the routing table!");
-						server.getRoutingHandler().removeNode(message.destination);
-						addBackToQueue(message);
-					} else {
-						Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
-								"Messaage is added back to the queue :: " + message);
-						queueMessage(message);
-					}
+//					Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
+//							"Messaage is added back to the queue :: " + message);
+					queueMessage(message);
+					break;
+				case PortHandler.REMOTE_SERVER_ERROR_FAILURE:
+					Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+							"Node " + message.destination + " is removed from the routing table!");
+					server.getRoutingHandler().removeNode(message.destination);
+					addBackToQueue(message);
 					break;
 			}
 		}
@@ -85,14 +85,37 @@ public class ThriftServer implements PortHandler {
 	}
 
 	private void addBackToQueue(Message message) {
-		if (message.type == MessageType.JOIN && message.source.serverId.equals(this.server.serverId)) {
-			Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-					"Join failed 'cos " + message.destination + " is unreacheble!");
-		} else if (message.type != MessageType.DISCOVER_NEIGHBOURS) {
-			message.lifetime++;
-			server.getMessageHandler().queueMessage(message);
-			Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
-					"Message destinated to  " + message.destination + " is added back to the queue.");
+		switch (message.type) {
+			case JOIN:
+				if (message.source.serverId.equals(this.server.serverId)) {
+					Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+							"Join failed 'cos " + message.destination + " is unreacheble!");
+					break;
+				}
+			case TEST_RING:
+			case REQUEST:
+			case STORE_DATA:
+			case DELETE_DATA:
+			case GET_DATA:
+			case PUBLISH_SERVICE:
+			case GET_SERVICE:
+			case REMOVE_SERVICE:
+				message.lifetime++;
+				server.getMessageHandler().queueMessage(message);
+//				Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
+//						"Message destinated to  " + message.destination + " is added back to the queue.");
+				break;
+			case DISCOVER_NEIGHBORS:
+				break;
+			case ERROR:
+			case RESPONSE:
+			case RESPONSE_DATA:
+			case RESPONSE_SERVICE:
+			case ACKNOWLEDGE_REMOVE:
+			case FAILURE_SERVICE:
+			case ACKNOWLEDGE_DATA:
+			case ACKNOWLEDGE_SERVICE:
+				break;
 		}
 	}
 
@@ -192,7 +215,7 @@ public class ThriftServer implements PortHandler {
 		msg.setDestination(destination.deepCopy());
 		msg.setRetryCount(0);
 		boolean done = queueMessage(msg);
-		while (!done && message.type != MessageType.DISCOVER_NEIGHBOURS) {
+		while (!done && message.type != MessageType.DISCOVER_NEIGHBORS) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException ex) {
@@ -207,8 +230,8 @@ public class ThriftServer implements PortHandler {
 
 	private boolean queueMessage(Message message) {
 		if (this.messageQueue.queueMessage(message)) {
-			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 1,
-					"Queued in transport buffer: " + message);
+//			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 1,
+//					"Queued in transport buffer: " + message);
 			return true;
 		} else {
 			Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
@@ -219,33 +242,31 @@ public class ThriftServer implements PortHandler {
 	private ConcurrentHashMap<Long, Long> ttmap = new ConcurrentHashMap<Long, Long>();
 
 	private int send(Message message) {
-		try {
-			DHTServer.Client client = connectionPool.getConnection(
-					message.destination.serverId, message.destination.address);
-			if (client == null) {
+		Connection connection = connectionPool.getConnection(
+				message.destination.serverId, message.destination.address);
+		if (!connection.isOpened()) {
+			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
+				connectionPool.resetConnection(message.destination.serverId);
+				return PortHandler.REMOTE_SERVER_ERROR_FAILURE;
+			} else {
 				return PortHandler.REMOTE_SERVER_ERROR;
 			}
-			synchronized (client) {
+		}
+		try {
+			synchronized (connection) {
 				ttmap.put(Thread.currentThread().getId(), Thread.currentThread().getId());
 				if (ttmap.size() > CONFIGURATIONS.NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS) {
 					throw new RuntimeException("This is unbelievable :P");
 				}
 				TesterController.setMaxCount(ttmap.size());
-				int reply = client.transfer(message);
+				int reply = connection.getClient().transfer(message);
 				ttmap.remove(Thread.currentThread().getId());
 				return reply;
 			}
-		} catch (TTransportException ex) {
-			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
-					"Error " + ex.getClass().getName() + " - " + message.destination.address);
-			return PortHandler.REMOTE_SERVER_ERROR;
-		} catch (TException ex) {
-			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
-					"Error " + ex.getClass().getName() + " - " + message.destination.address);
-			return PortHandler.REMOTE_SERVER_ERROR;
 		} catch (Exception ex) {
-			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
-					"Error " + ex.getClass().getName() + " - " + message.destination.address);
+//			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
+//					"Error " + ex.getClass().getName() + " - " + message.destination.address);
+			connection.close();
 			return PortHandler.REMOTE_SERVER_ERROR;
 		}
 	}

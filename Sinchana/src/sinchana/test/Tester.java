@@ -48,10 +48,10 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		try {
 			this.testId = testId;
 			this.testerController = tc;
-//			InetAddress[] ip = InetAddress.getAllByName("localhost");
-//			String address = ip[0].getHostAddress();
-            String address = InetAddress.getLocalHost().getHostAddress();
-			String remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
+			String address, remoteNodeAddress;
+			address = "127.0.0.1";
+			remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
+			remoteNodeAddress = "127.0.0.1:8000";
 //            String remoteNodeAddress = "10.8.108.59:8000";
 			server = new Server(address + ":" + portId, remoteNodeAddress);
 			server.registerSinchanaInterface(new SinchanaInterface() {
@@ -104,12 +104,12 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			server.registerSinchanaTestInterface(this);
 			server.startServer();
 			testService = new TestService(this, tc);
-            testDataStore = new TestDataStore(this, tc);
+			testDataStore = new TestDataStore(this, tc);
 			if (CONFIGURATIONS.GUI_ON) {
 				this.gui = new ServerUI(this);
 			}
-		} catch (UnknownHostException ex) {
-			ex.printStackTrace();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
 		}
 	}
 

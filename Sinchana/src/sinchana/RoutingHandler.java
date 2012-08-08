@@ -4,7 +4,7 @@
  */
 package sinchana;
 
-import java.util.Map;
+import java.util.Set;
 import sinchana.thrift.Node;
 import sinchana.thrift.Message;
 
@@ -27,13 +27,13 @@ public interface RoutingHandler {
 	 * Returns the successor.
 	 * @return successor node.
 	 */
-	public abstract Node getSuccessor();
+	public abstract Node[] getSuccessors();
 
 	/**
 	 * Returns the predecessor.
 	 * @return predecessor node.
 	 */
-	public abstract Node getPredecessor();
+	public abstract Node[] getPredecessors();
 
 	/**
 	 * Returns the next hop for the destination according to the finger table.
@@ -47,9 +47,9 @@ public interface RoutingHandler {
 	 * table entries.
 	 * @return Set of neighbor nodes.
 	 */
-	public abstract Map<String, Node> getNeighbourSet();
+	public abstract Set<Node> getNeighbourSet();
 
-	public abstract Map<String, Node> getFailedNodeSet();
+	public abstract Set<Node> getFailedNodeSet();
 
 	/**
 	 * Triggers the routing table optimization functions.
@@ -72,11 +72,11 @@ public interface RoutingHandler {
 	 */
 	public abstract void removeNode(Node node);
 
-	public abstract void removeNode(Map<String, Node> nodes);
+	public abstract void removeNode(Set<Node> nodes);
 
 	/**
 	 * Updates the table, successor and predecessor with the new node.
 	 * @param node Node to be added to the routing table.
 	 */
-	public abstract void updateTable(Node node);
+	public abstract void updateTable(Node node, boolean ignorePrevFailures);
 }

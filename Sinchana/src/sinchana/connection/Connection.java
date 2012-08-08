@@ -11,6 +11,7 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.thrift.DHTServer;
+import sinchana.thrift.DHTServer.Client;
 
 /**
  *
@@ -22,36 +23,31 @@ public class Connection {
 	private long lastOpenTime = 0;
 	private int numOfOpenTries = 0;
 	private String url;
-	private boolean opened;
 	private DHTServer.Client client;
 	private TTransport transport;
 	private TProtocol protocol;
+	private boolean opened = false;
 
 	public Connection(String url) {
 		this.url = url;
 	}
 
-	public DHTServer.Client open() {
-		lastUsedTime = Calendar.getInstance().getTimeInMillis();
-		if (opened) {
-			return client;
-		}
-		lastOpenTime = lastUsedTime;
+	public void open() {
+		lastOpenTime = Calendar.getInstance().getTimeInMillis();
 		try {
 			transport = new TSocket(url.split(":")[0], Integer.parseInt(url.split(":")[1]));
 			transport.open();
 			protocol = new TBinaryProtocol(transport);
 			client = new DHTServer.Client(protocol);
-			opened = true;
 			numOfOpenTries = 0;
-			return client;
+			opened = true;
 		} catch (TTransportException ex) {
 			numOfOpenTries++;
-			return null;
+			opened = false;
 		}
 	}
 
-	public void reset() {
+	public void close() {
 		if (transport != null && transport.isOpen()) {
 			transport.close();
 		}
@@ -60,5 +56,22 @@ public class Connection {
 
 	public long getLastUsedTime() {
 		return lastUsedTime;
+	}
+
+	public long getLastOpenTime() {
+		return lastOpenTime;
+	}
+
+	public Client getClient() {
+		lastUsedTime = Calendar.getInstance().getTimeInMillis();
+		return client;
+	}
+
+	public int getNumOfOpenTries() {
+		return numOfOpenTries;
+	}
+
+	public boolean isOpened() {
+		return opened;
 	}
 }

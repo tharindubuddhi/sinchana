@@ -345,7 +345,7 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
   public boolean equals(DataObject that) {
     if (that == null)
       return false;
-    
+
     boolean this_present_sourceID = true && this.isSetSourceID();
     boolean that_present_sourceID = true && that.isSetSourceID();
     if (this_present_sourceID || that_present_sourceID) {
@@ -364,14 +364,14 @@ public class DataObject implements org.apache.thrift.TBase<DataObject, DataObjec
         return false;
     }
 
-//    boolean this_present_dataValue = true && this.isSetDataValue();
-//    boolean that_present_dataValue = true && that.isSetDataValue();
-//    if (this_present_dataValue || that_present_dataValue) {
-//      if (!(this_present_dataValue && that_present_dataValue))
-//        return false;
-//      if (!this.dataValue.equals(that.dataValue))
-//        return false; 
-//    }
+    boolean this_present_dataValue = true && this.isSetDataValue();
+    boolean that_present_dataValue = true && that.isSetDataValue();
+    if (this_present_dataValue || that_present_dataValue) {
+      if (!(this_present_dataValue && that_present_dataValue))
+        return false;
+      if (!this.dataValue.equals(that.dataValue))
+        return false;
+    }
 
     boolean this_present_dataKey = true && this.isSetDataKey();
     boolean that_present_dataKey = true && that.isSetDataKey();

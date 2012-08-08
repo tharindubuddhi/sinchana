@@ -2698,14 +2698,14 @@ public class SinchanaClient {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
                 {
-                  org.apache.thrift.protocol.TSet _set36 = iprot.readSetBegin();
-                  struct.success = new HashSet<ServiceObject>(2*_set36.size);
-                  for (int _i37 = 0; _i37 < _set36.size; ++_i37)
+                  org.apache.thrift.protocol.TSet _set32 = iprot.readSetBegin();
+                  struct.success = new HashSet<ServiceObject>(2*_set32.size);
+                  for (int _i33 = 0; _i33 < _set32.size; ++_i33)
                   {
-                    ServiceObject _elem38; // required
-                    _elem38 = new ServiceObject();
-                    _elem38.read(iprot);
-                    struct.success.add(_elem38);
+                    ServiceObject _elem34; // required
+                    _elem34 = new ServiceObject();
+                    _elem34.read(iprot);
+                    struct.success.add(_elem34);
                   }
                   iprot.readSetEnd();
                 }
@@ -2733,9 +2733,9 @@ public class SinchanaClient {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (ServiceObject _iter39 : struct.success)
+            for (ServiceObject _iter35 : struct.success)
             {
-              _iter39.write(oprot);
+              _iter35.write(oprot);
             }
             oprot.writeSetEnd();
           }
@@ -2766,9 +2766,9 @@ public class SinchanaClient {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (ServiceObject _iter40 : struct.success)
+            for (ServiceObject _iter36 : struct.success)
             {
-              _iter40.write(oprot);
+              _iter36.write(oprot);
             }
           }
         }
@@ -2780,14 +2780,14 @@ public class SinchanaClient {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TSet _set41 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new HashSet<ServiceObject>(2*_set41.size);
-            for (int _i42 = 0; _i42 < _set41.size; ++_i42)
+            org.apache.thrift.protocol.TSet _set37 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new HashSet<ServiceObject>(2*_set37.size);
+            for (int _i38 = 0; _i38 < _set37.size; ++_i38)
             {
-              ServiceObject _elem43; // required
-              _elem43 = new ServiceObject();
-              _elem43.read(iprot);
-              struct.success.add(_elem43);
+              ServiceObject _elem39; // required
+              _elem39 = new ServiceObject();
+              _elem39.read(iprot);
+              struct.success.add(_elem39);
             }
           }
           struct.setSuccessIsSet(true);
@@ -4866,14 +4866,14 @@ public class SinchanaClient {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
                 {
-                  org.apache.thrift.protocol.TSet _set44 = iprot.readSetBegin();
-                  struct.success = new HashSet<DataObject>(2*_set44.size);
-                  for (int _i45 = 0; _i45 < _set44.size; ++_i45)
+                  org.apache.thrift.protocol.TSet _set40 = iprot.readSetBegin();
+                  struct.success = new HashSet<DataObject>(2*_set40.size);
+                  for (int _i41 = 0; _i41 < _set40.size; ++_i41)
                   {
-                    DataObject _elem46; // required
-                    _elem46 = new DataObject();
-                    _elem46.read(iprot);
-                    struct.success.add(_elem46);
+                    DataObject _elem42; // required
+                    _elem42 = new DataObject();
+                    _elem42.read(iprot);
+                    struct.success.add(_elem42);
                   }
                   iprot.readSetEnd();
                 }
@@ -4901,9 +4901,9 @@ public class SinchanaClient {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (DataObject _iter47 : struct.success)
+            for (DataObject _iter43 : struct.success)
             {
-              _iter47.write(oprot);
+              _iter43.write(oprot);
             }
             oprot.writeSetEnd();
           }
@@ -4934,9 +4934,9 @@ public class SinchanaClient {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (DataObject _iter48 : struct.success)
+            for (DataObject _iter44 : struct.success)
             {
-              _iter48.write(oprot);
+              _iter44.write(oprot);
             }
           }
         }
@@ -4948,14 +4948,14 @@ public class SinchanaClient {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TSet _set49 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new HashSet<DataObject>(2*_set49.size);
-            for (int _i50 = 0; _i50 < _set49.size; ++_i50)
+            org.apache.thrift.protocol.TSet _set45 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new HashSet<DataObject>(2*_set45.size);
+            for (int _i46 = 0; _i46 < _set45.size; ++_i46)
             {
-              DataObject _elem51; // required
-              _elem51 = new DataObject();
-              _elem51.read(iprot);
-              struct.success.add(_elem51);
+              DataObject _elem47; // required
+              _elem47 = new DataObject();
+              _elem47.read(iprot);
+              struct.success.add(_elem47);
             }
           }
           struct.setSuccessIsSet(true);

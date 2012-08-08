@@ -42,9 +42,9 @@ public class TesterController {
 	 */
 	public static void main(String[] args) {
 //        Uncomment when you have a proxy network        
-//        Properties props = System.getProperties();
-//        props.put("http.proxyHost", "cache.mrt.ac.lk");
-//        props.put("http.proxyPort", "3128");
+        Properties props = System.getProperties();
+        props.put("http.proxyHost", "cache.mrt.ac.lk");
+        props.put("http.proxyPort", "3128");
 		if (CONFIGURATIONS.CLEAR_CACHE_SERVER) {
 			LocalCacheServer.clear();
 		}
