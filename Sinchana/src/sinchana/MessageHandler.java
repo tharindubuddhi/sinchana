@@ -78,6 +78,7 @@ public class MessageHandler {
 			messageQueue.start(message);
 //			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_MESSAGE_HANDLER, 0,
 //					"Message Queue is started");
+			this.server.setJoined(true);
 			if (this.server.getSinchanaTestInterface() != null) {
 				this.server.getSinchanaTestInterface().setStable(true);
 			}
