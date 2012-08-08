@@ -19,7 +19,8 @@ public class TestDataStore {
     private ServerUI gui = null;
     private TesterController testerController;
 
-    private static  int storeResponseCount=0,storeCount=0;
+    public static  int storeResponseCount=0,storeCount=0, removeCount=0, removeResponseCount=0;
+    public static long storeStartTime=0,retrieveStartTime=0,removeStartTime=0;
     public TestDataStore(Tester tester,TesterController tc) {
         
         
@@ -42,23 +43,25 @@ public class TestDataStore {
                 for (DataObject dataObject : dataObjectSet) {
                     System.out.print(dataObject.dataValue+" ");
                 }
-                System.out.println("");
+                System.out.println("completed in : "+(System.currentTimeMillis()-retrieveStartTime));
             }
 
             @Override
             public void remove(DataObject dataObject) {
-                throw new UnsupportedOperationException("Not supported yet.");
+                removeCount++;
+                System.out.println(dataObject.dataKey+" data key removed from the root, count : "+removeCount);
             }
 
             @Override
             public void isStored(Boolean success) {
                 storeResponseCount++;
-                System.out.println("Stored response count : "+storeResponseCount+" "+success);
+                System.out.println("Stored response count : "+storeResponseCount+" "+success+" completed in : "+(System.currentTimeMillis()-storeStartTime));
             }
 
             @Override
             public void isRemoved(Boolean success) {
-                throw new UnsupportedOperationException("Not supported yet.");
+                removeResponseCount++;
+                System.out.println("Data removed "+success+" response count : "+removeResponseCount+" completed in : "+(System.currentTimeMillis()-removeStartTime));
             }
         });
             

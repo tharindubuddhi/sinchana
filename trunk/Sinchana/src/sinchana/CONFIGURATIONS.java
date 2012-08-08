@@ -8,6 +8,7 @@ package sinchana;
  *
  * @author Hiru
  */
+
 public class CONFIGURATIONS {
 
 	/**Sinchana DHT Configurations**/
@@ -24,6 +25,6 @@ public class CONFIGURATIONS {
 	public static final boolean GUI_ON = false;
 	public static final boolean USE_REMOTE_CACHE_SERVER = false;
 	public static final boolean CLEAR_CACHE_SERVER = false;
-	public static final int ROUND_TIP_TIME = 50;
+	public static final int ROUND_TIP_TIME = 0;
 	public static final boolean DO_LOG = false;
 }
