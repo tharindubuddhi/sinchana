@@ -156,7 +156,7 @@ public class MessageHandler {
 
 	private void updateTableWithMessage(Message message) {
 		if (!message.source.serverId.equals(this.server.serverId)) {
-			this.server.getRoutingHandler().updateTable(message.source, message.type == MessageType.JOIN);
+			this.server.getRoutingHandler().updateTable(message.source, false);
 		}
 		if (!message.station.serverId.equals(this.server.serverId)
 				&& !message.station.serverId.equals(message.source.serverId)) {
@@ -220,6 +220,11 @@ public class MessageHandler {
 //		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 //				"Join message " + message);
 		if (!message.source.serverId.equals(this.server.serverId)) {
+			if (this.server.getRoutingHandler().getFailedNodeSet().contains(message.source)) {
+				Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 4,
+						"Node " + message.source + "has to wait.");
+				return;
+			}
 			BigInteger newServerIdOffset = getOffset(message.source.serverId);
 			BigInteger prevStationIdOffset = getOffset(message.station.serverId);
 			BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
