@@ -7,8 +7,8 @@ package sinchana;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import sinchana.connection.ThriftServer;
 import sinchana.chord.ChordTable;
 import sinchana.thrift.Message;
@@ -21,7 +21,7 @@ import sinchana.util.tools.CommonTools;
  * @author S.A.H.S.Subasinghe
  */
 public class Server extends Node {
-
+	
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final PortHandler portHandler = new ThriftServer(this);
 	private final RoutingHandler routingHandler = new ChordTable(this);
@@ -34,6 +34,7 @@ public class Server extends Node {
 	private String remoteNodeAddress = null;
 	private BigInteger serverIdAsBigInt;
 	private boolean joined = false;
+	private final Semaphore joinLock = new Semaphore(1);
 
 	/**
 	 * Start a new node with the given server ID and next hop.
@@ -51,11 +52,11 @@ public class Server extends Node {
 			throw new RuntimeException("Error getting local host ip.", ex);
 		}
 	}
-
+	
 	public Server(String localAddress) {
 		this.init(localAddress, null);
 	}
-
+	
 	public Server(int localPortId, String remoteNodeAddress) {
 		try {
 			InetAddress inetAddress = InetAddress.getLocalHost();
@@ -64,11 +65,11 @@ public class Server extends Node {
 			throw new RuntimeException("Error getting local host ip.", ex);
 		}
 	}
-
+	
 	public Server(String localAddress, String remoteNodeAddress) {
 		this.init(localAddress, remoteNodeAddress);
 	}
-
+	
 	private void init(String address, String remoteNodeAddress) {
 		this.address = address;
 		this.serverIdAsBigInt = CommonTools.generateId(this.address);
@@ -87,7 +88,7 @@ public class Server extends Node {
 		this.routingHandler.init();
 		this.portHandler.startServer();
 	}
-
+	
 	public void join() {
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
 			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
@@ -96,9 +97,9 @@ public class Server extends Node {
 				try {
 					System.out.println("Connecting to " + remoteNodeAddress);
 					this.portHandler.send(msg, remoteNode);
-					Thread.sleep(5000);
+					Thread.sleep(CONFIGURATIONS.JOIN_RETRY_TIME_OUT);
 				} catch (InterruptedException ex) {
-					ex.printStackTrace();
+					throw new RuntimeException(ex);
 				}
 			}
 		} else {
@@ -134,11 +135,11 @@ public class Server extends Node {
 	public void registerSinchanaTestInterface(SinchanaTestInterface sinchanaTestInterface) {
 		this.sinchanaTestInterface = sinchanaTestInterface;
 	}
-
+	
 	public void registerSinchanaServiceInterface(SinchanaServiceInterface sinchanaServiceInterface) {
 		this.sinchanaServiceInterface = sinchanaServiceInterface;
 	}
-
+	
 	public void registerSinchanaStoreInterface(SinchanaStoreInterface sinchanaStoreInterface) {
 		this.sinchanaStoreInterface = sinchanaStoreInterface;
 	}
@@ -166,11 +167,11 @@ public class Server extends Node {
 	public RoutingHandler getRoutingHandler() {
 		return routingHandler;
 	}
-
+	
 	public SinchanaDataStore getSinchanaDataStore() {
 		return sinchanaDataStore;
 	}
-
+	
 	public BigInteger getServerIdAsBigInt() {
 		return serverIdAsBigInt;
 	}
@@ -190,11 +191,11 @@ public class Server extends Node {
 	public SinchanaInterface getSinchanaInterface() {
 		return sinchanaInterface;
 	}
-
+	
 	public SinchanaServiceInterface getSinchanaServiceInterface() {
 		return sinchanaServiceInterface;
 	}
-
+	
 	public SinchanaStoreInterface getSinchanaStoreInterface() {
 		return sinchanaStoreInterface;
 	}
@@ -222,7 +223,7 @@ public class Server extends Node {
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
-
+	
 	public void publishService(String key, String service) {
 		Message msg = new Message(this, MessageType.PUBLISH_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
@@ -230,21 +231,21 @@ public class Server extends Node {
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
-
+	
 	public void removeService(String key) {
 		Message msg = new Message(this, MessageType.REMOVE_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
-
+	
 	public void getService(String key) {
 		Message msg = new Message(this, MessageType.GET_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
-
+	
 	public void storeData(String key, String data) {
 //                this.getSinchanaDataStore().addStoredObjects(null);
 		Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
@@ -252,9 +253,9 @@ public class Server extends Node {
 		msg.setDataValue(data);
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
-
+		
 	}
-
+	
 	public void storeData(String data) {
 		String key = CommonTools.generateId(data).toString();
 		Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
@@ -263,26 +264,27 @@ public class Server extends Node {
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
-
+	
 	public void deleteData(String key) {
 		Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
-
+	
 	public void getData(String key) {
 		Message msg = new Message(this, MessageType.GET_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
-
+	
 	public void trigger() {
 		this.routingHandler.optimize();
 	}
-
+	
 	public void setJoined(boolean joined) {
 		this.joined = joined;
+		joinLock.release();
 	}
 }

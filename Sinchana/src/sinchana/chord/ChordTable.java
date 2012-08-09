@@ -13,7 +13,6 @@ import sinchana.Server;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
-import sinchana.util.logging.Logger;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -272,8 +271,8 @@ public class ChordTable implements RoutingHandler {
 					failedNodes.remove(node.serverId);
 					System.out.println("Adding back " + node);
 				} else {
-					System.out.println("Not accepted till " + 
-							(failedNodes.get(node.serverId).time + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT - Calendar.getInstance().getTimeInMillis()) 
+					System.out.println("Not accepted till "
+							+ (failedNodes.get(node.serverId).time + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT - Calendar.getInstance().getTimeInMillis())
 							+ "ms -- " + node);
 					return;
 				}
@@ -390,11 +389,13 @@ public class ChordTable implements RoutingHandler {
 	 */
 	@Override
 	public void removeNode(Node nodeToRemove) {
-		synchronized (this) {
+		synchronized (failedNodes) {
 			NodeInfoContainer nic = new NodeInfoContainer();
 			nic.node = nodeToRemove.deepCopy();
 			nic.time = Calendar.getInstance().getTimeInMillis();
 			failedNodes.put(nodeToRemove.serverId, nic);
+		}
+		synchronized (fingerTable) {
 			//gets the known node set.
 			Set<Node> neighbourSet = getNeighbourSet();
 			if (neighbourSet.contains(nodeToRemove)) {
