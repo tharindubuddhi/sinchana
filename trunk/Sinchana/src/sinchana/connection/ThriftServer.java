@@ -4,7 +4,6 @@
  */
 package sinchana.connection;
 
-import java.util.concurrent.ConcurrentHashMap;
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
@@ -17,8 +16,6 @@ import org.apache.thrift.transport.TTransportException;
 import sinchana.CONFIGURATIONS;
 import sinchana.PortHandler;
 import sinchana.Server;
-import sinchana.test.TesterController;
-import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.messagequeue.MessageQueue;
 
@@ -39,7 +36,6 @@ public class ThriftServer implements PortHandler {
 				server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 			}
 			if (server.getRoutingHandler().getFailedNodeSet().contains(message.destination)) {
-//				System.out.println(server.serverId + ": " + message);
 				addBackToQueue(message);
 				return;
 			}
@@ -55,14 +51,10 @@ public class ThriftServer implements PortHandler {
 						Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 								"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
 					} else {
-//						Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
-//								"Messaage is added back to the queue :: " + message);
 						queueMessage(message);
 					}
 					break;
 				case PortHandler.REMOTE_SERVER_ERROR:
-//					Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
-//							"Messaage is added back to the queue :: " + message);
 					queueMessage(message);
 					break;
 				case PortHandler.REMOTE_SERVER_ERROR_FAILURE:
@@ -102,8 +94,6 @@ public class ThriftServer implements PortHandler {
 			case REMOVE_SERVICE:
 				message.lifetime++;
 				server.getMessageHandler().queueMessage(message);
-//				Logger.log(server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 3,
-//						"Message destinated to  " + message.destination + " is added back to the queue.");
 				break;
 			case DISCOVER_NEIGHBORS:
 				break;
@@ -141,9 +131,9 @@ public class ThriftServer implements PortHandler {
 							 */
 							@Override
 							public int transfer(Message message) throws TException {
-								if (CONFIGURATIONS.ROUND_TIP_TIME != 0) {
+								if (CONFIGURATIONS.ROUND_TRIP_TIME != 0) {
 									try {
-										Thread.sleep(CONFIGURATIONS.ROUND_TIP_TIME);
+										Thread.sleep(CONFIGURATIONS.ROUND_TRIP_TIME);
 									} catch (InterruptedException ex) {
 										throw new RuntimeException(ex);
 									}
@@ -214,15 +204,7 @@ public class ThriftServer implements PortHandler {
 		}
 		msg.setDestination(destination.deepCopy());
 		msg.setRetryCount(0);
-		boolean done = queueMessage(msg);
-		while (!done && message.type != MessageType.DISCOVER_NEIGHBORS) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException ex) {
-				throw new RuntimeException(ex);
-			}
-			done = queueMessage(msg);
-		}
+		queueMessage(msg);
 		if (this.server.getSinchanaTestInterface() != null) {
 			this.server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 		}
@@ -230,8 +212,6 @@ public class ThriftServer implements PortHandler {
 
 	private boolean queueMessage(Message message) {
 		if (this.messageQueue.queueMessage(message)) {
-//			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_THRIFT_SERVER, 1,
-//					"Queued in transport buffer: " + message);
 			return true;
 		} else {
 			Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
@@ -239,8 +219,6 @@ public class ThriftServer implements PortHandler {
 			return false;
 		}
 	}
-	private ConcurrentHashMap<Long, Long> ttmap = new ConcurrentHashMap<Long, Long>();
-
 	private int send(Message message) {
 		Connection connection = connectionPool.getConnection(
 				message.destination.serverId, message.destination.address);
@@ -254,14 +232,7 @@ public class ThriftServer implements PortHandler {
 		}
 		try {
 			synchronized (connection) {
-				ttmap.put(Thread.currentThread().getId(), Thread.currentThread().getId());
-				if (ttmap.size() > CONFIGURATIONS.NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS) {
-					throw new RuntimeException("This is unbelievable :P");
-				}
-				TesterController.setMaxCount(ttmap.size());
-				int reply = connection.getClient().transfer(message);
-				ttmap.remove(Thread.currentThread().getId());
-				return reply;
+				return connection.getClient().transfer(message);
 			}
 		} catch (Exception ex) {
 //			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
