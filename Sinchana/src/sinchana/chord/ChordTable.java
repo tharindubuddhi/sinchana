@@ -28,12 +28,12 @@ public class ChordTable implements RoutingHandler {
 	public static final int TABLE_SIZE = 160;
 	public static final int SUCCESSOR_LEVEL = 3;
 	private final FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
-	private Server server;
+	private final Server server;
 	private final Node[] successors = new Node[SUCCESSOR_LEVEL];
 	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
 	private String serverId;
 	private BigInteger serverIdAsBigInt;
-	private Timer timer = new Timer();
+	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 	private final Map<String, NodeInfoContainer> failedNodes = new HashMap<String, NodeInfoContainer>();
 

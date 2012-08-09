@@ -5,7 +5,6 @@
 package sinchana.tapastry;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.logging.Level;
 import sinchana.PortHandler;
@@ -15,7 +14,6 @@ import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
-import java.util.Map;
 import java.util.Set;
 import sinchana.CONFIGURATIONS;
 
@@ -27,12 +25,12 @@ public class TapestryTable implements RoutingHandler, Runnable {
 
 	public static final int TABLE_SIZE = 37;
 	private static final int SUCCESSOR_LEVEL = 3;
-	private Server server;
-	private Node[] successor = new Node[SUCCESSOR_LEVEL];
-	private Node[] predecessor = new Node[SUCCESSOR_LEVEL];
+	private final Server server;
+	private final Node[] successor = new Node[SUCCESSOR_LEVEL];
+	private final Node[] predecessor = new Node[SUCCESSOR_LEVEL];
 	private String serverId;
 	private BigInteger serverIdAsBigInt;
-	private Node[][] fingerTable = new Node[TABLE_SIZE][10];
+	private final Node[][] fingerTable = new Node[TABLE_SIZE][10];
 	private boolean neighboursImported = false;
 
 	/**

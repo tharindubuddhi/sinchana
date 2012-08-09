@@ -23,6 +23,11 @@ public class FaultHandler {
 	private static final int MAX_POOL_SIZE = 12;
 	private final ConcurrentHashMap<String, NodeInfoContainer> nodePool = new ConcurrentHashMap<String, NodeInfoContainer>();
 	private final ConcurrentHashMap<String, Connection> connectionPool = new ConcurrentHashMap<String, Connection>();
+	private final Server server;
+	
+	public FaultHandler(Server svr){
+		this.server = svr;
+	}
 
 	public class NodeInfoContainer {
 

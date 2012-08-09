@@ -14,15 +14,15 @@ import sinchana.thrift.Message;
  */
 public class MessageQueue {
 
-	private int MESSAGE_BUFFER_SIZE;
+	private final int MESSAGE_BUFFER_SIZE;
 	private int head = 0;
 	private int tail = 0;
-	private Message[] messageQueue;
+	private final Message[] messageQueue;
 	private final Semaphore messagesAvailable = new Semaphore(0);
-	private MessageEventHandler messageEventHandler;
-	private Thread[] threads = null;
+	private final MessageEventHandler messageEventHandler;
+	private final Thread[] threads;
 	private boolean started;
-	private int numberOfThreads;
+	private final int numberOfThreads;
 	private Message firstMessage = null;
 
 	/**
