@@ -19,7 +19,7 @@ import sinchana.util.messagequeue.MessageQueue;
  */
 public class MessageHandler {
 
-	private Server server;
+	private final Server server;
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
 	 * determined by MESSAGE_BUFFER_SIZE.

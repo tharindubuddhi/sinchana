@@ -8,7 +8,6 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import sinchana.connection.ThriftServer;
 import sinchana.chord.ChordTable;
 import sinchana.thrift.Message;
@@ -26,6 +25,7 @@ public class Server extends Node {
 	private final PortHandler portHandler = new ThriftServer(this);
 	private final RoutingHandler routingHandler = new ChordTable(this);
 	private final MessageHandler messageHandler = new MessageHandler(this);
+	private final FaultHandler faultHandler = new FaultHandler(this);
 	private SinchanaInterface sinchanaInterface = null;
 	private SinchanaTestInterface sinchanaTestInterface = null;
 	private SinchanaServiceInterface sinchanaServiceInterface = null;

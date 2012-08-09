@@ -25,7 +25,7 @@ import sinchana.util.messagequeue.MessageQueue;
  */
 public class ThriftServer implements PortHandler {
 
-	private Server server;
+	private final Server server;
 	private TServer tServer;
 	private ConnectionPool connectionPool;
 	private MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
