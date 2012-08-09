@@ -34,8 +34,7 @@ public class Server extends Node {
 	private String remoteNodeAddress = null;
 	private BigInteger serverIdAsBigInt;
 	private boolean joined = false;
-	private final Semaphore joinLock = new Semaphore(1);
-
+	
 	/**
 	 * Start a new node with the given server ID and next hop.
 	 * @param serverId		Server ID. Generated using a hash function. 
@@ -167,6 +166,12 @@ public class Server extends Node {
 	public RoutingHandler getRoutingHandler() {
 		return routingHandler;
 	}
+
+	public FaultHandler getFaultHandler() {
+		return faultHandler;
+	}
+	
+	
 	
 	public SinchanaDataStore getSinchanaDataStore() {
 		return sinchanaDataStore;
@@ -285,6 +290,5 @@ public class Server extends Node {
 	
 	public void setJoined(boolean joined) {
 		this.joined = joined;
-		joinLock.release();
 	}
 }
