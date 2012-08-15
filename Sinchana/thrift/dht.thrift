@@ -66,7 +66,8 @@ struct Message {
 }
 
 service DHTServer {
-    i32 transfer(1: Message message)
+    i32 transfer(1: Message message);
+    void ping();
 }
 
 service SinchanaClient {

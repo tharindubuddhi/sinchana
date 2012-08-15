@@ -6,6 +6,7 @@ package sinchana.connection;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import sinchana.CONFIGURATIONS;
@@ -18,7 +19,7 @@ import sinchana.util.logging.Logger;
  * @author Hiru
  */
 public class ConnectionPool {
-
+	
 	private final Map<String, Connection> pool = new HashMap<String, Connection>();
 	private Server server;
 
@@ -27,8 +28,8 @@ public class ConnectionPool {
 	 * initialized is passed as the argument
 	 * @param s		Server instance.
 	 */
-	public ConnectionPool(Server s) {
-		this.server = s;
+	public ConnectionPool(Server svr) {
+		this.server = svr;
 	}
 
 	/**
@@ -40,34 +41,59 @@ public class ConnectionPool {
 	 * @param portId		Port id of the destination.
 	 * @return				TTransport connection opened to the destination.
 	 */
-	public Connection getConnection(String serverId, String url) {
+	public Connection getConnection(Node node) {
 		synchronized (pool) {
-			if (pool.containsKey(serverId)) {
-				Connection c = pool.get(serverId);
-				if (!c.isOpened()) {
-					c.open();
-				}
-				return c;
+			if (pool.containsKey(node.serverId)) {
+				return pool.get(node.serverId);
 			} else {
-				Connection connection = new Connection(url);
-				connection.open();
-				if (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION <= pool.size()) {
-					int level = Logger.LEVEL_INFO;
-					if (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION + 1 <= pool.size()) {
-						level = Logger.LEVEL_WARNING;
-					}
-					Logger.log(this.server.serverId, level, Logger.CLASS_CONNECTION_POOL, 1,
-							"Maximum number of connections opened exceeded! ("
-							+ pool.size() + "/" + CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION + " are opened)");
-					getSpace();
+				Connection connection = new Connection(node);
+				int numberOfOpenedConnections = getNumberOfOpenedConnections();
+				if (CONFIGURATIONS.NODE_POOL_SIZE <= pool.size()) {
+					Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
+							"Maximum number of nodes available exceeded! ("
+							+ numberOfOpenedConnections + "/" + pool.size() + ")");
+					getSpaceForNodes();
 				}
-				pool.put(serverId, connection);
+				numberOfOpenedConnections = getNumberOfOpenedConnections();
+				while (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION <= numberOfOpenedConnections) {
+//					Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
+//							"Maximum number of connections opened exceeded! ("
+//							+ numberOfOpenedConnections + "/" + pool.size() + " are opened).");
+					getSpaceForConnections();
+					numberOfOpenedConnections = getNumberOfOpenedConnections();
+				}
+				pool.put(node.serverId, connection);
+				connection.getClient();
 				return connection;
 			}
 		}
 	}
-
-	private void getSpace() {
+	
+	public boolean isAlive(String nodeId) {
+		Connection connection = pool.get(nodeId);
+		return connection.isAlive();
+	}
+	
+	private int getNumberOfOpenedConnections() {
+		int count = 0;
+		Collection<Connection> values = pool.values();
+		for (Connection connection : values) {
+			if (connection.isOpened()) {
+				count++;
+			}
+		}
+		return count;
+	}
+	
+	public boolean hasReportFailed(Node node) {
+		boolean result = false;
+		synchronized (pool) {
+			result = pool.containsKey(node.serverId) && pool.get(node.serverId).isFailed();
+		}
+		return result;
+	}
+	
+	private void getSpaceForNodes() {
 		Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 		Set<String> keySet = pool.keySet();
 		boolean terminate;
@@ -81,8 +107,9 @@ public class ConnectionPool {
 					break;
 				}
 			}
-			if (terminate && pool.get(sid).getLastUsedTime() < oldestTime) {
-				oldestTime = pool.get(sid).getLastUsedTime();
+			long lut = pool.get(sid).getLastUsedTime();
+			if (terminate && lut < oldestTime) {
+				oldestTime = lut;
 				idToTerminate = sid;
 			}
 		}
@@ -91,14 +118,18 @@ public class ConnectionPool {
 			pool.remove(idToTerminate);
 		}
 	}
-
-	public void resetConnection(String id) {
-		synchronized (pool) {
-			if (pool.containsKey(id)) {
-				pool.get(id).close();
-				pool.remove(id);
+	
+	private void getSpaceForConnections() {
+		Connection connectionToTerminate = null;
+		long oldestTime = Long.MAX_VALUE;
+		Collection<Connection> values = pool.values();
+		for (Connection connection : values) {
+			if (connection.isOpened() && connection.getLastUsedTime() < oldestTime) {
+				oldestTime = connection.getLastUsedTime();
+				connectionToTerminate = connection;
 			}
 		}
+		connectionToTerminate.close();
 	}
 
 	/**
@@ -106,13 +137,36 @@ public class ConnectionPool {
 	 */
 	public void closeAllConnections() {
 		synchronized (pool) {
-//			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_CONNECTION_POOL, 3,
-//					"Clossing all the connections.");
 			Collection<Connection> values = pool.values();
 			for (Connection connection : values) {
 				connection.close();
 			}
 			pool.clear();
 		}
+	}
+	
+	public void updateFailedNodeInfo(Set<Node> failedNodeSet) {
+		for (Node node : failedNodeSet) {
+			Connection connection = getConnection(node);
+			connection.failedByInfo();
+		}
+	}
+	
+	public void updateFailedNodeInfo(Node node) {
+		Connection connection = getConnection(node);
+		connection.failedByInfo();
+	}
+	
+	public Set<Node> getFailedNodes() {
+		Set<Node> nodes = new HashSet<Node>();
+		synchronized (pool) {
+			Collection<Connection> values = pool.values();
+			for (Connection connection : values) {
+				if (connection.isFailed()) {
+					nodes.add(connection.getNode());
+				}
+			}
+		}
+		return nodes;
 	}
 }

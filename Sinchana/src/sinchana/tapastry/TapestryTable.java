@@ -211,17 +211,13 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	}
 
 	@Override
-	public void getOptimalSuccessor(Message message) {
-	}
-
-	@Override
-	public void updateTable(Node node, boolean ignorePrevFailures) {
+	public boolean updateTable(Node node, boolean add) {
 		if (node.serverId.equals(this.serverId)) {
-			return;
+			return false;
 		}
 		//calculates offsets for the ids.
 		BigInteger newNodeOffset = getOffset(node.serverId);
-		boolean tableChanged = false;
+		boolean updated = false;
 		synchronized (this) {
 			BigInteger successorOffset = getOffset(this.successor[0].serverId);
 			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 7,
@@ -241,9 +237,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 						"Node " + node + " is set as successor overriding " + this.successor[0]);
 				this.successor[0] = node.deepCopy();
-				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().setSuccessor(successor[0]);
-				}
+				updated = true;
 			}
 
 			/**
@@ -261,31 +255,20 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 						"Node " + node + " is set as predecessor overriding " + this.predecessor[0]);
 				this.predecessor[0] = node.deepCopy();
-				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().setPredecessor(predecessor[0]);
-				}
+				updated = true;
 			}
 
 			int raw = getRaw(this.serverId, node.serverId);
 			int column = getColumn(node.serverId, raw);
+			updated = fingerTable[raw][column] == null;
 			fingerTable[raw][column] = node.deepCopy();
-//						System.out.println(this.serverId + ": [" + raw + "," + column + "] = " + node.serverId);
+
 		}
 		/**
-		 * updates the testing interfaces if the table is altered.
-		 */
-		if (tableChanged && this.server.getSinchanaTestInterface() != null) {
-//						this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
-		}
-
-		/**tableChanged
 		 * if the neighbor set has not imported, imports it from the predecessor.
 		 * This will happens only once after the node successfully joined to the grid.
 		 */
-		if (!neighboursImported && !this.serverId.equals(this.predecessor[0].serverId)) {
-			importNeighbours(this.predecessor[0]);
-			neighboursImported = true;
-		}
+		return updated;
 	}
 
 	@Override
@@ -298,32 +281,6 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				java.util.logging.Logger.getLogger(TapestryTable.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			break;
-		}
-	}
-
-	/**
-	 * Remove the node from the routing table, temporary update the table and 
-	 * send messages to the nodes in the routing table to get the optimal neighbors.
-	 * 
-	 * @param nodeToRemove Node to remove from the finger table. 
-	 */
-	@Override
-	public void removeNode(Node nodeToRemove) {
-		//gets the known node set.
-		Set<Node> neighbourSet = getNeighbourSet();
-		//reset the predecessor, successor and finger table entries.
-		synchronized (this) {
-			initFingerTable();
-			for (Node node : neighbourSet) {
-				/**
-				 * updates predecessor, successor and finger table entries
-				 * back, with the known node set, if the node is not equal 
-				 * to the node which is to be remove.
-				 */
-				if (!node.serverId.equals(nodeToRemove.serverId)) {
-					updateTable(node, false);
-				}
-			}
 		}
 	}
 
@@ -352,15 +309,5 @@ public class TapestryTable implements RoutingHandler, Runnable {
 
 	private int getColumn(String id, int raw) {
 		return (new BigInteger(id, 16).mod(new BigInteger("10", 16).pow(raw + 1)).divide(new BigInteger("10", 16).pow(raw))).intValue();
-	}
-
-	@Override
-	public Set<Node> getFailedNodeSet() {
-		throw new UnsupportedOperationException("Not supported yet.");
-	}
-
-	@Override
-	public void removeNode(Set<Node> nodes) {
-		throw new UnsupportedOperationException("Not supported yet.");
 	}
 }
