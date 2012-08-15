@@ -22,9 +22,5 @@ public interface SinchanaStoreInterface {
 	public abstract void isStored(Boolean success);
 
 	public abstract void isRemoved(Boolean success);
-//                public abstract boolean store(String objectkey, String data);
-//
-//		public abstract void get(String sourceKey);
-//
-//		public abstract boolean remove(String objectkey, String sourcekey);
+
 }

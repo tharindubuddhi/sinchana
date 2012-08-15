@@ -368,7 +368,7 @@ public class TesterController {
 //                    int randomAmount = (int) (Math.random() * datakeyArray.length);
 //                    System.out.println("random amount "+randomAmount);
                     for (int i = 0; i < randomAmount; i++) {
-                        testServers.get(randomId).getServer().deleteData(datakeyArray[i]);                       
+                        testServers.get(randomId).getServer().deleteData(dataArray[i]);                       
                     }
                 }
 	/**

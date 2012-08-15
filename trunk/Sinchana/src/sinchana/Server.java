@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.Semaphore;
 import sinchana.connection.ThriftServer;
 import sinchana.chord.ChordTable;
+import sinchana.thrift.DataObject;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -30,7 +31,8 @@ public class Server extends Node {
 	private SinchanaTestInterface sinchanaTestInterface = null;
 	private SinchanaServiceInterface sinchanaServiceInterface = null;
 	private SinchanaStoreInterface sinchanaStoreInterface = null;
-	private SinchanaDataStore sinchanaDataStore = new SinchanaDataStore();
+	private SinchanaDataStore sinchanaDataStore = new SinchanaDataStore(this);
+    private SinchanaServiceStore sinchanaServiceStore = null;//new SinchanaDataStore(this);
 	private String remoteNodeAddress = null;
 	private BigInteger serverIdAsBigInt;
 	private boolean joined = false;
@@ -176,7 +178,12 @@ public class Server extends Node {
 	public SinchanaDataStore getSinchanaDataStore() {
 		return sinchanaDataStore;
 	}
+
+    public SinchanaServiceStore getSinchanaServiceStore() {
+        return sinchanaServiceStore;
+    }
 	
+    
 	public BigInteger getServerIdAsBigInt() {
 		return serverIdAsBigInt;
 	}
@@ -252,7 +259,7 @@ public class Server extends Node {
 	}
 	
 	public void storeData(String key, String data) {
-//                this.getSinchanaDataStore().addStoredObjects(null);
+        this.sinchanaDataStore.addStoreObjects(key, data);
 		Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
 		msg.setDataValue(data);
@@ -263,26 +270,31 @@ public class Server extends Node {
 	
 	public void storeData(String data) {
 		String key = CommonTools.generateId(data).toString();
-		Message msg = new Message(this, MessageType.STORE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-		msg.setTargetKey(key);
-		msg.setDataValue(data);
-		msg.setStation(this);
-		this.getMessageHandler().queueMessage(msg);
+        storeData(key, data);
 	}
-	
-	public void deleteData(String key) {
-		Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-		msg.setTargetKey(key);
-		msg.setStation(this);
-		this.getMessageHandler().queueMessage(msg);
+    
+    public void storeData(String data, SinchanaStoreInterface callBack) {
+        this.sinchanaStoreInterface = callBack;
+        String key = CommonTools.generateId(data).toString();
+        storeData(key, data);
+		
 	}
-	
 	public void getData(String key) {
 		Message msg = new Message(this, MessageType.GET_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		msg.setTargetKey(key);
 		msg.setStation(this);
 		this.getMessageHandler().queueMessage(msg);
 	}
+
+    public void deleteData(String data) {       
+        String key = CommonTools.generateId(data).toString();
+		Message msg = new Message(this, MessageType.DELETE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+        msg.setDataValue(data);
+		msg.setTargetKey(key);
+		msg.setStation(this);
+		this.getMessageHandler().queueMessage(msg);
+	}	
+	
 	
 	public void trigger() {
 		this.routingHandler.optimize();

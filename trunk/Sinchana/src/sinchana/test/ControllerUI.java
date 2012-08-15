@@ -424,7 +424,6 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
 			this.logLocation.getText(),
 			this.contatain.getText());
 
-
 }//GEN-LAST:event_printLogButtonActionPerformed
 
 private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_storeButtonActionPerformed
