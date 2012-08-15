@@ -22,11 +22,11 @@ public class PastryTable implements RoutingHandler{
     public static final int TABLE_SIZE = (int) (Math.log(Math.pow(2, IDSPACE))/Math.log(BASE));
 	private static final int SUCCESSOR_LEVEL = 3;
 	private final Server server;
-	private final Node[] successor = new Node[SUCCESSOR_LEVEL];
-	private final Node[] predecessor = new Node[SUCCESSOR_LEVEL];
+//	private final Node[] successor = new Node[SUCCESSOR_LEVEL];
+//	private final Node[] predecessor = new Node[SUCCESSOR_LEVEL];
 	private String serverId;
 	private BigInteger serverIdAsBigInt;
-	private final Node[][] fingerTable = new Node[TABLE_SIZE][10];
+	private final Node[][] fingerTable = new Node[TABLE_SIZE][BASE];
 	private boolean neighboursImported = false;
 
     public PastryTable(Server server) {
@@ -36,7 +36,8 @@ public class PastryTable implements RoutingHandler{
     
     @Override
     public void init() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.serverId = this.server.getServerId();
+        this.serverIdAsBigInt = new BigInteger(this.serverId,BASE);
     }
 
     @Override
