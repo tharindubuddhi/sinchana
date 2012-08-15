@@ -4,8 +4,10 @@
  */
 package sinchana.test;
 
+import java.util.Set;
 import sinchana.Server;
 import sinchana.SinchanaServiceInterface;
+import sinchana.thrift.DataObject;
 
 /**
  *
@@ -28,22 +30,31 @@ public class TestService {
 
 		server.registerSinchanaServiceInterface(new SinchanaServiceInterface() {
 
-			@Override
-			public boolean publish(String key, String service) {
-				System.out.println(service + " published with the key " + key);
-				return true;
-			}
+            @Override
+            public void publish(DataObject dataObject) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
 
-			@Override
-			public String get(String key) {
-				throw new UnsupportedOperationException("Not supported yet.");
-			}
+            @Override
+            public void get(Set<DataObject> dataObjectSet) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
 
-			@Override
-			public boolean remove(String key) {
-				throw new UnsupportedOperationException("Not supported yet.");
-			}
-		});
+            @Override
+            public void remove(DataObject dataObject) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void isPublished(Boolean success) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void isRemoved(Boolean success) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        });
 
 	}
 }

@@ -55,7 +55,10 @@ public class MessageHandler {
 		this.server = server;
 	}
 
-	public void startAsRootNode() {
+    /**
+     * 
+     */
+    public void startAsRootNode() {
 		messageQueue.start();
 	}
 
@@ -339,6 +342,9 @@ public class MessageHandler {
 		return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
 	}
 
+    /**	 
+	 * Method which executes when the message is delivered to the relevant recipient node
+	 */
 	private void deliverMessage(Message message) {
 		Message returnMessage = null;
 		boolean success = false;
@@ -393,28 +399,32 @@ public class MessageHandler {
 				}
 				break;
 
-
 			case PUBLISH_SERVICE:
 				if (this.server.getSinchanaServiceInterface() != null) {
-					success = this.server.getSinchanaServiceInterface().publish(message.targetKey, message.message);
-				}
+                    DataObject dataObject = processPublishService(message);
+					this.server.getSinchanaServiceInterface().publish(dataObject);
+                }
 				break;
 			case REMOVE_SERVICE:
 				if (this.server.getSinchanaServiceInterface() != null) {
-					success = this.server.getSinchanaServiceInterface().remove(message.targetKey);
+					DataObject dataObject = processRemoveService(message);
+					this.server.getSinchanaServiceInterface().remove(dataObject);
 				}
 				break;
 			case GET_SERVICE:
 				if (this.server.getSinchanaServiceInterface() != null) {
-					returnMessage = new Message();
-					returnMessage.setLifetime(1);
-					message.setType(MessageType.RESPONSE_SERVICE);
-					message.setMessage(this.server.getSinchanaServiceInterface().get(message.targetKey));
+					Set<DataObject> services = processRetrieveService(message);
 				}
 				break;
 			case ACKNOWLEDGE_SERVICE_PUBLISH:
+                if(this.server.getSinchanaServiceInterface() != null){
+                this.server.getSinchanaStoreInterface().isStored(message.success);
+                }
 				break;
 			case ACKNOWLEDGE_SERVICE_REMOVE:
+                if(this.server.getSinchanaServiceInterface() != null){
+                this.server.getSinchanaServiceInterface().isRemoved(success);
+                }
 				break;
 			case RESPONSE_SERVICE:
 				break;
@@ -426,6 +436,9 @@ public class MessageHandler {
 		}
 	}
 
+    /**
+     * Method which stores the dataObject in the Sinchana Data Store
+     */
 	private DataObject processStore(Message msg) {
 
 		DataObject dataObject = new DataObject();
@@ -443,11 +456,13 @@ public class MessageHandler {
 
 	}
 
+    /**
+     * Method which returns the Data Set of Data Objects 
+     */
 	private Set<DataObject> processGetStore(Message msg) {
 
 		String objectKey = msg.targetKey;
-		String sourceKey = msg.source.serverId;
-		Set<DataObject> sourceServers = this.server.getSinchanaDataStore().getrootObjects().get(objectKey);
+		Set<DataObject> sourceServers = this.server.getSinchanaDataStore().get(objectKey);
 		if (sourceServers == null) {
             msg.setSuccess(false);
 			msg.setMessage("does not exist");
@@ -470,9 +485,63 @@ public class MessageHandler {
 		dataObject.setSourceID(msg.source.serverId);
 		dataObject.setSourceAddress(msg.source.address);
 		dataObject.setDataKey(msg.targetKey);
-
+        dataObject.setDataValue(msg.dataValue);
 		boolean success = this.server.getSinchanaDataStore().removeData(dataObject);
 		msg.setType(MessageType.ACKNOWLEDGE_DATA_REMOVE);	
+        msg.setSuccess(success);	
+		msg.setLifetime(1);
+		this.server.getPortHandler().send(msg, msg.source);
+		return dataObject;
+
+
+	}
+    
+    private DataObject processPublishService(Message msg) {
+
+		DataObject dataObject = new DataObject();
+		dataObject.setSourceID(msg.source.serverId);
+		dataObject.setSourceAddress(msg.source.address);
+		dataObject.setDataValue(msg.dataValue);
+		dataObject.setDataKey(msg.targetKey);
+
+		boolean success = this.server.getSinchanaServiceStore().publishService(dataObject);		
+        msg.setSuccess(success);		
+		msg.setType(MessageType.ACKNOWLEDGE_SERVICE_PUBLISH);
+		msg.setStation(this.server);
+		this.server.getPortHandler().send(msg, msg.source);
+		return dataObject;
+
+	}
+
+	private Set<DataObject> processRetrieveService(Message msg) {
+
+		String objectKey = msg.targetKey;
+		Set<DataObject> sourceServers = this.server.getSinchanaServiceStore().get(objectKey);
+		if (sourceServers == null) {
+            msg.setSuccess(false);
+			msg.setMessage("does not exist");
+			msg.setLifetime(1);			
+		} else {		
+            msg.setSuccess(true);
+			msg.setMessage("exist");
+			msg.setDataSet(sourceServers);
+			msg.setLifetime(1);			
+		}
+        msg.setType(MessageType.RESPONSE_SERVICE);
+        this.server.getPortHandler().send(msg, msg.source);
+		return sourceServers;
+
+	}
+
+	private DataObject processRemoveService(Message msg) {
+
+		DataObject dataObject = new DataObject();
+		dataObject.setSourceID(msg.source.serverId);
+		dataObject.setSourceAddress(msg.source.address);
+		dataObject.setDataKey(msg.targetKey);
+        dataObject.setDataValue(msg.dataValue);
+		boolean success = this.server.getSinchanaServiceStore().removeService(dataObject);
+		msg.setType(MessageType.ACKNOWLEDGE_SERVICE_REMOVE);	
         msg.setSuccess(success);	
 		msg.setLifetime(1);
 		this.server.getPortHandler().send(msg, msg.source);

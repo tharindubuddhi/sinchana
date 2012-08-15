@@ -2,8 +2,11 @@ package sinchana.test;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Set;
 import sinchana.Server;
 import sinchana.SinchanaInterface;
+import sinchana.SinchanaStoreInterface;
+import sinchana.thrift.DataObject;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 
@@ -11,8 +14,9 @@ public class TestClass {
 
 	public static void main(String[] args) throws InterruptedException, UnknownHostException {
 
-		InetAddress[] ip = InetAddress.getAllByName("localhost");
-		String localAddress = ip[0].getHostAddress();
+//		InetAddress[] ip = InetAddress.getAllByName("localhost");
+//		String localAddress = ip[0].getHostAddress();
+        String localAddress = InetAddress.getLocalHost().getHostAddress();
 
 		final Server sinchanaServer = new Server(localAddress + ":" + 2000);
 
@@ -68,5 +72,33 @@ public class TestClass {
 		sinchanaServer2.join();
 		sinchanaServer2.send(sinchanaServer.getServerId(), "Hello");
 
+        sinchanaServer.storeData("data", new SinchanaStoreInterface() {
+
+            @Override
+            public void store(DataObject dataObject) {
+                System.out.println("horry data stored in root.. "+dataObject.dataValue);
+            }
+
+            @Override
+            public void get(Set<DataObject> dataObjectSet) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void remove(DataObject dataObject) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void isStored(Boolean success) {
+                System.out.println("horray data stored response came back...");
+            }
+
+            @Override
+            public void isRemoved(Boolean success) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        });
+        
 	}
 }
