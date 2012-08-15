@@ -5,15 +5,12 @@
 package sinchana.chord;
 
 import java.math.BigInteger;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import sinchana.RoutingHandler;
 import sinchana.Server;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
-import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -25,6 +22,7 @@ import sinchana.CONFIGURATIONS;
  */
 public class ChordTable implements RoutingHandler {
 
+	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	public static final int TABLE_SIZE = 160;
 	public static final int SUCCESSOR_LEVEL = 3;
 	private final FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
@@ -35,7 +33,6 @@ public class ChordTable implements RoutingHandler {
 	private BigInteger serverIdAsBigInt;
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
-	private final Map<String, NodeInfoContainer> failedNodes = new HashMap<String, NodeInfoContainer>();
 
 	/**
 	 * Class constructor with the server instance where the routing table is initialize.
@@ -109,28 +106,19 @@ public class ChordTable implements RoutingHandler {
 	 */
 	@Override
 	public void optimize() {
+		Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, 2);
+		Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
+		msg.setFailedNodeSet(failedNodes);
 		synchronized (predecessors) {
 			if (!this.serverId.equals(this.predecessors[0].serverId)) {
-				this.importNeighbours(this.predecessors[0]);
+				this.server.getPortHandler().send(msg, this.predecessors[0]);
 			}
 		}
 		synchronized (successors) {
 			if (!this.serverId.equals(this.successors[0].serverId)) {
-				this.importNeighbours(this.successors[0]);
+				this.server.getPortHandler().send(msg, this.successors[0]);
 			}
 		}
-	}
-
-	/**
-	 * Imports the set of neighbors from the given node.
-	 * @param neighbour		Node to import neighbors.
-	 */
-	private void importNeighbours(Node neighbour) {
-//		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 3,
-//				"Importing neighbour set from " + neighbour.serverId);
-		Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, 256);
-		msg.setFailedNodeSet(getFailedNodeSet());
-		this.server.getPortHandler().send(msg, neighbour);
 		timeOutCount = 0;
 	}
 
@@ -180,110 +168,61 @@ public class ChordTable implements RoutingHandler {
 	public Set<Node> getNeighbourSet() {
 		//initializes an empty node set.
 		Set<Node> neighbourSet = new HashSet<Node>();
-		for (FingerTableEntry fingerTableEntry : fingerTable) {
-			/**
-			 * add each successors in the finger table to the set if it is
-			 * not this server it self. This is because the requester knows 
-			 * about this server, so sending it again is a waste.
-			 */
-			if (fingerTableEntry.getSuccessor() != null
-					&& !fingerTableEntry.getSuccessor().serverId.equals(this.serverId)) {
-				neighbourSet.add(fingerTableEntry.getSuccessor());
+		synchronized (fingerTable) {
+			for (FingerTableEntry fingerTableEntry : fingerTable) {
+				/**
+				 * add each successors in the finger table to the set if it is
+				 * not this server it self. This is because the requester knows 
+				 * about this server, so sending it again is a waste.
+				 */
+				if (fingerTableEntry.getSuccessor() != null
+						&& !fingerTableEntry.getSuccessor().serverId.equals(this.serverId)) {
+					neighbourSet.add(fingerTableEntry.getSuccessor());
+				}
 			}
 		}
 		//adds the predecessors & the successors.
-		for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-			if (!this.predecessors[i].serverId.equals(this.serverId)) {
-				neighbourSet.add(this.predecessors[i]);
+		synchronized (predecessors) {
+			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+				if (!this.predecessors[i].serverId.equals(this.serverId)) {
+					neighbourSet.add(this.predecessors[i]);
+				}
 			}
-			if (!this.successors[i].serverId.equals(this.serverId)) {
-				neighbourSet.add(this.successors[i]);
+		}
+		synchronized (successors) {
+			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+				if (!this.successors[i].serverId.equals(this.serverId)) {
+					neighbourSet.add(this.successors[i]);
+				}
 			}
 		}
 		return neighbourSet;
 	}
 
 	@Override
-	public Set<Node> getFailedNodeSet() {
-		Set<Node> nodes = new HashSet<Node>();
-		synchronized (failedNodes) {
-			Set<String> keySet = failedNodes.keySet();
-			for (String nid : keySet) {
-				nodes.add(failedNodes.get(nid).node);
-			}
-		}
-		return nodes;
-	}
-
-	@Override
-	public void getOptimalSuccessor(Message message) {
-		//calculates offset.
-		BigInteger idOffset = getOffset(message.getStartOfRange());
-		BigInteger neighBourOffset, mostAdvance = new BigInteger("0", 16);
-		//initializes to this server.
-		Node optimalSuccessor = this.server;
-		//get the neighbor set (the knows node set of this server)
-		Set<Node> neighbourSet = getNeighbourSet();
-		//considering each node
-		for (Node node : neighbourSet) {
-			neighBourOffset = getOffset(node.serverId);
-			/**
-			 * checks if the node successes the id (idOffset <= neighBourOffset)
-			 * and is it much suitable than the existing one (mostAdvance < neighBourOffset)
-			 */
-			if (idOffset.compareTo(neighBourOffset) != 1
-					&& mostAdvance.compareTo(neighBourOffset) == -1) {
-				//if so, sets it as the most suitable one.
-				mostAdvance = neighBourOffset;
-				optimalSuccessor = node;
-			}
-		}
-
-
-		if (optimalSuccessor.serverId.equals(this.server.serverId)) {
-			if (!message.station.serverId.equals(message.source.serverId)) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 6,
-//						"Valid response for " + message.targetKey
-//						+ " in " + message.startOfRange + "-" + message.endOfRange
-//						+ " is found as " + optimalSuccessor.serverId
-//						+ " where source is " + message.source.serverId
-//						+ " & prevstation is " + message.station.serverId);
-				message.setSuccessor(this.server.deepCopy());
-				this.server.getPortHandler().send(message, message.source);
-			}
+	public boolean updateTable(Node node, boolean add) {
+		boolean updated;
+		if (add) {
+			updated = addNode(node);
 		} else {
-			this.server.getPortHandler().send(message, optimalSuccessor);
+			updated = removeNode(node);
 		}
+		if (updated) {
+			timeOutCount = 0;
+		}
+		return updated;
 	}
 
-	@Override
-	public void updateTable(Node node, boolean ignorePrevFailures) {
+	private boolean addNode(Node node) {
 		if (node.serverId.equals(this.serverId)) {
-			return;
+			return false;
 		}
-		boolean tableChanged = false;
 		boolean updated = false;
-		ignorePrevFailures = false;
-		synchronized (failedNodes) {
-			if (failedNodes.containsKey(node.serverId)) {
-				if (ignorePrevFailures || (failedNodes.get(node.serverId).time + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT)
-						< Calendar.getInstance().getTimeInMillis()) {
-					failedNodes.remove(node.serverId);
-					System.out.println("Adding back " + node);
-				} else {
-					System.out.println("Not accepted till "
-							+ (failedNodes.get(node.serverId).time + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT - Calendar.getInstance().getTimeInMillis())
-							+ "ms -- " + node);
-					return;
-				}
-			}
-		}
-
 		//calculates offsets for the ids.
 		BigInteger newNodeOffset = getOffset(node.serverId);
 
 		synchronized (successors) {
-			BigInteger successorWRT = new BigInteger("0");
+			BigInteger successorWRT = ZERO;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
 				/**
 				 * Checks whether the new node should be set as the successors or not. 
@@ -296,14 +235,11 @@ public class ChordTable implements RoutingHandler {
 				BigInteger successorOffset = getOffset(this.successors[i].serverId);
 				if (successorWRT.compareTo(newNodeOffset) == -1
 						&& (newNodeOffset.compareTo(successorOffset) == -1
-						|| successorOffset.equals(new BigInteger("0", 16)))) {
+						|| successorOffset.equals(ZERO))) {
 //					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 //							"Node " + node + " is set as successor overriding " + this.successors[i]);
 					this.successors[i] = node.deepCopy();
 					updated = true;
-					if (this.server.getSinchanaTestInterface() != null) {
-//						this.server.getSinchanaTestInterface().setSuccessor(successors);
-					}
 				}
 				if (!successors[i].serverId.equals(this.serverId)) {
 					successorWRT = getOffset(successors[i].serverId);
@@ -324,14 +260,11 @@ public class ChordTable implements RoutingHandler {
 				BigInteger predecessorOffset = getOffset(this.predecessors[i].serverId);
 				if (newNodeOffset.compareTo(predecessorWRT) == -1
 						&& (predecessorOffset.compareTo(newNodeOffset) == -1
-						|| predecessorOffset.equals(new BigInteger("0", 16)))) {
+						|| predecessorOffset.equals(ZERO))) {
 //					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 //							"Node " + node + " is set as predecessor overriding " + this.predecessors[i]);
 					this.predecessors[i] = node.deepCopy();
 					updated = true;
-					if (this.server.getSinchanaTestInterface() != null) {
-//						this.server.getSinchanaTestInterface().setPredecessor(predecessors);
-					}
 				}
 				if (!predecessors[i].serverId.equals(this.serverId)) {
 					predecessorWRT = getOffset(predecessors[i].serverId);
@@ -354,31 +287,17 @@ public class ChordTable implements RoutingHandler {
 				 */
 				if (startOffset.compareTo(newNodeOffset) != 1
 						&& (newNodeOffset.compareTo(successorOffset) == -1
-						|| successorOffset.equals(new BigInteger("0", 16)))) {
+						|| successorOffset.equals(ZERO))) {
 //					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 0,
 //							"Setting " + node.serverId + " as successor of "
 //							+ fingerTable[i].getStart() + "-" + fingerTable[i].getEnd()
 //							+ " overriding " + fingerTable[i].getSuccessor().serverId);
 					fingerTable[i].setSuccessor(node.deepCopy());
 					updated = true;
-					tableChanged = true;
 				}
 			}
 		}
-
-
-		/**
-		 * updates the testing interfaces if the table is altered.
-		 */
-		if (tableChanged
-				&& this.server.getSinchanaTestInterface()
-				!= null) {
-			this.server.getSinchanaTestInterface().setRoutingTable(fingerTable);
-		}
-
-		if (updated) {
-			importNeighbours(node);
-		}
+		return updated;
 	}
 
 	/**
@@ -387,57 +306,19 @@ public class ChordTable implements RoutingHandler {
 	 * 
 	 * @param nodeToRemove Node to remove from the finger table. 
 	 */
-	@Override
-	public void removeNode(Node nodeToRemove) {
-		synchronized (failedNodes) {
-			NodeInfoContainer nic = new NodeInfoContainer();
-			nic.node = nodeToRemove.deepCopy();
-			nic.time = Calendar.getInstance().getTimeInMillis();
-			failedNodes.put(nodeToRemove.serverId, nic);
-		}
-		synchronized (fingerTable) {
-			//gets the known node set.
-			Set<Node> neighbourSet = getNeighbourSet();
-			if (neighbourSet.contains(nodeToRemove)) {
-				neighbourSet.remove(nodeToRemove);
-				//reset the predecessors, successors and finger table entries.
+	private boolean removeNode(Node nodeToRemove) {
+		Set<Node> neighbourSet = getNeighbourSet();
+		if (neighbourSet.contains(nodeToRemove)) {
+			neighbourSet.remove(nodeToRemove);
+			//reset the predecessors, successors and finger table entries.
 
-				initFingerTable();
-				for (Node node : neighbourSet) {
-					updateTable(node, false);
-				}
+			initFingerTable();
+			for (Node node : neighbourSet) {
+				addNode(node);
 			}
-		}
-	}
-
-	@Override
-	public void removeNode(Set<Node> nodesToRemove) {
-		synchronized (this) {
-			long time = Calendar.getInstance().getTimeInMillis();
-			for (Node node : nodesToRemove) {
-				if (!failedNodes.containsKey(node.serverId)) {
-					NodeInfoContainer nic = new NodeInfoContainer();
-					nic.node = node.deepCopy();
-					nic.time = time;
-					failedNodes.put(node.serverId, nic);
-				}
-			}
-			boolean needToUpdate = false;
-			//gets the known node set.
-			Set<Node> neighbourSet = getNeighbourSet();
-			for (Node node : nodesToRemove) {
-				if (neighbourSet.contains(node)) {
-					neighbourSet.remove(node);
-					needToUpdate = true;
-				}
-			}
-			if (needToUpdate) {
-				//reset the predecessors, successors and finger table entries.
-				initFingerTable();
-				for (Node node : neighbourSet) {
-					updateTable(node, false);
-				}
-			}
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -448,16 +329,10 @@ public class ChordTable implements RoutingHandler {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(String id) {
-		return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
+		return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(serverIdAsBigInt).mod(Server.GRID_SIZE);
 	}
 
 	private BigInteger getOffset(BigInteger id) {
-		return Server.GRID_SIZE.add(id).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
-	}
-
-	private class NodeInfoContainer {
-
-		Node node;
-		long time;
+		return Server.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(Server.GRID_SIZE);
 	}
 }

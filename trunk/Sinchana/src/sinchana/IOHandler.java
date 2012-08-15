@@ -2,7 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package sinchana.connection;
+package sinchana;
+
+import sinchana.connection.*;
 
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
@@ -13,9 +15,6 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
-import sinchana.CONFIGURATIONS;
-import sinchana.PortHandler;
-import sinchana.Server;
 import sinchana.thrift.Node;
 import sinchana.util.messagequeue.MessageQueue;
 
@@ -23,11 +22,10 @@ import sinchana.util.messagequeue.MessageQueue;
  *
  * @author Hiru
  */
-public class ThriftServer implements PortHandler {
+public class IOHandler implements PortHandler {
 
 	private final Server server;
 	private TServer tServer;
-	private ConnectionPool connectionPool;
 	private MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
 		@Override
@@ -35,7 +33,7 @@ public class ThriftServer implements PortHandler {
 			if (server.getSinchanaTestInterface() != null) {
 				server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 			}
-			if (server.getRoutingHandler().getFailedNodeSet().contains(message.destination)) {
+			if (server.getConnectionPool().hasReportFailed(message.destination)) {
 				addBackToQueue(message);
 				return;
 			}
@@ -60,7 +58,7 @@ public class ThriftServer implements PortHandler {
 				case PortHandler.REMOTE_SERVER_ERROR_FAILURE:
 					Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 							"Node " + message.destination + " is removed from the routing table!");
-					server.getRoutingHandler().removeNode(message.destination);
+					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
 					addBackToQueue(message);
 					break;
 			}
@@ -71,9 +69,8 @@ public class ThriftServer implements PortHandler {
 	 * 
 	 * @param svr
 	 */
-	public ThriftServer(Server svr) {
+	public IOHandler(Server svr) {
 		this.server = svr;
-		this.connectionPool = new ConnectionPool(svr);
 	}
 
 	private void addBackToQueue(Message message) {
@@ -143,6 +140,11 @@ public class ThriftServer implements PortHandler {
 								}
 								return PortHandler.ACCEPT_ERROR;
 							}
+
+							@Override
+							public void ping() throws TException {
+								System.out.println(server.serverId + ": pinged :)");
+							}
 						});
 						int localPortId = Integer.parseInt(server.getAddress().split(":")[1]);
 						TServerTransport serverTransport = new TServerSocket(localPortId);
@@ -182,7 +184,7 @@ public class ThriftServer implements PortHandler {
 		if (tServer != null && tServer.isServing()) {
 			tServer.stop();
 		}
-		this.connectionPool.closeAllConnections();
+		this.server.getConnectionPool().closeAllConnections();
 		if (this.server.getSinchanaTestInterface() != null) {
 			this.server.getSinchanaTestInterface().setServerIsRunning(false);
 		}
@@ -219,24 +221,22 @@ public class ThriftServer implements PortHandler {
 			return false;
 		}
 	}
+
 	private int send(Message message) {
-		Connection connection = connectionPool.getConnection(
-				message.destination.serverId, message.destination.address);
+		Connection connection = this.server.getConnectionPool().getConnection(message.destination);
+		connection.open();
 		if (!connection.isOpened()) {
 			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-				connectionPool.resetConnection(message.destination.serverId);
+				connection.failed();
 				return PortHandler.REMOTE_SERVER_ERROR_FAILURE;
-			} else {
-				return PortHandler.REMOTE_SERVER_ERROR;
 			}
+			return PortHandler.REMOTE_SERVER_ERROR;
 		}
 		try {
 			synchronized (connection) {
 				return connection.getClient().transfer(message);
 			}
 		} catch (Exception ex) {
-//			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 5,
-//					"Error " + ex.getClass().getName() + " - " + message.destination.address);
 			connection.close();
 			return PortHandler.REMOTE_SERVER_ERROR;
 		}

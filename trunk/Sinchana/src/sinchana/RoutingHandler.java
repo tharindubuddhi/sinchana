@@ -49,8 +49,6 @@ public interface RoutingHandler {
 	 */
 	public abstract Set<Node> getNeighbourSet();
 
-	public abstract Set<Node> getFailedNodeSet();
-
 	/**
 	 * Triggers the routing table optimization functions.
 	 */
@@ -62,7 +60,7 @@ public interface RoutingHandler {
 	 * @param message  Request message object.
 	 * @return Node which immediately follows start point.
 	 */
-	public abstract void getOptimalSuccessor(Message message);
+//	public abstract void getOptimalSuccessor(Message message);
 
 	/**
 	 * Removes the node from the predecessor, successor and routing table entries. 
@@ -70,13 +68,10 @@ public interface RoutingHandler {
 	 * the neighbor set.
 	 * @param node Node to remove from the routing table.
 	 */
-	public abstract void removeNode(Node node);
-
-	public abstract void removeNode(Set<Node> nodes);
 
 	/**
 	 * Updates the table, successor and predecessor with the new node.
 	 * @param node Node to be added to the routing table.
 	 */
-	public abstract void updateTable(Node node, boolean ignorePrevFailures);
+	public abstract boolean updateTable(Node node, boolean add);
 }

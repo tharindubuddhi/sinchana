@@ -7,10 +7,8 @@ package sinchana;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.Semaphore;
-import sinchana.connection.ThriftServer;
 import sinchana.chord.ChordTable;
-import sinchana.thrift.DataObject;
+import sinchana.connection.ConnectionPool;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -23,10 +21,10 @@ import sinchana.util.tools.CommonTools;
 public class Server extends Node {
 	
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
-	private final PortHandler portHandler = new ThriftServer(this);
+	private final PortHandler portHandler = new IOHandler(this);
 	private final RoutingHandler routingHandler = new ChordTable(this);
 	private final MessageHandler messageHandler = new MessageHandler(this);
-	private final FaultHandler faultHandler = new FaultHandler(this);
+	private final ConnectionPool connectionPool = new ConnectionPool(this);
 	private SinchanaInterface sinchanaInterface = null;
 	private SinchanaTestInterface sinchanaTestInterface = null;
 	private SinchanaServiceInterface sinchanaServiceInterface = null;
@@ -36,7 +34,7 @@ public class Server extends Node {
 	private String remoteNodeAddress = null;
 	private BigInteger serverIdAsBigInt;
 	private boolean joined = false;
-	
+
 	/**
 	 * Start a new node with the given server ID and next hop.
 	 * @param serverId		Server ID. Generated using a hash function. 
@@ -93,7 +91,7 @@ public class Server extends Node {
 	public void join() {
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
 			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-			Node remoteNode = new Node("n/a", remoteNodeAddress);
+			Node remoteNode = new Node(CommonTools.generateId(remoteNodeAddress).toString(16), remoteNodeAddress);
 			while (!joined) {
 				try {
 					System.out.println("Connecting to " + remoteNodeAddress);
@@ -168,12 +166,10 @@ public class Server extends Node {
 	public RoutingHandler getRoutingHandler() {
 		return routingHandler;
 	}
-
-	public FaultHandler getFaultHandler() {
-		return faultHandler;
+	
+	public ConnectionPool getConnectionPool() {
+		return connectionPool;
 	}
-	
-	
 	
 	public SinchanaDataStore getSinchanaDataStore() {
 		return sinchanaDataStore;
