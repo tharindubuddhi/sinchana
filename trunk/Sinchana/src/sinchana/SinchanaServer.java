@@ -14,12 +14,12 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import sinchana.chord.ChordTable;
 import sinchana.connection.ConnectionPool;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
+import sinchana.util.logging.Logger;
 import sinchana.util.tools.CommonTools;
 
 /**
@@ -27,7 +27,7 @@ import sinchana.util.tools.CommonTools;
  * @author S.A.H.S.Subasinghe
  */
 public class SinchanaServer extends Node {
-	
+
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final PortHandler portHandler = new IOHandler(this);
 	private final RoutingHandler routingHandler = new ChordTable(this);
@@ -59,11 +59,11 @@ public class SinchanaServer extends Node {
 			throw new RuntimeException("Error getting local host ip.", ex);
 		}
 	}
-	
+
 	public SinchanaServer(String localAddress) {
 		this.init(localAddress, null);
 	}
-	
+
 	public SinchanaServer(int localPortId, String remoteNodeAddress) {
 		try {
 			InetAddress inetAddress = InetAddress.getLocalHost();
@@ -72,17 +72,16 @@ public class SinchanaServer extends Node {
 			throw new RuntimeException("Error getting local host ip.", ex);
 		}
 	}
-	
+
 	public SinchanaServer(String localAddress, String remoteNodeAddress) {
 		this.init(localAddress, remoteNodeAddress);
 	}
-	
+
 	private void init(String address, String remoteNodeAddress) {
 		this.address = address;
 		this.setServerId(CommonTools.generateId(this.address));
-		this.serverIdAsBigInt = new BigInteger(this.getServerId());
+		this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
 		this.serverIdAsString = CommonTools.toReadableString(this.getServerId());
-		System.out.println("length: " + this.getServerId().length + "\t" + Arrays.toString(this.getServerId()));
 		this.remoteNodeAddress = remoteNodeAddress;
 	}
 
@@ -93,7 +92,7 @@ public class SinchanaServer extends Node {
 		this.routingHandler.init();
 		this.portHandler.startServer();
 	}
-	
+
 	public void join() {
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
 			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
@@ -119,7 +118,7 @@ public class SinchanaServer extends Node {
 			}
 		}
 	}
-	
+
 	void setJoined(boolean joined) {
 		this.joined = joined;
 	}
@@ -149,7 +148,7 @@ public class SinchanaServer extends Node {
 	public void registerSinchanaTestInterface(SinchanaTestInterface sinchanaTestInterface) {
 		this.sinchanaTestInterface = sinchanaTestInterface;
 	}
-	
+
 	public void registerSinchanaStoreInterface(SinchanaDataStoreInterface sdsi) {
 		this.sinchanaDataStoreInterface = sdsi;
 	}
@@ -177,27 +176,27 @@ public class SinchanaServer extends Node {
 	public RoutingHandler getRoutingHandler() {
 		return routingHandler;
 	}
-	
+
 	public ConnectionPool getConnectionPool() {
 		return connectionPool;
 	}
-	
+
 	public ClientHandler getClientHandler() {
 		return clientHandler;
 	}
-	
+
 	public SinchanaServiceStore getSinchanaServiceStore() {
 		return sinchanaServiceStore;
 	}
-	
+
 	public SinchanaDataStoreInterface getSinchanaDataStoreInterface() {
 		return sinchanaDataStoreInterface;
 	}
-	
+
 	public BigInteger getServerIdAsBigInt() {
 		return serverIdAsBigInt;
 	}
-	
+
 	public String getServerIdAsString() {
 		return serverIdAsString;
 	}
@@ -209,7 +208,7 @@ public class SinchanaServer extends Node {
 	public SinchanaTestInterface getSinchanaTestInterface() {
 		return sinchanaTestInterface;
 	}
-	
+
 	public sinchana.SinchanaRequestHandler getSinchanaRequestHandler() {
 		return SinchanaRequestHandler;
 	}
@@ -221,72 +220,75 @@ public class SinchanaServer extends Node {
 	public void testRing() {
 		Message message = new Message(this, MessageType.TEST_RING, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		message.setStation(this);
-		this.getMessageHandler().queueMessage(message);
+		if (!this.getMessageHandler().queueMessage(message)) {
+			Logger.log(this, Logger.LEVEL_WARNING, Logger.CLASS_SINCHANA_SERVER, 0,
+					"Message is unacceptable 'cos buffer is full! " + message);
+		}
 	}
 
-	/**
-	 * Send a MessageType.GET message.
-	 * @param destination	Destination ID to receive message.
-	 * @param message		Message string.
-	 */
 	public byte[] request(byte[] destination, byte[] message) {
-		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, null, true, null).data;
+		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, null, true).data;
 	}
-	
+
 	public void request(byte[] destination, byte[] message, SinchanaResponseHandler callBack) {
-		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack, false, null);
+		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack, false);
 	}
-	
+
 	public boolean storeData(byte[] key, byte[] data) {
-		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, null, true, null).success;
+		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, null, true).success;
 	}
-	
+
 	public void storeData(byte[] key, byte[] data, SinchanaDataHandler callBack) {
-		this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, callBack, false, null);
+		this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, callBack, false);
 	}
-	
+
 	public byte[] getData(byte[] key) {
-		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, null, true, null).data;
+		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, null, true).data;
 	}
-	
+
 	public void getData(byte[] key, SinchanaDataHandler callBack) {
-		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack, false, null);
+		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack, false);
 	}
-	
+
 	public boolean deleteData(byte[] key) {
-		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, null, true, null).success;
+		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, null, true).success;
 	}
-	
+
 	public void deleteData(byte[] key, SinchanaDataHandler callBack) {
-		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack, false, null);
+		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack, false);
 	}
-	
+
 	public byte[] getService(byte[] reference, byte[] data) {
-		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, null, true, null).data;
+		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, null, true).data;
 	}
-	
+
 	public void getService(byte[] reference, byte[] data, SinchanaServiceHandler callBack) {
-		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack, false, null);
+		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack, false);
 	}
-	
+
 	public byte[] discoverService(byte[] key) {
-		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, null, true, CONFIGURATIONS.SERVICE_TAG).data;
+		byte[] formattedKey = CommonTools.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
+		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, null, true).data;
 	}
-	
+
 	public void discoverService(byte[] key, SinchanaServiceHandler callBack) {
-		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack, false, CONFIGURATIONS.SERVICE_TAG);
+		byte[] formattedKey = CommonTools.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
+		this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, callBack, false);
 	}
-	
-	public void publishService(byte[] key, byte[] reference, SinchanaServiceInterface ssi) {
-		boolean success = this.sinchanaServiceStore.publishService(key, ssi);
+
+	public void publishService(byte[] key, SinchanaServiceInterface ssi) {
+		byte[] formattedKey = CommonTools.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
+		byte[] formattedReference = CommonTools.arrayConcat(this.getServerId(), formattedKey);
+		boolean success = this.sinchanaServiceStore.publishService(formattedKey, ssi);
 		if (success) {
-			this.clientHandler.addRequest(key, reference, MessageType.STORE_DATA, ssi, false, CONFIGURATIONS.SERVICE_TAG);
+			this.clientHandler.addRequest(formattedKey, formattedReference, MessageType.STORE_DATA, ssi, false);
 		} else {
 			ssi.isPublished(key, false);
 		}
 	}
-	
+
 	public void removeService(byte[] key, SinchanaServiceInterface ssi) {
-		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, ssi, false, CONFIGURATIONS.SERVICE_TAG);
+		byte[] formattedKey = CommonTools.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
+		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi, false);
 	}
 }

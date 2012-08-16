@@ -192,7 +192,7 @@ public class TesterController {
 		for (int key : keySet) {
 			if (testServers.get(key).getServerId().equals(requester)) {
 				Message msg = new Message(testServers.get(key).getServer(), MessageType.REQUEST, 10);
-				msg.setTargetKey(destination.getBytes());
+				msg.setDestinationId(destination.getBytes());
 				msg.setData(text.getBytes());
 //				testServers.get(key).getServer().send(msg);
 			}

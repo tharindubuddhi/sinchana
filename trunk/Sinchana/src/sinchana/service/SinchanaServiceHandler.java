@@ -12,7 +12,7 @@ import sinchana.SinchanaCallBackHandler;
  */
 public interface SinchanaServiceHandler extends SinchanaCallBackHandler {
 
-	public abstract void serviceFound(byte[] key, byte[] data);
+	public abstract void serviceFound(byte[] key, boolean success, byte[] data);
 
-	public abstract void serviceResponse(byte[] key, byte[] data);
+	public abstract void serviceResponse(byte[] key, boolean success, byte[] data);
 }

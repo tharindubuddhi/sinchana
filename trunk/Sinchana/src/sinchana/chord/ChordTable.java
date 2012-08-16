@@ -60,7 +60,7 @@ public class ChordTable implements RoutingHandler {
 	@Override
 	public void init() {
 		this.serverId = this.server.getServerId();
-		this.serverIdAsBigInt = new BigInteger(serverId);
+		this.serverIdAsBigInt = new BigInteger(1, serverId);
 		synchronized (fingerTable) {
 			for (int i = 0; i < fingerTable.length; i++) {
 				/**
@@ -330,7 +330,7 @@ public class ChordTable implements RoutingHandler {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(byte[] id) {
-		return SinchanaServer.GRID_SIZE.add(new BigInteger(id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
+		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
 
 	private BigInteger getOffset(BigInteger id) {

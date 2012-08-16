@@ -55,7 +55,7 @@ public final class Logger {
 	 */
 	public static final int CLASS_CONNECTION_POOL = 4;
 	public static final int CLASS_CLIENT_HANDLER = 5;
-//		public static final int CLASS_THRIFT_SERVER = 6;
+	public static final int CLASS_SINCHANA_SERVER = 6;
 	/**
 	 * 
 	 */
@@ -120,6 +120,12 @@ public final class Logger {
 				break;
 			case CLASS_CONNECTION_POOL:
 				className = "CONNECTION_POOL";
+				break;
+			case CLASS_SINCHANA_SERVER:
+				className = "SINCHANA_SERVER";
+				break;
+			case CLASS_CLIENT_HANDLER:
+				className = "CLIENT_HANDLER";
 				break;
 			default:
 				className = "LOGGER";

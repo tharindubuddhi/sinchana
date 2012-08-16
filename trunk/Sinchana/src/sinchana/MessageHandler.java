@@ -24,6 +24,7 @@ import sinchana.util.messagequeue.MessageQueue;
 public class MessageHandler {
 
 	private final SinchanaServer server;
+	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
 	 * determined by MESSAGE_BUFFER_SIZE.
@@ -89,18 +90,12 @@ public class MessageHandler {
 			}
 			return true;
 		} else {
-
-			if (messageQueue.queueMessage(message)) {
-				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().incIncomingMessageCount();
-					this.server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
-				}
-				return true;
-			} else {
-				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 0,
-						"Message is unacceptable 'cos buffer is full! " + message);
-				return false;
+			boolean success = messageQueue.queueMessage(message);
+			if (this.server.getSinchanaTestInterface() != null) {
+				this.server.getSinchanaTestInterface().incIncomingMessageCount();
+				this.server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
 			}
+			return success;
 		}
 	}
 
@@ -109,17 +104,8 @@ public class MessageHandler {
 	 * @param message
 	 */
 	private synchronized void processMessage(Message message) {
-//		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 1,
-//				"Processing: " + message);
-
-		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
-		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
 
 		this.updateTableWithMessage(message);
-		if (message.type == MessageType.JOIN) {
-			message.setPredecessor(predecessor.deepCopy());
-			message.setSuccessor(successor.deepCopy());
-		}
 
 		switch (message.type) {
 			case REQUEST:
@@ -127,7 +113,7 @@ public class MessageHandler {
 			case DELETE_DATA:
 			case GET_DATA:
 			case GET_SERVICE:
-				this.processGet(message);
+				this.processRouting(message);
 				break;
 			case JOIN:
 				this.processJoin(message);
@@ -204,17 +190,17 @@ public class MessageHandler {
 		}
 	}
 
-	private void processGet(Message message) {
+	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
-		Node nextHop = this.server.getRoutingHandler().getNextNode(message.getTargetKey());
-		BigInteger targetKeyOffset = getOffset(message.getTargetKey());
+		Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
+		BigInteger targetKeyOffset = getOffset(message.getDestinationId());
 		BigInteger predecessorOffset = getOffset(predecessor.getServerId());
 		BigInteger prevStationOffset = getOffset(message.station.getServerId());
 
-		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(new BigInteger("0", 16))) {
+		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(ZERO)) {
 			deliverMessage(message);
 		} else {
-			if (!prevStationOffset.equals(new BigInteger("0", 16))
+			if (!prevStationOffset.equals(ZERO)
 					&& prevStationOffset.compareTo(targetKeyOffset) == -1) {
 //				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
 //						"This should be an errornous receive of " + message.targetKey
@@ -234,6 +220,8 @@ public class MessageHandler {
 						"Node " + message.source + "has to wait.");
 				return;
 			}
+			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
+
 			BigInteger newServerIdOffset = getOffset(message.source.getServerId());
 			BigInteger prevStationIdOffset = getOffset(message.station.getServerId());
 			BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
@@ -245,48 +233,29 @@ public class MessageHandler {
 				nextPredecessorOffset = getOffset(nextPredecessor.getServerId());
 				nextSuccessorOffset = getOffset(nextSuccessor.getServerId());
 
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
-//						"NewNode:" + message.source.serverId
-//						+ "\tPrevStat:" + message.station.serverId
-//						+ "\tTempNode:" + node.serverId
-//						+ "\tnextPDO:" + nextPredecessor.serverId
-//						+ "\tnextSCO:" + nextSuccessor.serverId);
-
 				if (newServerIdOffset.compareTo(prevStationIdOffset) != 1
 						&& (nextSuccessorOffset.compareTo(tempNodeOffset) == -1
-						|| nextSuccessorOffset.equals(new BigInteger("0", 16)))
+						|| nextSuccessorOffset.equals(ZERO))
 						&& tempNodeOffset.compareTo(newServerIdOffset) == -1) {
 					nextSuccessor = node;
 				}
 				if (prevStationIdOffset.compareTo(newServerIdOffset) != 1
 						&& (tempNodeOffset.compareTo(nextPredecessorOffset) == -1
-						|| nextPredecessorOffset.equals(new BigInteger("0", 16)))
+						|| nextPredecessorOffset.equals(ZERO))
 						&& newServerIdOffset.compareTo(tempNodeOffset) == -1) {
 					nextPredecessor = node;
 				}
 			}
-//			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
-//					"Analyze of state: \tPD: " + nextPredecessor + "\tSC: " + nextSuccessor);
-
 			if (!Arrays.equals(nextPredecessor.getServerId(), this.server.getServerId())) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
-//						"Sending message to the predecessor " + nextPredecessor.serverId);
 				server.getPortHandler().send(message, nextPredecessor);
 			} else {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
-//						"Sending message to the origin " + message.source.serverId);
 				server.getPortHandler().send(message, message.source);
 			}
 			if (!Arrays.equals(nextSuccessor.getServerId(), this.server.getServerId())) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
-//						"Sending message to the successor " + nextSuccessor.serverId);
 				server.getPortHandler().send(message, nextSuccessor);
 			} else {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
-//						"Sending message to the origin " + message.source.serverId);
 				server.getPortHandler().send(message, message.source);
 			}
-
 		}
 	}
 
@@ -302,8 +271,8 @@ public class MessageHandler {
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
 		if (Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			if (message.isSetData()) {
-				System.out.println("Ring test completed - length: " 
-						+ (new String(message.getData()).split(" > ").length) 
+				System.out.println("Ring test completed - length: "
+						+ (new String(message.getData()).split(" > ").length)
 						+ " :: " + new String(message.getData()));
 			} else {
 				message.setData(this.server.getServerIdAsString().getBytes());
@@ -340,77 +309,89 @@ public class MessageHandler {
 	 */
 	private void deliverMessage(Message message) {
 		Message returnMessage = null;
+		boolean handlerAvailable;
 		boolean responseExpected = message.isSetResponseExpected() && message.responseExpected;
+		if (responseExpected) {
+			returnMessage = new Message();
+			returnMessage.setSource(server);
+			returnMessage.setLifetime(CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+			returnMessage.setDestination(message.source);
+			returnMessage.setDestinationId(message.source.serverId);
+			returnMessage.setId(message.getId());
+			returnMessage.setKey(message.getKey());
+		}
 		switch (message.type) {
 			case REQUEST:
-				if (this.server.getSinchanaRequestHandler() != null) {
-					if (responseExpected) {
-						returnMessage = new Message(this.server, MessageType.RESPONSE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-						returnMessage.setDestination(message.source);
-						returnMessage.setId(message.getId());
-						returnMessage.setTargetKey(message.targetKey);
+				handlerAvailable = this.server.getSinchanaRequestHandler() != null;
+				if (responseExpected) {
+					returnMessage.setType(MessageType.RESPONSE);
+					returnMessage.setSuccess(handlerAvailable);
+					if (handlerAvailable) {
 						returnMessage.setData(this.server.getSinchanaRequestHandler().request(message.getData()));
 					} else {
-						this.server.getSinchanaRequestHandler().request(message.getData());
+						returnMessage.setError("Request handler is not found!");
 					}
+				} else if (handlerAvailable) {
+					this.server.getSinchanaRequestHandler().request(message.getData());
 				}
 				break;
 			case STORE_DATA:
-				if (this.server.getSinchanaDataStoreInterface() != null) {
-					if (responseExpected) {
-						returnMessage = new Message(this.server, MessageType.ACKNOWLEDGE_DATA_STORE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-						returnMessage.setDestination(message.source);
-						returnMessage.setId(message.getId());
-						returnMessage.setTargetKey(message.targetKey);
-						returnMessage.setSuccess(this.server.getSinchanaDataStoreInterface().store(message.getTargetKey(), message.getData()));
-					} else {
-						this.server.getSinchanaDataStoreInterface().store(message.getTargetKey(), message.getData());
+				handlerAvailable = this.server.getSinchanaDataStoreInterface() != null;
+				if (responseExpected) {
+					returnMessage.setType(MessageType.ACKNOWLEDGE_DATA_STORE);
+					returnMessage.setSuccess(handlerAvailable
+							&& this.server.getSinchanaDataStoreInterface().store(message.getKey(), message.getData()));
+					if (!handlerAvailable) {
+						returnMessage.setError("Data store is not found!");
 					}
+				} else if (handlerAvailable) {
+					this.server.getSinchanaDataStoreInterface().store(message.getKey(), message.getData());
 				}
 				break;
 			case DELETE_DATA:
-				if (this.server.getSinchanaDataStoreInterface() != null) {
-					if (responseExpected) {
-						returnMessage = new Message(this.server, MessageType.ACKNOWLEDGE_DATA_REMOVE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-						returnMessage.setDestination(message.source);
-						returnMessage.setId(message.getId());
-						returnMessage.setTargetKey(message.targetKey);
-						returnMessage.setSuccess(this.server.getSinchanaDataStoreInterface().remove(message.getTargetKey()));
-					} else {
-						this.server.getSinchanaDataStoreInterface().remove(message.getTargetKey());
+				handlerAvailable = this.server.getSinchanaDataStoreInterface() != null;
+				if (responseExpected) {
+					returnMessage.setType(MessageType.ACKNOWLEDGE_DATA_REMOVE);
+					returnMessage.setSuccess(handlerAvailable
+							&& this.server.getSinchanaDataStoreInterface().remove(message.getKey()));
+					if (!handlerAvailable) {
+						returnMessage.setError("Data store is not found!");
 					}
-
+				} else if (handlerAvailable) {
+					this.server.getSinchanaDataStoreInterface().remove(message.getKey());
 				}
 				break;
 			case GET_DATA:
-				if (this.server.getSinchanaDataStoreInterface() != null) {
-					if (responseExpected) {
-						returnMessage = new Message(this.server, MessageType.RESPONSE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-						returnMessage.setDestination(message.source);
-						returnMessage.setId(message.getId());
-						returnMessage.setTargetKey(message.targetKey);
-						returnMessage.setData(this.server.getSinchanaDataStoreInterface().get(message.getTargetKey()));
+				handlerAvailable = this.server.getSinchanaDataStoreInterface() != null;
+				if (responseExpected) {
+					returnMessage.setType(MessageType.RESPONSE_DATA);
+					returnMessage.setSuccess(handlerAvailable);
+					if (handlerAvailable) {
+						returnMessage.setData(this.server.getSinchanaDataStoreInterface().get(message.getKey()));
 					} else {
-						this.server.getSinchanaDataStoreInterface().get(message.getTargetKey());
+						returnMessage.setError("Data store is not found!");
 					}
+				} else if (handlerAvailable) {
+					this.server.getSinchanaDataStoreInterface().get(message.getKey());
 				}
 				break;
 			case GET_SERVICE:
-				SinchanaServiceInterface ssi = this.server.getSinchanaServiceStore().get(message.getData());
-				if (ssi != null) {
-					if (responseExpected) {
-						returnMessage = new Message(this.server, MessageType.RESPONSE_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-						returnMessage.setDestination(message.source);
-						returnMessage.setId(message.getId());
-						returnMessage.setTargetKey(message.targetKey);
-						returnMessage.setData(ssi.process(message.getData(), message.getData()));
+				SinchanaServiceInterface ssi = this.server.getSinchanaServiceStore().get(message.getKey());
+				handlerAvailable = ssi != null;
+				if (responseExpected) {
+					returnMessage.setType(MessageType.RESPONSE_SERVICE);
+					returnMessage.setSuccess(handlerAvailable);
+					if (handlerAvailable) {
+						returnMessage.setData(ssi.process(message.getKey(), message.getData()));
 					} else {
-						ssi.process(message.getData(), message.getData());
+						returnMessage.setError("Service is not found!");
 					}
+				} else if (handlerAvailable) {
+					ssi.process(message.getKey(), message.getData());
 				}
 				break;
 		}
-		if (returnMessage != null) {
+		if (responseExpected) {
 			this.server.getPortHandler().send(returnMessage, returnMessage.destination);
 		}
 	}
