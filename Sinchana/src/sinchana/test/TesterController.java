@@ -4,17 +4,13 @@
  */
 package sinchana.test;
 
-import java.math.BigInteger;
 import java.util.Set;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
@@ -33,8 +29,7 @@ public class TesterController {
 	private final ControllerUI cui = new ControllerUI(this);
 	private int completedCount = 0;
 	private final Timer timer = new Timer();
-	private final Timer timer2 = new Timer();
-	private long numOfTestMessages = 0;
+	private static long count = 0;
 
 	/**
 	 * 
@@ -42,9 +37,9 @@ public class TesterController {
 	 */
 	public static void main(String[] args) {
 //        Uncomment when you have a proxy network        
-        Properties props = System.getProperties();
-        props.put("http.proxyHost", "cache.mrt.ac.lk");
-        props.put("http.proxyPort", "3128");
+		Properties props = System.getProperties();
+//        props.put("http.proxyHost", "cache.mrt.ac.lk");
+//        props.put("http.proxyPort", "3128");
 		if (CONFIGURATIONS.CLEAR_CACHE_SERVER) {
 			LocalCacheServer.clear();
 		}
@@ -91,8 +86,6 @@ public class TesterController {
 
 				}
 				newTime = Calendar.getInstance().getTimeInMillis();
-				verifiedCount = 0;
-				retrieveCount = 0;
 				if (completedCount != 0) {
 					cui.setStat("IC: " + (totalMessageIncome / completedCount)
 							+ "    IB: " + (totalInputMessageQueue / completedCount)
@@ -101,10 +94,7 @@ public class TesterController {
 							+ "    MO: " + maxOutputMessageQueueSize
 							+ "    TR: " + totalResolves
 							+ "    TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S"
-							+ "    AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA")
-							+ "    MS: " + dataMap.size()
-							+ "    " + verifiedCount
-							+ "    " + retrieveCount);
+							+ "    AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA"));
 				}
 				oldTime = newTime;
 				if (mxaTester != -1) {
@@ -112,15 +102,6 @@ public class TesterController {
 				}
 			}
 		}, 1000, 2000);
-		timer2.scheduleAtFixedRate(new TimerTask() {
-
-			@Override
-			public void run() {
-				if (numOfTestMessages != 0) {
-					testMessages(numOfTestMessages / 10);
-				}
-			}
-		}, 100, 100);
 	}
 
 	/**
@@ -134,15 +115,14 @@ public class TesterController {
 			testServers.put(i, tester);
 		}
 		NUM_OF_TESTING_NODES += numOfTesters;
-		String[] testServerIds = new String[NUM_OF_TESTING_NODES];
+		byte[][] testServerIds = new byte[NUM_OF_TESTING_NODES][20];
 
 		for (int i = 0; i < NUM_OF_TESTING_NODES; i++) {
 			testServerIds[i] = testServers.get(i).getServerId();
 		}
 
-		Arrays.sort(testServerIds);
-		for (String id : testServerIds) {
-			System.out.print(id + " ");
+		for (byte[] id : testServerIds) {
+			System.out.print(CommonTools.toReadableString(id) + " ");
 		}
 		System.out.println("");
 		Set<Integer> keySet = testServers.keySet();
@@ -150,7 +130,6 @@ public class TesterController {
 			tester = testServers.get(key);
 			if (!tester.isRunning()) {
 				tester.startServer();
-				System.out.println("Server " + tester.getServerId() + " is running...");
 			}
 		}
 	}
@@ -160,16 +139,10 @@ public class TesterController {
 	 * @param numOfAutoTesters
 	 */
 	public void startAutoTest(long numOfTestMessages) {
-		this.numOfTestMessages = numOfTestMessages;
-	}
-	private ConcurrentHashMap<String, TestData> dataMap = new ConcurrentHashMap<String, TestData>();
-	private int verifiedCount = 0, retrieveCount = 0;
-	private boolean verified = false;
-
-	public void testMessages(long numOfTestMessages) {
 		int numOfTestServers = testServers.size();
 		int randomId;
 		long randomAmount = 0;
+		count = 0;
 		while (numOfTestMessages > 0) {
 			randomId = (int) (Math.random() * numOfTestServers);
 			if (numOfTestMessages > 10) {
@@ -183,56 +156,6 @@ public class TesterController {
 		}
 	}
 
-	synchronized TestData getNextData() {
-		verified = ((int) (Math.random() * dataMap.size())) % 2 != 0;
-		if (verified) {
-			while (true) {
-				int rn = (int) (Math.random() * dataMap.size());
-				Set<String> keySet = dataMap.keySet();
-				for (String id : keySet) {
-					if (rn-- == 0 && dataMap.get(id).verified && !dataMap.get(id).requested) {
-						dataMap.get(id).requested = true;
-						return dataMap.get(id);
-					}
-				}
-			}
-		} else {
-			BigInteger bi = new BigInteger(160, new Random());
-			while (dataMap.containsKey(bi.toString(16))) {
-				bi = new BigInteger(160, new Random());
-			}
-			TestData td = new TestData();
-			td.key = bi.toString(16);
-			td.data = td.key;
-			td.verified = false;
-			td.requested = false;
-			dataMap.put(td.key, td);
-			return td;
-		}
-	}
-
-	synchronized void setResponse(String targetKey) {
-		if (dataMap.containsKey(targetKey)) {
-			dataMap.get(targetKey).verified = true;
-		} else {
-			System.out.println("This is not acceptable!");
-		}
-	}
-
-	synchronized void setResponse(String targetKey, String data) {
-		if (!dataMap.remove(targetKey).data.equals(data)) {
-			System.out.println("Failed :P");
-		}
-	}
-
-	class TestData {
-
-		String key;
-		String data;
-		boolean verified;
-		boolean requested;
-	}
-
 	/**
 	 * 
 	 */
@@ -244,13 +167,9 @@ public class TesterController {
 		}
 
 	}
-	public static int count = 0;
 
-	public static synchronized void setMaxCount(int c) {
-		if (c > count) {
-			count = c;
-			System.out.println("max: " + count);
-		}
+	public static synchronized long incCount() {
+		return ++count;
 	}
 
 	/**
@@ -273,104 +192,29 @@ public class TesterController {
 		for (int key : keySet) {
 			if (testServers.get(key).getServerId().equals(requester)) {
 				Message msg = new Message(testServers.get(key).getServer(), MessageType.REQUEST, 10);
-				msg.setTargetKey(destination);
-				msg.setMessage(text);
-				testServers.get(key).getServer().send(msg);
+				msg.setTargetKey(destination.getBytes());
+				msg.setData(text.getBytes());
+//				testServers.get(key).getServer().send(msg);
 			}
 		}
-	}
-	String[] serviceArray = null;
-	String[] keyArray = null;
-	int serviceID = 0;
-
-	public void publishService(int noOfServices) {
-
-		serviceArray = new String[noOfServices];
-		keyArray = new String[noOfServices];
-
-		for (int i = 0; i < noOfServices; i++) {
-			serviceArray[i] = String.valueOf("Service " + serviceID);
-			keyArray[i] = CommonTools.generateId(serviceArray[i]).toString();
-			serviceID++;
-		}
-
-		int randomId;
-		int randomAmount;
-		int x = 0;
-		while (noOfServices > 0) {
-
-			randomId = (int) (Math.random() * testServers.size());
-			randomAmount = (int) (Math.random() * noOfServices);
-			noOfServices = noOfServices - randomAmount;
-
-			while (randomAmount > 0) {
-				testServers.get(randomId).getServer().publishService(keyArray[x], serviceArray[x]);
-				x++;
-				randomAmount--;
-			}
-		}
-	}
-
-	public void retrieveService() {
-		int randomId = 4;
-		int randomAmount;
-//		randomId = (int) (Math.random() * testServers.size());
-        
-		randomAmount = (int) (Math.random() * serviceArray.length);
-		for (int i = 0; i < serviceArray.length; i++) {
-			testServers.get(randomId).getServer().getService(keyArray[i]);
-		}
-
-
 	}
 	String[] dataArray = null;
 	String[] datakeyArray = null;
 	int dataID = 1;
 
-        
-		public void storeData(int noOfData) {
-                dataArray = new String[noOfData];
-				datakeyArray = new String[noOfData];
-                TestDataStore.storeCount = 0;
-                TestDataStore.storeStartTime = System.currentTimeMillis();
-				for (int i = 0; i < noOfData; i++) {
-						dataArray[i] = String.valueOf("Data " + dataID);
-						datakeyArray[i] = CommonTools.generateId(dataArray[i]).toString();
-						dataID++;
-				}
-//                int randomId = (int) (Math.random() * testServers.size());
-                int randomId = 4;
-                
-                for (int i = 0; i < noOfData; i++) {
-                testServers.get(randomId).getServer().storeData(datakeyArray[i], dataArray[i]);
-                
-            }
-   
-		}
-        
-        
-        
-                public void retrieveData(){                  
-                    TestDataStore.retrieveStartTime = System.currentTimeMillis();
-                    int randomId = (int) (Math.random() * testServers.size());
-                    for (int i = 0; i < datakeyArray.length; i++) {
-                        testServers.get(randomId).getServer().getData(datakeyArray[i]);
-                        
-                    }
+	public void storeData(int noOfData) {
+		
 
-                }
-                
-                
-                public void removeData(int randomAmount){
-//                    int randomId = (int) (Math.random() * testServers.size());
-                    TestDataStore.removeStartTime = System.currentTimeMillis();
-                    int randomId = 4;
-//                    int randomAmount = (int) (Math.random() * datakeyArray.length);
-//                    System.out.println("random amount "+randomAmount);
-                    for (int i = 0; i < randomAmount; i++) {
-                        testServers.get(randomId).getServer().deleteData(dataArray[i]);                       
-                    }
-                }
+	}
+
+	public void retrieveData() {
+		
+
+	}
+
+	public void removeData(int randomAmount) {
+	}
+
 	/**
 	 * 
 	 * @param nodeIdsString
@@ -408,12 +252,5 @@ public class TesterController {
 			}
 		}
 		sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations, containTextString);
-	}
-
-	public void trigger() {
-		Set<Integer> keySet = testServers.keySet();
-		for (int key : keySet) {
-			testServers.get(key).trigger();
-		}
 	}
 }

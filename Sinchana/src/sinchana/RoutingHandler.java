@@ -6,17 +6,12 @@ package sinchana;
 
 import java.util.Set;
 import sinchana.thrift.Node;
-import sinchana.thrift.Message;
 
 /**
  *
  * @author Hiru
  */
 public interface RoutingHandler {
-
-	public static final String TYPE_CHORD = "chord";
-	public static final String TYPE_TAPESTRY = "tapestry";
-	public static final String TYPE_PESTRY = "pestry";
 
 	/**
 	 * Initialize routing table.
@@ -40,7 +35,7 @@ public interface RoutingHandler {
 	 * @param destination Destination id.
 	 * @return NExt hop (node) to reach to the destination.
 	 */
-	public abstract Node getNextNode(String destination);
+	public abstract Node getNextNode(byte[] destination);
 
 	/**
 	 * Returns the set of nodes contains successor, predecessor and all the

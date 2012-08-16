@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import sinchana.CONFIGURATIONS;
+import sinchana.thrift.Node;
 
 /**
  * 
@@ -71,10 +72,10 @@ public final class Logger {
 	 * @param locId
 	 * @param logData
 	 */
-	public static void log(String nodeId, int type, int classId, int locId, String logData) {
+	public static void log(Node node, int type, int classId, int locId, String logData) {
 		if (CONFIGURATIONS.DO_LOG) {
 			Log nl = new Log();
-			nl.nodeId = nodeId;
+			nl.node = node;
 			nl.level = type;
 			nl.classId = classId;
 			nl.locId = (byte) locId;
@@ -125,7 +126,7 @@ public final class Logger {
 				break;
 		}
 		java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
-				className, "Server " + nodeId, logData);
+				className, "Server " + node, logData);
 
 
 	}
@@ -170,7 +171,7 @@ public final class Logger {
 			if (filterByNodeId) {
 				validToPrint = false;
 				for (String id : nodeIds) {
-					if (log.nodeId.equals(id)) {
+					if (id.equals(new String(log.node.getServerId()))) {
 						validToPrint = true;
 						break;
 					}

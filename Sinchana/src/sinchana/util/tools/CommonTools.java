@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class CommonTools {
 
-	public static BigInteger generateId(String address) {
+	public static byte[] generateId(String address) {
 		try {
 			MessageDigest cript = MessageDigest.getInstance("SHA-1");
 			cript.reset();
@@ -23,10 +23,14 @@ public class CommonTools {
 			byte[] digest = cript.digest();
 			BigInteger bi = new BigInteger(1, digest);
 			//check(bi);
-			return bi;
+			return bi.toByteArray();
 		} catch (Exception ex) {
 			throw new RuntimeException("Error calculating hash value", ex);
 		}
+	}
+
+	public static String toReadableString(byte[] arrayToRead) {
+		return new BigInteger(arrayToRead).toString(16);
 	}
 	private static Set<BigInteger> ids = new HashSet<BigInteger>();
 

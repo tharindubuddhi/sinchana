@@ -31,37 +31,33 @@ public class SinchanaClient {
 
   public interface Iface {
 
-    public boolean publishService(ServiceObject services) throws org.apache.thrift.TException;
+    public ByteBuffer discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException;
 
-    public boolean removeService(String serviceKey) throws org.apache.thrift.TException;
+    public ByteBuffer getService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException;
 
-    public Set<ServiceObject> getService(String serviceKey) throws org.apache.thrift.TException;
+    public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException;
 
-    public boolean publishData(DataObject data) throws org.apache.thrift.TException;
+    public boolean removeData(ByteBuffer dataKey) throws org.apache.thrift.TException;
 
-    public boolean removeData(String dataKey) throws org.apache.thrift.TException;
+    public ByteBuffer getData(ByteBuffer dataKey) throws org.apache.thrift.TException;
 
-    public Set<DataObject> getData(String dataKey) throws org.apache.thrift.TException;
-
-    public String request(String destination) throws org.apache.thrift.TException;
+    public ByteBuffer request(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException;
 
   }
 
   public interface AsyncIface {
 
-    public void publishService(ServiceObject services, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.publishService_call> resultHandler) throws org.apache.thrift.TException;
+    public void discoverService(ByteBuffer serviceKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.discoverService_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void removeService(String serviceKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeService_call> resultHandler) throws org.apache.thrift.TException;
+    public void getService(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getService_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void getService(String serviceKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getService_call> resultHandler) throws org.apache.thrift.TException;
+    public void publishData(ByteBuffer dataKey, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.publishData_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void publishData(DataObject data, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.publishData_call> resultHandler) throws org.apache.thrift.TException;
+    public void removeData(ByteBuffer dataKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeData_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void removeData(String dataKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.removeData_call> resultHandler) throws org.apache.thrift.TException;
+    public void getData(ByteBuffer dataKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getData_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void getData(String dataKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getData_call> resultHandler) throws org.apache.thrift.TException;
-
-    public void request(String destination, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.request_call> resultHandler) throws org.apache.thrift.TException;
+    public void request(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.request_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -85,66 +81,44 @@ public class SinchanaClient {
       super(iprot, oprot);
     }
 
-    public boolean publishService(ServiceObject services) throws org.apache.thrift.TException
+    public ByteBuffer discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException
     {
-      send_publishService(services);
-      return recv_publishService();
+      send_discoverService(serviceKey);
+      return recv_discoverService();
     }
 
-    public void send_publishService(ServiceObject services) throws org.apache.thrift.TException
+    public void send_discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException
     {
-      publishService_args args = new publishService_args();
-      args.setServices(services);
-      sendBase("publishService", args);
-    }
-
-    public boolean recv_publishService() throws org.apache.thrift.TException
-    {
-      publishService_result result = new publishService_result();
-      receiveBase(result, "publishService");
-      if (result.isSetSuccess()) {
-        return result.success;
-      }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "publishService failed: unknown result");
-    }
-
-    public boolean removeService(String serviceKey) throws org.apache.thrift.TException
-    {
-      send_removeService(serviceKey);
-      return recv_removeService();
-    }
-
-    public void send_removeService(String serviceKey) throws org.apache.thrift.TException
-    {
-      removeService_args args = new removeService_args();
+      discoverService_args args = new discoverService_args();
       args.setServiceKey(serviceKey);
-      sendBase("removeService", args);
+      sendBase("discoverService", args);
     }
 
-    public boolean recv_removeService() throws org.apache.thrift.TException
+    public ByteBuffer recv_discoverService() throws org.apache.thrift.TException
     {
-      removeService_result result = new removeService_result();
-      receiveBase(result, "removeService");
+      discoverService_result result = new discoverService_result();
+      receiveBase(result, "discoverService");
       if (result.isSetSuccess()) {
         return result.success;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "removeService failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "discoverService failed: unknown result");
     }
 
-    public Set<ServiceObject> getService(String serviceKey) throws org.apache.thrift.TException
+    public ByteBuffer getService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
     {
-      send_getService(serviceKey);
+      send_getService(reference, data);
       return recv_getService();
     }
 
-    public void send_getService(String serviceKey) throws org.apache.thrift.TException
+    public void send_getService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
     {
       getService_args args = new getService_args();
-      args.setServiceKey(serviceKey);
+      args.setReference(reference);
+      args.setData(data);
       sendBase("getService", args);
     }
 
-    public Set<ServiceObject> recv_getService() throws org.apache.thrift.TException
+    public ByteBuffer recv_getService() throws org.apache.thrift.TException
     {
       getService_result result = new getService_result();
       receiveBase(result, "getService");
@@ -154,15 +128,16 @@ public class SinchanaClient {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getService failed: unknown result");
     }
 
-    public boolean publishData(DataObject data) throws org.apache.thrift.TException
+    public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException
     {
-      send_publishData(data);
+      send_publishData(dataKey, data);
       return recv_publishData();
     }
 
-    public void send_publishData(DataObject data) throws org.apache.thrift.TException
+    public void send_publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException
     {
       publishData_args args = new publishData_args();
+      args.setDataKey(dataKey);
       args.setData(data);
       sendBase("publishData", args);
     }
@@ -177,13 +152,13 @@ public class SinchanaClient {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "publishData failed: unknown result");
     }
 
-    public boolean removeData(String dataKey) throws org.apache.thrift.TException
+    public boolean removeData(ByteBuffer dataKey) throws org.apache.thrift.TException
     {
       send_removeData(dataKey);
       return recv_removeData();
     }
 
-    public void send_removeData(String dataKey) throws org.apache.thrift.TException
+    public void send_removeData(ByteBuffer dataKey) throws org.apache.thrift.TException
     {
       removeData_args args = new removeData_args();
       args.setDataKey(dataKey);
@@ -200,20 +175,20 @@ public class SinchanaClient {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "removeData failed: unknown result");
     }
 
-    public Set<DataObject> getData(String dataKey) throws org.apache.thrift.TException
+    public ByteBuffer getData(ByteBuffer dataKey) throws org.apache.thrift.TException
     {
       send_getData(dataKey);
       return recv_getData();
     }
 
-    public void send_getData(String dataKey) throws org.apache.thrift.TException
+    public void send_getData(ByteBuffer dataKey) throws org.apache.thrift.TException
     {
       getData_args args = new getData_args();
       args.setDataKey(dataKey);
       sendBase("getData", args);
     }
 
-    public Set<DataObject> recv_getData() throws org.apache.thrift.TException
+    public ByteBuffer recv_getData() throws org.apache.thrift.TException
     {
       getData_result result = new getData_result();
       receiveBase(result, "getData");
@@ -223,20 +198,21 @@ public class SinchanaClient {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getData failed: unknown result");
     }
 
-    public String request(String destination) throws org.apache.thrift.TException
+    public ByteBuffer request(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
     {
-      send_request(destination);
+      send_request(destination, message);
       return recv_request();
     }
 
-    public void send_request(String destination) throws org.apache.thrift.TException
+    public void send_request(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
     {
       request_args args = new request_args();
       args.setDestination(destination);
+      args.setMessage(message);
       sendBase("request", args);
     }
 
-    public String recv_request() throws org.apache.thrift.TException
+    public ByteBuffer recv_request() throws org.apache.thrift.TException
     {
       request_result result = new request_result();
       receiveBase(result, "request");
@@ -264,93 +240,64 @@ public class SinchanaClient {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void publishService(ServiceObject services, org.apache.thrift.async.AsyncMethodCallback<publishService_call> resultHandler) throws org.apache.thrift.TException {
+    public void discoverService(ByteBuffer serviceKey, org.apache.thrift.async.AsyncMethodCallback<discoverService_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      publishService_call method_call = new publishService_call(services, resultHandler, this, ___protocolFactory, ___transport);
+      discoverService_call method_call = new discoverService_call(serviceKey, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class publishService_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private ServiceObject services;
-      public publishService_call(ServiceObject services, org.apache.thrift.async.AsyncMethodCallback<publishService_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
-        super(client, protocolFactory, transport, resultHandler, false);
-        this.services = services;
-      }
-
-      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("publishService", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        publishService_args args = new publishService_args();
-        args.setServices(services);
-        args.write(prot);
-        prot.writeMessageEnd();
-      }
-
-      public boolean getResult() throws org.apache.thrift.TException {
-        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
-          throw new IllegalStateException("Method call not finished!");
-        }
-        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
-        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_publishService();
-      }
-    }
-
-    public void removeService(String serviceKey, org.apache.thrift.async.AsyncMethodCallback<removeService_call> resultHandler) throws org.apache.thrift.TException {
-      checkReady();
-      removeService_call method_call = new removeService_call(serviceKey, resultHandler, this, ___protocolFactory, ___transport);
-      this.___currentMethod = method_call;
-      ___manager.call(method_call);
-    }
-
-    public static class removeService_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private String serviceKey;
-      public removeService_call(String serviceKey, org.apache.thrift.async.AsyncMethodCallback<removeService_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+    public static class discoverService_call extends org.apache.thrift.async.TAsyncMethodCall {
+      private ByteBuffer serviceKey;
+      public discoverService_call(ByteBuffer serviceKey, org.apache.thrift.async.AsyncMethodCallback<discoverService_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.serviceKey = serviceKey;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("removeService", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        removeService_args args = new removeService_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("discoverService", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        discoverService_args args = new discoverService_args();
         args.setServiceKey(serviceKey);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public boolean getResult() throws org.apache.thrift.TException {
+      public ByteBuffer getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_removeService();
+        return (new Client(prot)).recv_discoverService();
       }
     }
 
-    public void getService(String serviceKey, org.apache.thrift.async.AsyncMethodCallback<getService_call> resultHandler) throws org.apache.thrift.TException {
+    public void getService(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<getService_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getService_call method_call = new getService_call(serviceKey, resultHandler, this, ___protocolFactory, ___transport);
+      getService_call method_call = new getService_call(reference, data, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class getService_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private String serviceKey;
-      public getService_call(String serviceKey, org.apache.thrift.async.AsyncMethodCallback<getService_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private ByteBuffer reference;
+      private ByteBuffer data;
+      public getService_call(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<getService_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
-        this.serviceKey = serviceKey;
+        this.reference = reference;
+        this.data = data;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getService", org.apache.thrift.protocol.TMessageType.CALL, 0));
         getService_args args = new getService_args();
-        args.setServiceKey(serviceKey);
+        args.setReference(reference);
+        args.setData(data);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public Set<ServiceObject> getResult() throws org.apache.thrift.TException {
+      public ByteBuffer getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -360,23 +307,26 @@ public class SinchanaClient {
       }
     }
 
-    public void publishData(DataObject data, org.apache.thrift.async.AsyncMethodCallback<publishData_call> resultHandler) throws org.apache.thrift.TException {
+    public void publishData(ByteBuffer dataKey, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<publishData_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      publishData_call method_call = new publishData_call(data, resultHandler, this, ___protocolFactory, ___transport);
+      publishData_call method_call = new publishData_call(dataKey, data, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class publishData_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private DataObject data;
-      public publishData_call(DataObject data, org.apache.thrift.async.AsyncMethodCallback<publishData_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private ByteBuffer dataKey;
+      private ByteBuffer data;
+      public publishData_call(ByteBuffer dataKey, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<publishData_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
+        this.dataKey = dataKey;
         this.data = data;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("publishData", org.apache.thrift.protocol.TMessageType.CALL, 0));
         publishData_args args = new publishData_args();
+        args.setDataKey(dataKey);
         args.setData(data);
         args.write(prot);
         prot.writeMessageEnd();
@@ -392,7 +342,7 @@ public class SinchanaClient {
       }
     }
 
-    public void removeData(String dataKey, org.apache.thrift.async.AsyncMethodCallback<removeData_call> resultHandler) throws org.apache.thrift.TException {
+    public void removeData(ByteBuffer dataKey, org.apache.thrift.async.AsyncMethodCallback<removeData_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       removeData_call method_call = new removeData_call(dataKey, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -400,8 +350,8 @@ public class SinchanaClient {
     }
 
     public static class removeData_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private String dataKey;
-      public removeData_call(String dataKey, org.apache.thrift.async.AsyncMethodCallback<removeData_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private ByteBuffer dataKey;
+      public removeData_call(ByteBuffer dataKey, org.apache.thrift.async.AsyncMethodCallback<removeData_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.dataKey = dataKey;
       }
@@ -424,7 +374,7 @@ public class SinchanaClient {
       }
     }
 
-    public void getData(String dataKey, org.apache.thrift.async.AsyncMethodCallback<getData_call> resultHandler) throws org.apache.thrift.TException {
+    public void getData(ByteBuffer dataKey, org.apache.thrift.async.AsyncMethodCallback<getData_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       getData_call method_call = new getData_call(dataKey, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -432,8 +382,8 @@ public class SinchanaClient {
     }
 
     public static class getData_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private String dataKey;
-      public getData_call(String dataKey, org.apache.thrift.async.AsyncMethodCallback<getData_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private ByteBuffer dataKey;
+      public getData_call(ByteBuffer dataKey, org.apache.thrift.async.AsyncMethodCallback<getData_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.dataKey = dataKey;
       }
@@ -446,7 +396,7 @@ public class SinchanaClient {
         prot.writeMessageEnd();
       }
 
-      public Set<DataObject> getResult() throws org.apache.thrift.TException {
+      public ByteBuffer getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -456,29 +406,32 @@ public class SinchanaClient {
       }
     }
 
-    public void request(String destination, org.apache.thrift.async.AsyncMethodCallback<request_call> resultHandler) throws org.apache.thrift.TException {
+    public void request(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<request_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      request_call method_call = new request_call(destination, resultHandler, this, ___protocolFactory, ___transport);
+      request_call method_call = new request_call(destination, message, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class request_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private String destination;
-      public request_call(String destination, org.apache.thrift.async.AsyncMethodCallback<request_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private ByteBuffer destination;
+      private ByteBuffer message;
+      public request_call(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<request_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.destination = destination;
+        this.message = message;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("request", org.apache.thrift.protocol.TMessageType.CALL, 0));
         request_args args = new request_args();
         args.setDestination(destination);
+        args.setMessage(message);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public String getResult() throws org.apache.thrift.TException {
+      public ByteBuffer getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -501,8 +454,7 @@ public class SinchanaClient {
     }
 
     private static <I extends Iface> Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> getProcessMap(Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
-      processMap.put("publishService", new publishService());
-      processMap.put("removeService", new removeService());
+      processMap.put("discoverService", new discoverService());
       processMap.put("getService", new getService());
       processMap.put("publishData", new publishData());
       processMap.put("removeData", new removeData());
@@ -511,36 +463,18 @@ public class SinchanaClient {
       return processMap;
     }
 
-    private static class publishService<I extends Iface> extends org.apache.thrift.ProcessFunction<I, publishService_args> {
-      public publishService() {
-        super("publishService");
+    private static class discoverService<I extends Iface> extends org.apache.thrift.ProcessFunction<I, discoverService_args> {
+      public discoverService() {
+        super("discoverService");
       }
 
-      protected publishService_args getEmptyArgsInstance() {
-        return new publishService_args();
+      protected discoverService_args getEmptyArgsInstance() {
+        return new discoverService_args();
       }
 
-      protected publishService_result getResult(I iface, publishService_args args) throws org.apache.thrift.TException {
-        publishService_result result = new publishService_result();
-        result.success = iface.publishService(args.services);
-        result.setSuccessIsSet(true);
-        return result;
-      }
-    }
-
-    private static class removeService<I extends Iface> extends org.apache.thrift.ProcessFunction<I, removeService_args> {
-      public removeService() {
-        super("removeService");
-      }
-
-      protected removeService_args getEmptyArgsInstance() {
-        return new removeService_args();
-      }
-
-      protected removeService_result getResult(I iface, removeService_args args) throws org.apache.thrift.TException {
-        removeService_result result = new removeService_result();
-        result.success = iface.removeService(args.serviceKey);
-        result.setSuccessIsSet(true);
+      protected discoverService_result getResult(I iface, discoverService_args args) throws org.apache.thrift.TException {
+        discoverService_result result = new discoverService_result();
+        result.success = iface.discoverService(args.serviceKey);
         return result;
       }
     }
@@ -556,7 +490,7 @@ public class SinchanaClient {
 
       protected getService_result getResult(I iface, getService_args args) throws org.apache.thrift.TException {
         getService_result result = new getService_result();
-        result.success = iface.getService(args.serviceKey);
+        result.success = iface.getService(args.reference, args.data);
         return result;
       }
     }
@@ -572,7 +506,7 @@ public class SinchanaClient {
 
       protected publishData_result getResult(I iface, publishData_args args) throws org.apache.thrift.TException {
         publishData_result result = new publishData_result();
-        result.success = iface.publishData(args.data);
+        result.success = iface.publishData(args.dataKey, args.data);
         result.setSuccessIsSet(true);
         return result;
       }
@@ -622,730 +556,25 @@ public class SinchanaClient {
 
       protected request_result getResult(I iface, request_args args) throws org.apache.thrift.TException {
         request_result result = new request_result();
-        result.success = iface.request(args.destination);
+        result.success = iface.request(args.destination, args.message);
         return result;
       }
     }
 
   }
 
-  public static class publishService_args implements org.apache.thrift.TBase<publishService_args, publishService_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("publishService_args");
-
-    private static final org.apache.thrift.protocol.TField SERVICES_FIELD_DESC = new org.apache.thrift.protocol.TField("services", org.apache.thrift.protocol.TType.STRUCT, (short)1);
-
-    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
-    static {
-      schemes.put(StandardScheme.class, new publishService_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new publishService_argsTupleSchemeFactory());
-    }
-
-    public ServiceObject services; // required
-
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SERVICES((short)1, "services");
-
-      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
-
-      static {
-        for (_Fields field : EnumSet.allOf(_Fields.class)) {
-          byName.put(field.getFieldName(), field);
-        }
-      }
-
-      /**
-       * Find the _Fields constant that matches fieldId, or null if its not found.
-       */
-      public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          case 1: // SERVICES
-            return SERVICES;
-          default:
-            return null;
-        }
-      }
-
-      /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
-       */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
-        return fields;
-      }
-
-      /**
-       * Find the _Fields constant that matches name, or null if its not found.
-       */
-      public static _Fields findByName(String name) {
-        return byName.get(name);
-      }
-
-      private final short _thriftId;
-      private final String _fieldName;
-
-      _Fields(short thriftId, String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
-      }
-
-      public short getThriftFieldId() {
-        return _thriftId;
-      }
-
-      public String getFieldName() {
-        return _fieldName;
-      }
-    }
-
-    // isset id assignments
-    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
-    static {
-      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SERVICES, new org.apache.thrift.meta_data.FieldMetaData("services", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServiceObject.class)));
-      metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(publishService_args.class, metaDataMap);
-    }
-
-    public publishService_args() {
-    }
-
-    public publishService_args(
-      ServiceObject services)
-    {
-      this();
-      this.services = services;
-    }
-
-    /**
-     * Performs a deep copy on <i>other</i>.
-     */
-    public publishService_args(publishService_args other) {
-      if (other.isSetServices()) {
-        this.services = new ServiceObject(other.services);
-      }
-    }
-
-    public publishService_args deepCopy() {
-      return new publishService_args(this);
-    }
-
-    @Override
-    public void clear() {
-      this.services = null;
-    }
-
-    public ServiceObject getServices() {
-      return this.services;
-    }
-
-    public publishService_args setServices(ServiceObject services) {
-      this.services = services;
-      return this;
-    }
-
-    public void unsetServices() {
-      this.services = null;
-    }
-
-    /** Returns true if field services is set (has been assigned a value) and false otherwise */
-    public boolean isSetServices() {
-      return this.services != null;
-    }
-
-    public void setServicesIsSet(boolean value) {
-      if (!value) {
-        this.services = null;
-      }
-    }
-
-    public void setFieldValue(_Fields field, Object value) {
-      switch (field) {
-      case SERVICES:
-        if (value == null) {
-          unsetServices();
-        } else {
-          setServices((ServiceObject)value);
-        }
-        break;
-
-      }
-    }
-
-    public Object getFieldValue(_Fields field) {
-      switch (field) {
-      case SERVICES:
-        return getServices();
-
-      }
-      throw new IllegalStateException();
-    }
-
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
-    public boolean isSet(_Fields field) {
-      if (field == null) {
-        throw new IllegalArgumentException();
-      }
-
-      switch (field) {
-      case SERVICES:
-        return isSetServices();
-      }
-      throw new IllegalStateException();
-    }
-
-    @Override
-    public boolean equals(Object that) {
-      if (that == null)
-        return false;
-      if (that instanceof publishService_args)
-        return this.equals((publishService_args)that);
-      return false;
-    }
-
-    public boolean equals(publishService_args that) {
-      if (that == null)
-        return false;
-
-      boolean this_present_services = true && this.isSetServices();
-      boolean that_present_services = true && that.isSetServices();
-      if (this_present_services || that_present_services) {
-        if (!(this_present_services && that_present_services))
-          return false;
-        if (!this.services.equals(that.services))
-          return false;
-      }
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-
-    public int compareTo(publishService_args other) {
-      if (!getClass().equals(other.getClass())) {
-        return getClass().getName().compareTo(other.getClass().getName());
-      }
-
-      int lastComparison = 0;
-      publishService_args typedOther = (publishService_args)other;
-
-      lastComparison = Boolean.valueOf(isSetServices()).compareTo(typedOther.isSetServices());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetServices()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.services, typedOther.services);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      return 0;
-    }
-
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
-    }
-
-    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
-      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
-    }
-
-    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
-      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder("publishService_args(");
-      boolean first = true;
-
-      sb.append("services:");
-      if (this.services == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.services);
-      }
-      first = false;
-      sb.append(")");
-      return sb.toString();
-    }
-
-    public void validate() throws org.apache.thrift.TException {
-      // check for required fields
-    }
-
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-      try {
-        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
-      try {
-        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private static class publishService_argsStandardSchemeFactory implements SchemeFactory {
-      public publishService_argsStandardScheme getScheme() {
-        return new publishService_argsStandardScheme();
-      }
-    }
-
-    private static class publishService_argsStandardScheme extends StandardScheme<publishService_args> {
-
-      public void read(org.apache.thrift.protocol.TProtocol iprot, publishService_args struct) throws org.apache.thrift.TException {
-        org.apache.thrift.protocol.TField schemeField;
-        iprot.readStructBegin();
-        while (true)
-        {
-          schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
-            break;
-          }
-          switch (schemeField.id) {
-            case 1: // SERVICES
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.services = new ServiceObject();
-                struct.services.read(iprot);
-                struct.setServicesIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            default:
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-          }
-          iprot.readFieldEnd();
-        }
-        iprot.readStructEnd();
-
-        // check for required fields of primitive type, which can't be checked in the validate method
-        struct.validate();
-      }
-
-      public void write(org.apache.thrift.protocol.TProtocol oprot, publishService_args struct) throws org.apache.thrift.TException {
-        struct.validate();
-
-        oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.services != null) {
-          oprot.writeFieldBegin(SERVICES_FIELD_DESC);
-          struct.services.write(oprot);
-          oprot.writeFieldEnd();
-        }
-        oprot.writeFieldStop();
-        oprot.writeStructEnd();
-      }
-
-    }
-
-    private static class publishService_argsTupleSchemeFactory implements SchemeFactory {
-      public publishService_argsTupleScheme getScheme() {
-        return new publishService_argsTupleScheme();
-      }
-    }
-
-    private static class publishService_argsTupleScheme extends TupleScheme<publishService_args> {
-
-      @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, publishService_args struct) throws org.apache.thrift.TException {
-        TTupleProtocol oprot = (TTupleProtocol) prot;
-        BitSet optionals = new BitSet();
-        if (struct.isSetServices()) {
-          optionals.set(0);
-        }
-        oprot.writeBitSet(optionals, 1);
-        if (struct.isSetServices()) {
-          struct.services.write(oprot);
-        }
-      }
-
-      @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, publishService_args struct) throws org.apache.thrift.TException {
-        TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
-        if (incoming.get(0)) {
-          struct.services = new ServiceObject();
-          struct.services.read(iprot);
-          struct.setServicesIsSet(true);
-        }
-      }
-    }
-
-  }
-
-  public static class publishService_result implements org.apache.thrift.TBase<publishService_result, publishService_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("publishService_result");
-
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)0);
-
-    private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
-    static {
-      schemes.put(StandardScheme.class, new publishService_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new publishService_resultTupleSchemeFactory());
-    }
-
-    public boolean success; // required
-
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
-    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SUCCESS((short)0, "success");
-
-      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
-
-      static {
-        for (_Fields field : EnumSet.allOf(_Fields.class)) {
-          byName.put(field.getFieldName(), field);
-        }
-      }
-
-      /**
-       * Find the _Fields constant that matches fieldId, or null if its not found.
-       */
-      public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          case 0: // SUCCESS
-            return SUCCESS;
-          default:
-            return null;
-        }
-      }
-
-      /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
-       */
-      public static _Fields findByThriftIdOrThrow(int fieldId) {
-        _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
-        return fields;
-      }
-
-      /**
-       * Find the _Fields constant that matches name, or null if its not found.
-       */
-      public static _Fields findByName(String name) {
-        return byName.get(name);
-      }
-
-      private final short _thriftId;
-      private final String _fieldName;
-
-      _Fields(short thriftId, String fieldName) {
-        _thriftId = thriftId;
-        _fieldName = fieldName;
-      }
-
-      public short getThriftFieldId() {
-        return _thriftId;
-      }
-
-      public String getFieldName() {
-        return _fieldName;
-      }
-    }
-
-    // isset id assignments
-    private static final int __SUCCESS_ISSET_ID = 0;
-    private BitSet __isset_bit_vector = new BitSet(1);
-    public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
-    static {
-      Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
-      metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(publishService_result.class, metaDataMap);
-    }
-
-    public publishService_result() {
-    }
-
-    public publishService_result(
-      boolean success)
-    {
-      this();
-      this.success = success;
-      setSuccessIsSet(true);
-    }
-
-    /**
-     * Performs a deep copy on <i>other</i>.
-     */
-    public publishService_result(publishService_result other) {
-      __isset_bit_vector.clear();
-      __isset_bit_vector.or(other.__isset_bit_vector);
-      this.success = other.success;
-    }
-
-    public publishService_result deepCopy() {
-      return new publishService_result(this);
-    }
-
-    @Override
-    public void clear() {
-      setSuccessIsSet(false);
-      this.success = false;
-    }
-
-    public boolean isSuccess() {
-      return this.success;
-    }
-
-    public publishService_result setSuccess(boolean success) {
-      this.success = success;
-      setSuccessIsSet(true);
-      return this;
-    }
-
-    public void unsetSuccess() {
-      __isset_bit_vector.clear(__SUCCESS_ISSET_ID);
-    }
-
-    /** Returns true if field success is set (has been assigned a value) and false otherwise */
-    public boolean isSetSuccess() {
-      return __isset_bit_vector.get(__SUCCESS_ISSET_ID);
-    }
-
-    public void setSuccessIsSet(boolean value) {
-      __isset_bit_vector.set(__SUCCESS_ISSET_ID, value);
-    }
-
-    public void setFieldValue(_Fields field, Object value) {
-      switch (field) {
-      case SUCCESS:
-        if (value == null) {
-          unsetSuccess();
-        } else {
-          setSuccess((Boolean)value);
-        }
-        break;
-
-      }
-    }
-
-    public Object getFieldValue(_Fields field) {
-      switch (field) {
-      case SUCCESS:
-        return Boolean.valueOf(isSuccess());
-
-      }
-      throw new IllegalStateException();
-    }
-
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
-    public boolean isSet(_Fields field) {
-      if (field == null) {
-        throw new IllegalArgumentException();
-      }
-
-      switch (field) {
-      case SUCCESS:
-        return isSetSuccess();
-      }
-      throw new IllegalStateException();
-    }
-
-    @Override
-    public boolean equals(Object that) {
-      if (that == null)
-        return false;
-      if (that instanceof publishService_result)
-        return this.equals((publishService_result)that);
-      return false;
-    }
-
-    public boolean equals(publishService_result that) {
-      if (that == null)
-        return false;
-
-      boolean this_present_success = true;
-      boolean that_present_success = true;
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success))
-          return false;
-        if (this.success != that.success)
-          return false;
-      }
-
-      return true;
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-
-    public int compareTo(publishService_result other) {
-      if (!getClass().equals(other.getClass())) {
-        return getClass().getName().compareTo(other.getClass().getName());
-      }
-
-      int lastComparison = 0;
-      publishService_result typedOther = (publishService_result)other;
-
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetSuccess()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, typedOther.success);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      return 0;
-    }
-
-    public _Fields fieldForId(int fieldId) {
-      return _Fields.findByThriftId(fieldId);
-    }
-
-    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
-      schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
-    }
-
-    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
-      schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
-      }
-
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder("publishService_result(");
-      boolean first = true;
-
-      sb.append("success:");
-      sb.append(this.success);
-      first = false;
-      sb.append(")");
-      return sb.toString();
-    }
-
-    public void validate() throws org.apache.thrift.TException {
-      // check for required fields
-    }
-
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-      try {
-        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
-      try {
-        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
-      } catch (org.apache.thrift.TException te) {
-        throw new java.io.IOException(te);
-      }
-    }
-
-    private static class publishService_resultStandardSchemeFactory implements SchemeFactory {
-      public publishService_resultStandardScheme getScheme() {
-        return new publishService_resultStandardScheme();
-      }
-    }
-
-    private static class publishService_resultStandardScheme extends StandardScheme<publishService_result> {
-
-      public void read(org.apache.thrift.protocol.TProtocol iprot, publishService_result struct) throws org.apache.thrift.TException {
-        org.apache.thrift.protocol.TField schemeField;
-        iprot.readStructBegin();
-        while (true)
-        {
-          schemeField = iprot.readFieldBegin();
-          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
-            break;
-          }
-          switch (schemeField.id) {
-            case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
-                struct.success = iprot.readBool();
-                struct.setSuccessIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            default:
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-          }
-          iprot.readFieldEnd();
-        }
-        iprot.readStructEnd();
-
-        // check for required fields of primitive type, which can't be checked in the validate method
-        struct.validate();
-      }
-
-      public void write(org.apache.thrift.protocol.TProtocol oprot, publishService_result struct) throws org.apache.thrift.TException {
-        struct.validate();
-
-        oprot.writeStructBegin(STRUCT_DESC);
-        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-        oprot.writeBool(struct.success);
-        oprot.writeFieldEnd();
-        oprot.writeFieldStop();
-        oprot.writeStructEnd();
-      }
-
-    }
-
-    private static class publishService_resultTupleSchemeFactory implements SchemeFactory {
-      public publishService_resultTupleScheme getScheme() {
-        return new publishService_resultTupleScheme();
-      }
-    }
-
-    private static class publishService_resultTupleScheme extends TupleScheme<publishService_result> {
-
-      @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, publishService_result struct) throws org.apache.thrift.TException {
-        TTupleProtocol oprot = (TTupleProtocol) prot;
-        BitSet optionals = new BitSet();
-        if (struct.isSetSuccess()) {
-          optionals.set(0);
-        }
-        oprot.writeBitSet(optionals, 1);
-        if (struct.isSetSuccess()) {
-          oprot.writeBool(struct.success);
-        }
-      }
-
-      @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, publishService_result struct) throws org.apache.thrift.TException {
-        TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
-        if (incoming.get(0)) {
-          struct.success = iprot.readBool();
-          struct.setSuccessIsSet(true);
-        }
-      }
-    }
-
-  }
-
-  public static class removeService_args implements org.apache.thrift.TBase<removeService_args, removeService_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeService_args");
+  public static class discoverService_args implements org.apache.thrift.TBase<discoverService_args, discoverService_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("discoverService_args");
 
     private static final org.apache.thrift.protocol.TField SERVICE_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("serviceKey", org.apache.thrift.protocol.TType.STRING, (short)1);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new removeService_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new removeService_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new discoverService_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new discoverService_argsTupleSchemeFactory());
     }
 
-    public String serviceKey; // required
+    public ByteBuffer serviceKey; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -1410,16 +639,16 @@ public class SinchanaClient {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SERVICE_KEY, new org.apache.thrift.meta_data.FieldMetaData("serviceKey", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeService_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(discoverService_args.class, metaDataMap);
     }
 
-    public removeService_args() {
+    public discoverService_args() {
     }
 
-    public removeService_args(
-      String serviceKey)
+    public discoverService_args(
+      ByteBuffer serviceKey)
     {
       this();
       this.serviceKey = serviceKey;
@@ -1428,14 +657,15 @@ public class SinchanaClient {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public removeService_args(removeService_args other) {
+    public discoverService_args(discoverService_args other) {
       if (other.isSetServiceKey()) {
-        this.serviceKey = other.serviceKey;
+        this.serviceKey = org.apache.thrift.TBaseHelper.copyBinary(other.serviceKey);
+;
       }
     }
 
-    public removeService_args deepCopy() {
-      return new removeService_args(this);
+    public discoverService_args deepCopy() {
+      return new discoverService_args(this);
     }
 
     @Override
@@ -1443,11 +673,21 @@ public class SinchanaClient {
       this.serviceKey = null;
     }
 
-    public String getServiceKey() {
-      return this.serviceKey;
+    public byte[] getServiceKey() {
+      setServiceKey(org.apache.thrift.TBaseHelper.rightSize(serviceKey));
+      return serviceKey == null ? null : serviceKey.array();
     }
 
-    public removeService_args setServiceKey(String serviceKey) {
+    public ByteBuffer bufferForServiceKey() {
+      return serviceKey;
+    }
+
+    public discoverService_args setServiceKey(byte[] serviceKey) {
+      setServiceKey(serviceKey == null ? (ByteBuffer)null : ByteBuffer.wrap(serviceKey));
+      return this;
+    }
+
+    public discoverService_args setServiceKey(ByteBuffer serviceKey) {
       this.serviceKey = serviceKey;
       return this;
     }
@@ -1473,7 +713,7 @@ public class SinchanaClient {
         if (value == null) {
           unsetServiceKey();
         } else {
-          setServiceKey((String)value);
+          setServiceKey((ByteBuffer)value);
         }
         break;
 
@@ -1506,12 +746,12 @@ public class SinchanaClient {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof removeService_args)
-        return this.equals((removeService_args)that);
+      if (that instanceof discoverService_args)
+        return this.equals((discoverService_args)that);
       return false;
     }
 
-    public boolean equals(removeService_args that) {
+    public boolean equals(discoverService_args that) {
       if (that == null)
         return false;
 
@@ -1532,13 +772,13 @@ public class SinchanaClient {
       return 0;
     }
 
-    public int compareTo(removeService_args other) {
+    public int compareTo(discoverService_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      removeService_args typedOther = (removeService_args)other;
+      discoverService_args typedOther = (discoverService_args)other;
 
       lastComparison = Boolean.valueOf(isSetServiceKey()).compareTo(typedOther.isSetServiceKey());
       if (lastComparison != 0) {
@@ -1567,14 +807,14 @@ public class SinchanaClient {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("removeService_args(");
+      StringBuilder sb = new StringBuilder("discoverService_args(");
       boolean first = true;
 
       sb.append("serviceKey:");
       if (this.serviceKey == null) {
         sb.append("null");
       } else {
-        sb.append(this.serviceKey);
+        org.apache.thrift.TBaseHelper.toString(this.serviceKey, sb);
       }
       first = false;
       sb.append(")");
@@ -1601,15 +841,15 @@ public class SinchanaClient {
       }
     }
 
-    private static class removeService_argsStandardSchemeFactory implements SchemeFactory {
-      public removeService_argsStandardScheme getScheme() {
-        return new removeService_argsStandardScheme();
+    private static class discoverService_argsStandardSchemeFactory implements SchemeFactory {
+      public discoverService_argsStandardScheme getScheme() {
+        return new discoverService_argsStandardScheme();
       }
     }
 
-    private static class removeService_argsStandardScheme extends StandardScheme<removeService_args> {
+    private static class discoverService_argsStandardScheme extends StandardScheme<discoverService_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, removeService_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, discoverService_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -1621,7 +861,7 @@ public class SinchanaClient {
           switch (schemeField.id) {
             case 1: // SERVICE_KEY
               if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.serviceKey = iprot.readString();
+                struct.serviceKey = iprot.readBinary();
                 struct.setServiceKeyIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -1638,13 +878,13 @@ public class SinchanaClient {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, removeService_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, discoverService_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.serviceKey != null) {
           oprot.writeFieldBegin(SERVICE_KEY_FIELD_DESC);
-          oprot.writeString(struct.serviceKey);
+          oprot.writeBinary(struct.serviceKey);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -1653,16 +893,16 @@ public class SinchanaClient {
 
     }
 
-    private static class removeService_argsTupleSchemeFactory implements SchemeFactory {
-      public removeService_argsTupleScheme getScheme() {
-        return new removeService_argsTupleScheme();
+    private static class discoverService_argsTupleSchemeFactory implements SchemeFactory {
+      public discoverService_argsTupleScheme getScheme() {
+        return new discoverService_argsTupleScheme();
       }
     }
 
-    private static class removeService_argsTupleScheme extends TupleScheme<removeService_args> {
+    private static class discoverService_argsTupleScheme extends TupleScheme<discoverService_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, removeService_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, discoverService_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetServiceKey()) {
@@ -1670,16 +910,16 @@ public class SinchanaClient {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetServiceKey()) {
-          oprot.writeString(struct.serviceKey);
+          oprot.writeBinary(struct.serviceKey);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, removeService_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, discoverService_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.serviceKey = iprot.readString();
+          struct.serviceKey = iprot.readBinary();
           struct.setServiceKeyIsSet(true);
         }
       }
@@ -1687,18 +927,18 @@ public class SinchanaClient {
 
   }
 
-  public static class removeService_result implements org.apache.thrift.TBase<removeService_result, removeService_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeService_result");
+  public static class discoverService_result implements org.apache.thrift.TBase<discoverService_result, discoverService_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("discoverService_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new removeService_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new removeService_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new discoverService_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new discoverService_resultTupleSchemeFactory());
     }
 
-    public boolean success; // required
+    public ByteBuffer success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -1759,68 +999,76 @@ public class SinchanaClient {
     }
 
     // isset id assignments
-    private static final int __SUCCESS_ISSET_ID = 0;
-    private BitSet __isset_bit_vector = new BitSet(1);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeService_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(discoverService_result.class, metaDataMap);
     }
 
-    public removeService_result() {
+    public discoverService_result() {
     }
 
-    public removeService_result(
-      boolean success)
+    public discoverService_result(
+      ByteBuffer success)
     {
       this();
       this.success = success;
-      setSuccessIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public removeService_result(removeService_result other) {
-      __isset_bit_vector.clear();
-      __isset_bit_vector.or(other.__isset_bit_vector);
-      this.success = other.success;
+    public discoverService_result(discoverService_result other) {
+      if (other.isSetSuccess()) {
+        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
+;
+      }
     }
 
-    public removeService_result deepCopy() {
-      return new removeService_result(this);
+    public discoverService_result deepCopy() {
+      return new discoverService_result(this);
     }
 
     @Override
     public void clear() {
-      setSuccessIsSet(false);
-      this.success = false;
+      this.success = null;
     }
 
-    public boolean isSuccess() {
-      return this.success;
+    public byte[] getSuccess() {
+      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
+      return success == null ? null : success.array();
     }
 
-    public removeService_result setSuccess(boolean success) {
+    public ByteBuffer bufferForSuccess() {
+      return success;
+    }
+
+    public discoverService_result setSuccess(byte[] success) {
+      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
+      return this;
+    }
+
+    public discoverService_result setSuccess(ByteBuffer success) {
       this.success = success;
-      setSuccessIsSet(true);
       return this;
     }
 
     public void unsetSuccess() {
-      __isset_bit_vector.clear(__SUCCESS_ISSET_ID);
+      this.success = null;
     }
 
     /** Returns true if field success is set (has been assigned a value) and false otherwise */
     public boolean isSetSuccess() {
-      return __isset_bit_vector.get(__SUCCESS_ISSET_ID);
+      return this.success != null;
     }
 
     public void setSuccessIsSet(boolean value) {
-      __isset_bit_vector.set(__SUCCESS_ISSET_ID, value);
+      if (!value) {
+        this.success = null;
+      }
     }
 
     public void setFieldValue(_Fields field, Object value) {
@@ -1829,7 +1077,7 @@ public class SinchanaClient {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Boolean)value);
+          setSuccess((ByteBuffer)value);
         }
         break;
 
@@ -1839,7 +1087,7 @@ public class SinchanaClient {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case SUCCESS:
-        return Boolean.valueOf(isSuccess());
+        return getSuccess();
 
       }
       throw new IllegalStateException();
@@ -1862,21 +1110,21 @@ public class SinchanaClient {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof removeService_result)
-        return this.equals((removeService_result)that);
+      if (that instanceof discoverService_result)
+        return this.equals((discoverService_result)that);
       return false;
     }
 
-    public boolean equals(removeService_result that) {
+    public boolean equals(discoverService_result that) {
       if (that == null)
         return false;
 
-      boolean this_present_success = true;
-      boolean that_present_success = true;
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
       if (this_present_success || that_present_success) {
         if (!(this_present_success && that_present_success))
           return false;
-        if (this.success != that.success)
+        if (!this.success.equals(that.success))
           return false;
       }
 
@@ -1888,13 +1136,13 @@ public class SinchanaClient {
       return 0;
     }
 
-    public int compareTo(removeService_result other) {
+    public int compareTo(discoverService_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      removeService_result typedOther = (removeService_result)other;
+      discoverService_result typedOther = (discoverService_result)other;
 
       lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
       if (lastComparison != 0) {
@@ -1923,11 +1171,15 @@ public class SinchanaClient {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("removeService_result(");
+      StringBuilder sb = new StringBuilder("discoverService_result(");
       boolean first = true;
 
       sb.append("success:");
-      sb.append(this.success);
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        org.apache.thrift.TBaseHelper.toString(this.success, sb);
+      }
       first = false;
       sb.append(")");
       return sb.toString();
@@ -1953,15 +1205,15 @@ public class SinchanaClient {
       }
     }
 
-    private static class removeService_resultStandardSchemeFactory implements SchemeFactory {
-      public removeService_resultStandardScheme getScheme() {
-        return new removeService_resultStandardScheme();
+    private static class discoverService_resultStandardSchemeFactory implements SchemeFactory {
+      public discoverService_resultStandardScheme getScheme() {
+        return new discoverService_resultStandardScheme();
       }
     }
 
-    private static class removeService_resultStandardScheme extends StandardScheme<removeService_result> {
+    private static class discoverService_resultStandardScheme extends StandardScheme<discoverService_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, removeService_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, discoverService_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -1972,8 +1224,8 @@ public class SinchanaClient {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
-                struct.success = iprot.readBool();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.success = iprot.readBinary();
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -1990,29 +1242,31 @@ public class SinchanaClient {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, removeService_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, discoverService_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-        oprot.writeBool(struct.success);
-        oprot.writeFieldEnd();
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          oprot.writeBinary(struct.success);
+          oprot.writeFieldEnd();
+        }
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
 
     }
 
-    private static class removeService_resultTupleSchemeFactory implements SchemeFactory {
-      public removeService_resultTupleScheme getScheme() {
-        return new removeService_resultTupleScheme();
+    private static class discoverService_resultTupleSchemeFactory implements SchemeFactory {
+      public discoverService_resultTupleScheme getScheme() {
+        return new discoverService_resultTupleScheme();
       }
     }
 
-    private static class removeService_resultTupleScheme extends TupleScheme<removeService_result> {
+    private static class discoverService_resultTupleScheme extends TupleScheme<discoverService_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, removeService_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, discoverService_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetSuccess()) {
@@ -2020,16 +1274,16 @@ public class SinchanaClient {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBool(struct.success);
+          oprot.writeBinary(struct.success);
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, removeService_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, discoverService_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBool();
+          struct.success = iprot.readBinary();
           struct.setSuccessIsSet(true);
         }
       }
@@ -2040,7 +1294,8 @@ public class SinchanaClient {
   public static class getService_args implements org.apache.thrift.TBase<getService_args, getService_args._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getService_args");
 
-    private static final org.apache.thrift.protocol.TField SERVICE_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("serviceKey", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField REFERENCE_FIELD_DESC = new org.apache.thrift.protocol.TField("reference", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRING, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -2048,11 +1303,13 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new getService_argsTupleSchemeFactory());
     }
 
-    public String serviceKey; // required
+    public ByteBuffer reference; // required
+    public ByteBuffer data; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SERVICE_KEY((short)1, "serviceKey");
+      REFERENCE((short)1, "reference"),
+      DATA((short)2, "data");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -2067,8 +1324,10 @@ public class SinchanaClient {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // SERVICE_KEY
-            return SERVICE_KEY;
+          case 1: // REFERENCE
+            return REFERENCE;
+          case 2: // DATA
+            return DATA;
           default:
             return null;
         }
@@ -2112,8 +1371,10 @@ public class SinchanaClient {
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SERVICE_KEY, new org.apache.thrift.meta_data.FieldMetaData("serviceKey", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.REFERENCE, new org.apache.thrift.meta_data.FieldMetaData("reference", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
+      tmpMap.put(_Fields.DATA, new org.apache.thrift.meta_data.FieldMetaData("data", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getService_args.class, metaDataMap);
     }
@@ -2122,18 +1383,25 @@ public class SinchanaClient {
     }
 
     public getService_args(
-      String serviceKey)
+      ByteBuffer reference,
+      ByteBuffer data)
     {
       this();
-      this.serviceKey = serviceKey;
+      this.reference = reference;
+      this.data = data;
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public getService_args(getService_args other) {
-      if (other.isSetServiceKey()) {
-        this.serviceKey = other.serviceKey;
+      if (other.isSetReference()) {
+        this.reference = org.apache.thrift.TBaseHelper.copyBinary(other.reference);
+;
+      }
+      if (other.isSetData()) {
+        this.data = org.apache.thrift.TBaseHelper.copyBinary(other.data);
+;
       }
     }
 
@@ -2143,40 +1411,93 @@ public class SinchanaClient {
 
     @Override
     public void clear() {
-      this.serviceKey = null;
+      this.reference = null;
+      this.data = null;
     }
 
-    public String getServiceKey() {
-      return this.serviceKey;
+    public byte[] getReference() {
+      setReference(org.apache.thrift.TBaseHelper.rightSize(reference));
+      return reference == null ? null : reference.array();
     }
 
-    public getService_args setServiceKey(String serviceKey) {
-      this.serviceKey = serviceKey;
+    public ByteBuffer bufferForReference() {
+      return reference;
+    }
+
+    public getService_args setReference(byte[] reference) {
+      setReference(reference == null ? (ByteBuffer)null : ByteBuffer.wrap(reference));
       return this;
     }
 
-    public void unsetServiceKey() {
-      this.serviceKey = null;
+    public getService_args setReference(ByteBuffer reference) {
+      this.reference = reference;
+      return this;
     }
 
-    /** Returns true if field serviceKey is set (has been assigned a value) and false otherwise */
-    public boolean isSetServiceKey() {
-      return this.serviceKey != null;
+    public void unsetReference() {
+      this.reference = null;
     }
 
-    public void setServiceKeyIsSet(boolean value) {
+    /** Returns true if field reference is set (has been assigned a value) and false otherwise */
+    public boolean isSetReference() {
+      return this.reference != null;
+    }
+
+    public void setReferenceIsSet(boolean value) {
       if (!value) {
-        this.serviceKey = null;
+        this.reference = null;
+      }
+    }
+
+    public byte[] getData() {
+      setData(org.apache.thrift.TBaseHelper.rightSize(data));
+      return data == null ? null : data.array();
+    }
+
+    public ByteBuffer bufferForData() {
+      return data;
+    }
+
+    public getService_args setData(byte[] data) {
+      setData(data == null ? (ByteBuffer)null : ByteBuffer.wrap(data));
+      return this;
+    }
+
+    public getService_args setData(ByteBuffer data) {
+      this.data = data;
+      return this;
+    }
+
+    public void unsetData() {
+      this.data = null;
+    }
+
+    /** Returns true if field data is set (has been assigned a value) and false otherwise */
+    public boolean isSetData() {
+      return this.data != null;
+    }
+
+    public void setDataIsSet(boolean value) {
+      if (!value) {
+        this.data = null;
       }
     }
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
-      case SERVICE_KEY:
+      case REFERENCE:
         if (value == null) {
-          unsetServiceKey();
+          unsetReference();
         } else {
-          setServiceKey((String)value);
+          setReference((ByteBuffer)value);
+        }
+        break;
+
+      case DATA:
+        if (value == null) {
+          unsetData();
+        } else {
+          setData((ByteBuffer)value);
         }
         break;
 
@@ -2185,8 +1506,11 @@ public class SinchanaClient {
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
-      case SERVICE_KEY:
-        return getServiceKey();
+      case REFERENCE:
+        return getReference();
+
+      case DATA:
+        return getData();
 
       }
       throw new IllegalStateException();
@@ -2199,8 +1523,10 @@ public class SinchanaClient {
       }
 
       switch (field) {
-      case SERVICE_KEY:
-        return isSetServiceKey();
+      case REFERENCE:
+        return isSetReference();
+      case DATA:
+        return isSetData();
       }
       throw new IllegalStateException();
     }
@@ -2218,12 +1544,21 @@ public class SinchanaClient {
       if (that == null)
         return false;
 
-      boolean this_present_serviceKey = true && this.isSetServiceKey();
-      boolean that_present_serviceKey = true && that.isSetServiceKey();
-      if (this_present_serviceKey || that_present_serviceKey) {
-        if (!(this_present_serviceKey && that_present_serviceKey))
+      boolean this_present_reference = true && this.isSetReference();
+      boolean that_present_reference = true && that.isSetReference();
+      if (this_present_reference || that_present_reference) {
+        if (!(this_present_reference && that_present_reference))
           return false;
-        if (!this.serviceKey.equals(that.serviceKey))
+        if (!this.reference.equals(that.reference))
+          return false;
+      }
+
+      boolean this_present_data = true && this.isSetData();
+      boolean that_present_data = true && that.isSetData();
+      if (this_present_data || that_present_data) {
+        if (!(this_present_data && that_present_data))
+          return false;
+        if (!this.data.equals(that.data))
           return false;
       }
 
@@ -2243,12 +1578,22 @@ public class SinchanaClient {
       int lastComparison = 0;
       getService_args typedOther = (getService_args)other;
 
-      lastComparison = Boolean.valueOf(isSetServiceKey()).compareTo(typedOther.isSetServiceKey());
+      lastComparison = Boolean.valueOf(isSetReference()).compareTo(typedOther.isSetReference());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetServiceKey()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.serviceKey, typedOther.serviceKey);
+      if (isSetReference()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.reference, typedOther.reference);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetData()).compareTo(typedOther.isSetData());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetData()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.data, typedOther.data);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -2273,11 +1618,19 @@ public class SinchanaClient {
       StringBuilder sb = new StringBuilder("getService_args(");
       boolean first = true;
 
-      sb.append("serviceKey:");
-      if (this.serviceKey == null) {
+      sb.append("reference:");
+      if (this.reference == null) {
         sb.append("null");
       } else {
-        sb.append(this.serviceKey);
+        org.apache.thrift.TBaseHelper.toString(this.reference, sb);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("data:");
+      if (this.data == null) {
+        sb.append("null");
+      } else {
+        org.apache.thrift.TBaseHelper.toString(this.data, sb);
       }
       first = false;
       sb.append(")");
@@ -2322,10 +1675,18 @@ public class SinchanaClient {
             break;
           }
           switch (schemeField.id) {
-            case 1: // SERVICE_KEY
+            case 1: // REFERENCE
               if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.serviceKey = iprot.readString();
-                struct.setServiceKeyIsSet(true);
+                struct.reference = iprot.readBinary();
+                struct.setReferenceIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // DATA
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.data = iprot.readBinary();
+                struct.setDataIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -2345,9 +1706,14 @@ public class SinchanaClient {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.serviceKey != null) {
-          oprot.writeFieldBegin(SERVICE_KEY_FIELD_DESC);
-          oprot.writeString(struct.serviceKey);
+        if (struct.reference != null) {
+          oprot.writeFieldBegin(REFERENCE_FIELD_DESC);
+          oprot.writeBinary(struct.reference);
+          oprot.writeFieldEnd();
+        }
+        if (struct.data != null) {
+          oprot.writeFieldBegin(DATA_FIELD_DESC);
+          oprot.writeBinary(struct.data);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -2368,22 +1734,32 @@ public class SinchanaClient {
       public void write(org.apache.thrift.protocol.TProtocol prot, getService_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
-        if (struct.isSetServiceKey()) {
+        if (struct.isSetReference()) {
           optionals.set(0);
         }
-        oprot.writeBitSet(optionals, 1);
-        if (struct.isSetServiceKey()) {
-          oprot.writeString(struct.serviceKey);
+        if (struct.isSetData()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetReference()) {
+          oprot.writeBinary(struct.reference);
+        }
+        if (struct.isSetData()) {
+          oprot.writeBinary(struct.data);
         }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, getService_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
+        BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
-          struct.serviceKey = iprot.readString();
-          struct.setServiceKeyIsSet(true);
+          struct.reference = iprot.readBinary();
+          struct.setReferenceIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.data = iprot.readBinary();
+          struct.setDataIsSet(true);
         }
       }
     }
@@ -2393,7 +1769,7 @@ public class SinchanaClient {
   public static class getService_result implements org.apache.thrift.TBase<getService_result, getService_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getService_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.SET, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -2401,7 +1777,7 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new getService_resultTupleSchemeFactory());
     }
 
-    public Set<ServiceObject> success; // required
+    public ByteBuffer success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -2466,8 +1842,7 @@ public class SinchanaClient {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
-              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ServiceObject.class))));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getService_result.class, metaDataMap);
     }
@@ -2476,7 +1851,7 @@ public class SinchanaClient {
     }
 
     public getService_result(
-      Set<ServiceObject> success)
+      ByteBuffer success)
     {
       this();
       this.success = success;
@@ -2487,11 +1862,8 @@ public class SinchanaClient {
      */
     public getService_result(getService_result other) {
       if (other.isSetSuccess()) {
-        Set<ServiceObject> __this__success = new HashSet<ServiceObject>();
-        for (ServiceObject other_element : other.success) {
-          __this__success.add(new ServiceObject(other_element));
-        }
-        this.success = __this__success;
+        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
+;
       }
     }
 
@@ -2504,26 +1876,21 @@ public class SinchanaClient {
       this.success = null;
     }
 
-    public int getSuccessSize() {
-      return (this.success == null) ? 0 : this.success.size();
+    public byte[] getSuccess() {
+      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
+      return success == null ? null : success.array();
     }
 
-    public java.util.Iterator<ServiceObject> getSuccessIterator() {
-      return (this.success == null) ? null : this.success.iterator();
+    public ByteBuffer bufferForSuccess() {
+      return success;
     }
 
-    public void addToSuccess(ServiceObject elem) {
-      if (this.success == null) {
-        this.success = new HashSet<ServiceObject>();
-      }
-      this.success.add(elem);
+    public getService_result setSuccess(byte[] success) {
+      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
+      return this;
     }
 
-    public Set<ServiceObject> getSuccess() {
-      return this.success;
-    }
-
-    public getService_result setSuccess(Set<ServiceObject> success) {
+    public getService_result setSuccess(ByteBuffer success) {
       this.success = success;
       return this;
     }
@@ -2549,7 +1916,7 @@ public class SinchanaClient {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Set<ServiceObject>)value);
+          setSuccess((ByteBuffer)value);
         }
         break;
 
@@ -2650,7 +2017,7 @@ public class SinchanaClient {
       if (this.success == null) {
         sb.append("null");
       } else {
-        sb.append(this.success);
+        org.apache.thrift.TBaseHelper.toString(this.success, sb);
       }
       first = false;
       sb.append(")");
@@ -2696,19 +2063,8 @@ public class SinchanaClient {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
-                {
-                  org.apache.thrift.protocol.TSet _set32 = iprot.readSetBegin();
-                  struct.success = new HashSet<ServiceObject>(2*_set32.size);
-                  for (int _i33 = 0; _i33 < _set32.size; ++_i33)
-                  {
-                    ServiceObject _elem34; // required
-                    _elem34 = new ServiceObject();
-                    _elem34.read(iprot);
-                    struct.success.add(_elem34);
-                  }
-                  iprot.readSetEnd();
-                }
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.success = iprot.readBinary();
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -2731,14 +2087,7 @@ public class SinchanaClient {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          {
-            oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (ServiceObject _iter35 : struct.success)
-            {
-              _iter35.write(oprot);
-            }
-            oprot.writeSetEnd();
-          }
+          oprot.writeBinary(struct.success);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -2764,13 +2113,7 @@ public class SinchanaClient {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          {
-            oprot.writeI32(struct.success.size());
-            for (ServiceObject _iter36 : struct.success)
-            {
-              _iter36.write(oprot);
-            }
-          }
+          oprot.writeBinary(struct.success);
         }
       }
 
@@ -2779,17 +2122,7 @@ public class SinchanaClient {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          {
-            org.apache.thrift.protocol.TSet _set37 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new HashSet<ServiceObject>(2*_set37.size);
-            for (int _i38 = 0; _i38 < _set37.size; ++_i38)
-            {
-              ServiceObject _elem39; // required
-              _elem39 = new ServiceObject();
-              _elem39.read(iprot);
-              struct.success.add(_elem39);
-            }
-          }
+          struct.success = iprot.readBinary();
           struct.setSuccessIsSet(true);
         }
       }
@@ -2800,7 +2133,8 @@ public class SinchanaClient {
   public static class publishData_args implements org.apache.thrift.TBase<publishData_args, publishData_args._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("publishData_args");
 
-    private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField DATA_KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("dataKey", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRING, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -2808,11 +2142,13 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new publishData_argsTupleSchemeFactory());
     }
 
-    public DataObject data; // required
+    public ByteBuffer dataKey; // required
+    public ByteBuffer data; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      DATA((short)1, "data");
+      DATA_KEY((short)1, "dataKey"),
+      DATA((short)2, "data");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -2827,7 +2163,9 @@ public class SinchanaClient {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // DATA
+          case 1: // DATA_KEY
+            return DATA_KEY;
+          case 2: // DATA
             return DATA;
           default:
             return null;
@@ -2872,8 +2210,10 @@ public class SinchanaClient {
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.DATA_KEY, new org.apache.thrift.meta_data.FieldMetaData("dataKey", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       tmpMap.put(_Fields.DATA, new org.apache.thrift.meta_data.FieldMetaData("data", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, DataObject.class)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(publishData_args.class, metaDataMap);
     }
@@ -2882,9 +2222,11 @@ public class SinchanaClient {
     }
 
     public publishData_args(
-      DataObject data)
+      ByteBuffer dataKey,
+      ByteBuffer data)
     {
       this();
+      this.dataKey = dataKey;
       this.data = data;
     }
 
@@ -2892,8 +2234,13 @@ public class SinchanaClient {
      * Performs a deep copy on <i>other</i>.
      */
     public publishData_args(publishData_args other) {
+      if (other.isSetDataKey()) {
+        this.dataKey = org.apache.thrift.TBaseHelper.copyBinary(other.dataKey);
+;
+      }
       if (other.isSetData()) {
-        this.data = new DataObject(other.data);
+        this.data = org.apache.thrift.TBaseHelper.copyBinary(other.data);
+;
       }
     }
 
@@ -2903,14 +2250,59 @@ public class SinchanaClient {
 
     @Override
     public void clear() {
+      this.dataKey = null;
       this.data = null;
     }
 
-    public DataObject getData() {
-      return this.data;
+    public byte[] getDataKey() {
+      setDataKey(org.apache.thrift.TBaseHelper.rightSize(dataKey));
+      return dataKey == null ? null : dataKey.array();
     }
 
-    public publishData_args setData(DataObject data) {
+    public ByteBuffer bufferForDataKey() {
+      return dataKey;
+    }
+
+    public publishData_args setDataKey(byte[] dataKey) {
+      setDataKey(dataKey == null ? (ByteBuffer)null : ByteBuffer.wrap(dataKey));
+      return this;
+    }
+
+    public publishData_args setDataKey(ByteBuffer dataKey) {
+      this.dataKey = dataKey;
+      return this;
+    }
+
+    public void unsetDataKey() {
+      this.dataKey = null;
+    }
+
+    /** Returns true if field dataKey is set (has been assigned a value) and false otherwise */
+    public boolean isSetDataKey() {
+      return this.dataKey != null;
+    }
+
+    public void setDataKeyIsSet(boolean value) {
+      if (!value) {
+        this.dataKey = null;
+      }
+    }
+
+    public byte[] getData() {
+      setData(org.apache.thrift.TBaseHelper.rightSize(data));
+      return data == null ? null : data.array();
+    }
+
+    public ByteBuffer bufferForData() {
+      return data;
+    }
+
+    public publishData_args setData(byte[] data) {
+      setData(data == null ? (ByteBuffer)null : ByteBuffer.wrap(data));
+      return this;
+    }
+
+    public publishData_args setData(ByteBuffer data) {
       this.data = data;
       return this;
     }
@@ -2932,11 +2324,19 @@ public class SinchanaClient {
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
+      case DATA_KEY:
+        if (value == null) {
+          unsetDataKey();
+        } else {
+          setDataKey((ByteBuffer)value);
+        }
+        break;
+
       case DATA:
         if (value == null) {
           unsetData();
         } else {
-          setData((DataObject)value);
+          setData((ByteBuffer)value);
         }
         break;
 
@@ -2945,6 +2345,9 @@ public class SinchanaClient {
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
+      case DATA_KEY:
+        return getDataKey();
+
       case DATA:
         return getData();
 
@@ -2959,6 +2362,8 @@ public class SinchanaClient {
       }
 
       switch (field) {
+      case DATA_KEY:
+        return isSetDataKey();
       case DATA:
         return isSetData();
       }
@@ -2977,6 +2382,15 @@ public class SinchanaClient {
     public boolean equals(publishData_args that) {
       if (that == null)
         return false;
+
+      boolean this_present_dataKey = true && this.isSetDataKey();
+      boolean that_present_dataKey = true && that.isSetDataKey();
+      if (this_present_dataKey || that_present_dataKey) {
+        if (!(this_present_dataKey && that_present_dataKey))
+          return false;
+        if (!this.dataKey.equals(that.dataKey))
+          return false;
+      }
 
       boolean this_present_data = true && this.isSetData();
       boolean that_present_data = true && that.isSetData();
@@ -3003,6 +2417,16 @@ public class SinchanaClient {
       int lastComparison = 0;
       publishData_args typedOther = (publishData_args)other;
 
+      lastComparison = Boolean.valueOf(isSetDataKey()).compareTo(typedOther.isSetDataKey());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetDataKey()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.dataKey, typedOther.dataKey);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       lastComparison = Boolean.valueOf(isSetData()).compareTo(typedOther.isSetData());
       if (lastComparison != 0) {
         return lastComparison;
@@ -3033,11 +2457,19 @@ public class SinchanaClient {
       StringBuilder sb = new StringBuilder("publishData_args(");
       boolean first = true;
 
+      sb.append("dataKey:");
+      if (this.dataKey == null) {
+        sb.append("null");
+      } else {
+        org.apache.thrift.TBaseHelper.toString(this.dataKey, sb);
+      }
+      first = false;
+      if (!first) sb.append(", ");
       sb.append("data:");
       if (this.data == null) {
         sb.append("null");
       } else {
-        sb.append(this.data);
+        org.apache.thrift.TBaseHelper.toString(this.data, sb);
       }
       first = false;
       sb.append(")");
@@ -3082,10 +2514,17 @@ public class SinchanaClient {
             break;
           }
           switch (schemeField.id) {
-            case 1: // DATA
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.data = new DataObject();
-                struct.data.read(iprot);
+            case 1: // DATA_KEY
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.dataKey = iprot.readBinary();
+                struct.setDataKeyIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // DATA
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.data = iprot.readBinary();
                 struct.setDataIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -3106,9 +2545,14 @@ public class SinchanaClient {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.dataKey != null) {
+          oprot.writeFieldBegin(DATA_KEY_FIELD_DESC);
+          oprot.writeBinary(struct.dataKey);
+          oprot.writeFieldEnd();
+        }
         if (struct.data != null) {
           oprot.writeFieldBegin(DATA_FIELD_DESC);
-          struct.data.write(oprot);
+          oprot.writeBinary(struct.data);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -3129,22 +2573,31 @@ public class SinchanaClient {
       public void write(org.apache.thrift.protocol.TProtocol prot, publishData_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
-        if (struct.isSetData()) {
+        if (struct.isSetDataKey()) {
           optionals.set(0);
         }
-        oprot.writeBitSet(optionals, 1);
         if (struct.isSetData()) {
-          struct.data.write(oprot);
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetDataKey()) {
+          oprot.writeBinary(struct.dataKey);
+        }
+        if (struct.isSetData()) {
+          oprot.writeBinary(struct.data);
         }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, publishData_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
+        BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
-          struct.data = new DataObject();
-          struct.data.read(iprot);
+          struct.dataKey = iprot.readBinary();
+          struct.setDataKeyIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.data = iprot.readBinary();
           struct.setDataIsSet(true);
         }
       }
@@ -3513,7 +2966,7 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new removeData_argsTupleSchemeFactory());
     }
 
-    public String dataKey; // required
+    public ByteBuffer dataKey; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -3578,7 +3031,7 @@ public class SinchanaClient {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.DATA_KEY, new org.apache.thrift.meta_data.FieldMetaData("dataKey", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeData_args.class, metaDataMap);
     }
@@ -3587,7 +3040,7 @@ public class SinchanaClient {
     }
 
     public removeData_args(
-      String dataKey)
+      ByteBuffer dataKey)
     {
       this();
       this.dataKey = dataKey;
@@ -3598,7 +3051,8 @@ public class SinchanaClient {
      */
     public removeData_args(removeData_args other) {
       if (other.isSetDataKey()) {
-        this.dataKey = other.dataKey;
+        this.dataKey = org.apache.thrift.TBaseHelper.copyBinary(other.dataKey);
+;
       }
     }
 
@@ -3611,11 +3065,21 @@ public class SinchanaClient {
       this.dataKey = null;
     }
 
-    public String getDataKey() {
-      return this.dataKey;
+    public byte[] getDataKey() {
+      setDataKey(org.apache.thrift.TBaseHelper.rightSize(dataKey));
+      return dataKey == null ? null : dataKey.array();
     }
 
-    public removeData_args setDataKey(String dataKey) {
+    public ByteBuffer bufferForDataKey() {
+      return dataKey;
+    }
+
+    public removeData_args setDataKey(byte[] dataKey) {
+      setDataKey(dataKey == null ? (ByteBuffer)null : ByteBuffer.wrap(dataKey));
+      return this;
+    }
+
+    public removeData_args setDataKey(ByteBuffer dataKey) {
       this.dataKey = dataKey;
       return this;
     }
@@ -3641,7 +3105,7 @@ public class SinchanaClient {
         if (value == null) {
           unsetDataKey();
         } else {
-          setDataKey((String)value);
+          setDataKey((ByteBuffer)value);
         }
         break;
 
@@ -3742,7 +3206,7 @@ public class SinchanaClient {
       if (this.dataKey == null) {
         sb.append("null");
       } else {
-        sb.append(this.dataKey);
+        org.apache.thrift.TBaseHelper.toString(this.dataKey, sb);
       }
       first = false;
       sb.append(")");
@@ -3789,7 +3253,7 @@ public class SinchanaClient {
           switch (schemeField.id) {
             case 1: // DATA_KEY
               if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.dataKey = iprot.readString();
+                struct.dataKey = iprot.readBinary();
                 struct.setDataKeyIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -3812,7 +3276,7 @@ public class SinchanaClient {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.dataKey != null) {
           oprot.writeFieldBegin(DATA_KEY_FIELD_DESC);
-          oprot.writeString(struct.dataKey);
+          oprot.writeBinary(struct.dataKey);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -3838,7 +3302,7 @@ public class SinchanaClient {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetDataKey()) {
-          oprot.writeString(struct.dataKey);
+          oprot.writeBinary(struct.dataKey);
         }
       }
 
@@ -3847,7 +3311,7 @@ public class SinchanaClient {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.dataKey = iprot.readString();
+          struct.dataKey = iprot.readBinary();
           struct.setDataKeyIsSet(true);
         }
       }
@@ -4216,7 +3680,7 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new getData_argsTupleSchemeFactory());
     }
 
-    public String dataKey; // required
+    public ByteBuffer dataKey; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -4281,7 +3745,7 @@ public class SinchanaClient {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.DATA_KEY, new org.apache.thrift.meta_data.FieldMetaData("dataKey", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getData_args.class, metaDataMap);
     }
@@ -4290,7 +3754,7 @@ public class SinchanaClient {
     }
 
     public getData_args(
-      String dataKey)
+      ByteBuffer dataKey)
     {
       this();
       this.dataKey = dataKey;
@@ -4301,7 +3765,8 @@ public class SinchanaClient {
      */
     public getData_args(getData_args other) {
       if (other.isSetDataKey()) {
-        this.dataKey = other.dataKey;
+        this.dataKey = org.apache.thrift.TBaseHelper.copyBinary(other.dataKey);
+;
       }
     }
 
@@ -4314,11 +3779,21 @@ public class SinchanaClient {
       this.dataKey = null;
     }
 
-    public String getDataKey() {
-      return this.dataKey;
+    public byte[] getDataKey() {
+      setDataKey(org.apache.thrift.TBaseHelper.rightSize(dataKey));
+      return dataKey == null ? null : dataKey.array();
     }
 
-    public getData_args setDataKey(String dataKey) {
+    public ByteBuffer bufferForDataKey() {
+      return dataKey;
+    }
+
+    public getData_args setDataKey(byte[] dataKey) {
+      setDataKey(dataKey == null ? (ByteBuffer)null : ByteBuffer.wrap(dataKey));
+      return this;
+    }
+
+    public getData_args setDataKey(ByteBuffer dataKey) {
       this.dataKey = dataKey;
       return this;
     }
@@ -4344,7 +3819,7 @@ public class SinchanaClient {
         if (value == null) {
           unsetDataKey();
         } else {
-          setDataKey((String)value);
+          setDataKey((ByteBuffer)value);
         }
         break;
 
@@ -4445,7 +3920,7 @@ public class SinchanaClient {
       if (this.dataKey == null) {
         sb.append("null");
       } else {
-        sb.append(this.dataKey);
+        org.apache.thrift.TBaseHelper.toString(this.dataKey, sb);
       }
       first = false;
       sb.append(")");
@@ -4492,7 +3967,7 @@ public class SinchanaClient {
           switch (schemeField.id) {
             case 1: // DATA_KEY
               if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.dataKey = iprot.readString();
+                struct.dataKey = iprot.readBinary();
                 struct.setDataKeyIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -4515,7 +3990,7 @@ public class SinchanaClient {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.dataKey != null) {
           oprot.writeFieldBegin(DATA_KEY_FIELD_DESC);
-          oprot.writeString(struct.dataKey);
+          oprot.writeBinary(struct.dataKey);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -4541,7 +4016,7 @@ public class SinchanaClient {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetDataKey()) {
-          oprot.writeString(struct.dataKey);
+          oprot.writeBinary(struct.dataKey);
         }
       }
 
@@ -4550,7 +4025,7 @@ public class SinchanaClient {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.dataKey = iprot.readString();
+          struct.dataKey = iprot.readBinary();
           struct.setDataKeyIsSet(true);
         }
       }
@@ -4561,7 +4036,7 @@ public class SinchanaClient {
   public static class getData_result implements org.apache.thrift.TBase<getData_result, getData_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getData_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.SET, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -4569,7 +4044,7 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new getData_resultTupleSchemeFactory());
     }
 
-    public Set<DataObject> success; // required
+    public ByteBuffer success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -4634,8 +4109,7 @@ public class SinchanaClient {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
-              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, DataObject.class))));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getData_result.class, metaDataMap);
     }
@@ -4644,7 +4118,7 @@ public class SinchanaClient {
     }
 
     public getData_result(
-      Set<DataObject> success)
+      ByteBuffer success)
     {
       this();
       this.success = success;
@@ -4655,11 +4129,8 @@ public class SinchanaClient {
      */
     public getData_result(getData_result other) {
       if (other.isSetSuccess()) {
-        Set<DataObject> __this__success = new HashSet<DataObject>();
-        for (DataObject other_element : other.success) {
-          __this__success.add(new DataObject(other_element));
-        }
-        this.success = __this__success;
+        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
+;
       }
     }
 
@@ -4672,26 +4143,21 @@ public class SinchanaClient {
       this.success = null;
     }
 
-    public int getSuccessSize() {
-      return (this.success == null) ? 0 : this.success.size();
+    public byte[] getSuccess() {
+      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
+      return success == null ? null : success.array();
     }
 
-    public java.util.Iterator<DataObject> getSuccessIterator() {
-      return (this.success == null) ? null : this.success.iterator();
+    public ByteBuffer bufferForSuccess() {
+      return success;
     }
 
-    public void addToSuccess(DataObject elem) {
-      if (this.success == null) {
-        this.success = new HashSet<DataObject>();
-      }
-      this.success.add(elem);
+    public getData_result setSuccess(byte[] success) {
+      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
+      return this;
     }
 
-    public Set<DataObject> getSuccess() {
-      return this.success;
-    }
-
-    public getData_result setSuccess(Set<DataObject> success) {
+    public getData_result setSuccess(ByteBuffer success) {
       this.success = success;
       return this;
     }
@@ -4717,7 +4183,7 @@ public class SinchanaClient {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Set<DataObject>)value);
+          setSuccess((ByteBuffer)value);
         }
         break;
 
@@ -4818,7 +4284,7 @@ public class SinchanaClient {
       if (this.success == null) {
         sb.append("null");
       } else {
-        sb.append(this.success);
+        org.apache.thrift.TBaseHelper.toString(this.success, sb);
       }
       first = false;
       sb.append(")");
@@ -4864,19 +4330,8 @@ public class SinchanaClient {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
-                {
-                  org.apache.thrift.protocol.TSet _set40 = iprot.readSetBegin();
-                  struct.success = new HashSet<DataObject>(2*_set40.size);
-                  for (int _i41 = 0; _i41 < _set40.size; ++_i41)
-                  {
-                    DataObject _elem42; // required
-                    _elem42 = new DataObject();
-                    _elem42.read(iprot);
-                    struct.success.add(_elem42);
-                  }
-                  iprot.readSetEnd();
-                }
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.success = iprot.readBinary();
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -4899,14 +4354,7 @@ public class SinchanaClient {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          {
-            oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (DataObject _iter43 : struct.success)
-            {
-              _iter43.write(oprot);
-            }
-            oprot.writeSetEnd();
-          }
+          oprot.writeBinary(struct.success);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -4932,13 +4380,7 @@ public class SinchanaClient {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          {
-            oprot.writeI32(struct.success.size());
-            for (DataObject _iter44 : struct.success)
-            {
-              _iter44.write(oprot);
-            }
-          }
+          oprot.writeBinary(struct.success);
         }
       }
 
@@ -4947,17 +4389,7 @@ public class SinchanaClient {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          {
-            org.apache.thrift.protocol.TSet _set45 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new HashSet<DataObject>(2*_set45.size);
-            for (int _i46 = 0; _i46 < _set45.size; ++_i46)
-            {
-              DataObject _elem47; // required
-              _elem47 = new DataObject();
-              _elem47.read(iprot);
-              struct.success.add(_elem47);
-            }
-          }
+          struct.success = iprot.readBinary();
           struct.setSuccessIsSet(true);
         }
       }
@@ -4969,6 +4401,7 @@ public class SinchanaClient {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("request_args");
 
     private static final org.apache.thrift.protocol.TField DESTINATION_FIELD_DESC = new org.apache.thrift.protocol.TField("destination", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("message", org.apache.thrift.protocol.TType.STRING, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -4976,11 +4409,13 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new request_argsTupleSchemeFactory());
     }
 
-    public String destination; // required
+    public ByteBuffer destination; // required
+    public ByteBuffer message; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      DESTINATION((short)1, "destination");
+      DESTINATION((short)1, "destination"),
+      MESSAGE((short)2, "message");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -4997,6 +4432,8 @@ public class SinchanaClient {
         switch(fieldId) {
           case 1: // DESTINATION
             return DESTINATION;
+          case 2: // MESSAGE
+            return MESSAGE;
           default:
             return null;
         }
@@ -5041,7 +4478,9 @@ public class SinchanaClient {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.DESTINATION, new org.apache.thrift.meta_data.FieldMetaData("destination", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
+      tmpMap.put(_Fields.MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(request_args.class, metaDataMap);
     }
@@ -5050,10 +4489,12 @@ public class SinchanaClient {
     }
 
     public request_args(
-      String destination)
+      ByteBuffer destination,
+      ByteBuffer message)
     {
       this();
       this.destination = destination;
+      this.message = message;
     }
 
     /**
@@ -5061,7 +4502,12 @@ public class SinchanaClient {
      */
     public request_args(request_args other) {
       if (other.isSetDestination()) {
-        this.destination = other.destination;
+        this.destination = org.apache.thrift.TBaseHelper.copyBinary(other.destination);
+;
+      }
+      if (other.isSetMessage()) {
+        this.message = org.apache.thrift.TBaseHelper.copyBinary(other.message);
+;
       }
     }
 
@@ -5072,13 +4518,24 @@ public class SinchanaClient {
     @Override
     public void clear() {
       this.destination = null;
+      this.message = null;
     }
 
-    public String getDestination() {
-      return this.destination;
+    public byte[] getDestination() {
+      setDestination(org.apache.thrift.TBaseHelper.rightSize(destination));
+      return destination == null ? null : destination.array();
     }
 
-    public request_args setDestination(String destination) {
+    public ByteBuffer bufferForDestination() {
+      return destination;
+    }
+
+    public request_args setDestination(byte[] destination) {
+      setDestination(destination == null ? (ByteBuffer)null : ByteBuffer.wrap(destination));
+      return this;
+    }
+
+    public request_args setDestination(ByteBuffer destination) {
       this.destination = destination;
       return this;
     }
@@ -5098,13 +4555,55 @@ public class SinchanaClient {
       }
     }
 
+    public byte[] getMessage() {
+      setMessage(org.apache.thrift.TBaseHelper.rightSize(message));
+      return message == null ? null : message.array();
+    }
+
+    public ByteBuffer bufferForMessage() {
+      return message;
+    }
+
+    public request_args setMessage(byte[] message) {
+      setMessage(message == null ? (ByteBuffer)null : ByteBuffer.wrap(message));
+      return this;
+    }
+
+    public request_args setMessage(ByteBuffer message) {
+      this.message = message;
+      return this;
+    }
+
+    public void unsetMessage() {
+      this.message = null;
+    }
+
+    /** Returns true if field message is set (has been assigned a value) and false otherwise */
+    public boolean isSetMessage() {
+      return this.message != null;
+    }
+
+    public void setMessageIsSet(boolean value) {
+      if (!value) {
+        this.message = null;
+      }
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case DESTINATION:
         if (value == null) {
           unsetDestination();
         } else {
-          setDestination((String)value);
+          setDestination((ByteBuffer)value);
+        }
+        break;
+
+      case MESSAGE:
+        if (value == null) {
+          unsetMessage();
+        } else {
+          setMessage((ByteBuffer)value);
         }
         break;
 
@@ -5115,6 +4614,9 @@ public class SinchanaClient {
       switch (field) {
       case DESTINATION:
         return getDestination();
+
+      case MESSAGE:
+        return getMessage();
 
       }
       throw new IllegalStateException();
@@ -5129,6 +4631,8 @@ public class SinchanaClient {
       switch (field) {
       case DESTINATION:
         return isSetDestination();
+      case MESSAGE:
+        return isSetMessage();
       }
       throw new IllegalStateException();
     }
@@ -5152,6 +4656,15 @@ public class SinchanaClient {
         if (!(this_present_destination && that_present_destination))
           return false;
         if (!this.destination.equals(that.destination))
+          return false;
+      }
+
+      boolean this_present_message = true && this.isSetMessage();
+      boolean that_present_message = true && that.isSetMessage();
+      if (this_present_message || that_present_message) {
+        if (!(this_present_message && that_present_message))
+          return false;
+        if (!this.message.equals(that.message))
           return false;
       }
 
@@ -5181,6 +4694,16 @@ public class SinchanaClient {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetMessage()).compareTo(typedOther.isSetMessage());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetMessage()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.message, typedOther.message);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -5205,7 +4728,15 @@ public class SinchanaClient {
       if (this.destination == null) {
         sb.append("null");
       } else {
-        sb.append(this.destination);
+        org.apache.thrift.TBaseHelper.toString(this.destination, sb);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("message:");
+      if (this.message == null) {
+        sb.append("null");
+      } else {
+        org.apache.thrift.TBaseHelper.toString(this.message, sb);
       }
       first = false;
       sb.append(")");
@@ -5252,8 +4783,16 @@ public class SinchanaClient {
           switch (schemeField.id) {
             case 1: // DESTINATION
               if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.destination = iprot.readString();
+                struct.destination = iprot.readBinary();
                 struct.setDestinationIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // MESSAGE
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.message = iprot.readBinary();
+                struct.setMessageIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -5275,7 +4814,12 @@ public class SinchanaClient {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.destination != null) {
           oprot.writeFieldBegin(DESTINATION_FIELD_DESC);
-          oprot.writeString(struct.destination);
+          oprot.writeBinary(struct.destination);
+          oprot.writeFieldEnd();
+        }
+        if (struct.message != null) {
+          oprot.writeFieldBegin(MESSAGE_FIELD_DESC);
+          oprot.writeBinary(struct.message);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -5299,19 +4843,29 @@ public class SinchanaClient {
         if (struct.isSetDestination()) {
           optionals.set(0);
         }
-        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetMessage()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
         if (struct.isSetDestination()) {
-          oprot.writeString(struct.destination);
+          oprot.writeBinary(struct.destination);
+        }
+        if (struct.isSetMessage()) {
+          oprot.writeBinary(struct.message);
         }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, request_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(1);
+        BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
-          struct.destination = iprot.readString();
+          struct.destination = iprot.readBinary();
           struct.setDestinationIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.message = iprot.readBinary();
+          struct.setMessageIsSet(true);
         }
       }
     }
@@ -5329,7 +4883,7 @@ public class SinchanaClient {
       schemes.put(TupleScheme.class, new request_resultTupleSchemeFactory());
     }
 
-    public String success; // required
+    public ByteBuffer success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -5394,7 +4948,7 @@ public class SinchanaClient {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(request_result.class, metaDataMap);
     }
@@ -5403,7 +4957,7 @@ public class SinchanaClient {
     }
 
     public request_result(
-      String success)
+      ByteBuffer success)
     {
       this();
       this.success = success;
@@ -5414,7 +4968,8 @@ public class SinchanaClient {
      */
     public request_result(request_result other) {
       if (other.isSetSuccess()) {
-        this.success = other.success;
+        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
+;
       }
     }
 
@@ -5427,11 +4982,21 @@ public class SinchanaClient {
       this.success = null;
     }
 
-    public String getSuccess() {
-      return this.success;
+    public byte[] getSuccess() {
+      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
+      return success == null ? null : success.array();
     }
 
-    public request_result setSuccess(String success) {
+    public ByteBuffer bufferForSuccess() {
+      return success;
+    }
+
+    public request_result setSuccess(byte[] success) {
+      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
+      return this;
+    }
+
+    public request_result setSuccess(ByteBuffer success) {
       this.success = success;
       return this;
     }
@@ -5457,7 +5022,7 @@ public class SinchanaClient {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((String)value);
+          setSuccess((ByteBuffer)value);
         }
         break;
 
@@ -5558,7 +5123,7 @@ public class SinchanaClient {
       if (this.success == null) {
         sb.append("null");
       } else {
-        sb.append(this.success);
+        org.apache.thrift.TBaseHelper.toString(this.success, sb);
       }
       first = false;
       sb.append(")");
@@ -5605,7 +5170,7 @@ public class SinchanaClient {
           switch (schemeField.id) {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.success = iprot.readString();
+                struct.success = iprot.readBinary();
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -5628,7 +5193,7 @@ public class SinchanaClient {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeString(struct.success);
+          oprot.writeBinary(struct.success);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -5654,7 +5219,7 @@ public class SinchanaClient {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeString(struct.success);
+          oprot.writeBinary(struct.success);
         }
       }
 
@@ -5663,7 +5228,7 @@ public class SinchanaClient {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readString();
+          struct.success = iprot.readBinary();
           struct.setSuccessIsSet(true);
         }
       }

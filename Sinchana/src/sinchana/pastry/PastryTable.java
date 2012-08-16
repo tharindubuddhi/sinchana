@@ -7,7 +7,7 @@ package sinchana.pastry;
 import java.math.BigInteger;
 import java.util.HashSet;
 import sinchana.RoutingHandler;
-import sinchana.Server;
+import sinchana.SinchanaServer;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -26,8 +26,8 @@ public class PastryTable implements RoutingHandler{
     public static final int BASE = 16;
     public static final int TABLE_SIZE = (int) (Math.log(Math.pow(2, IDSPACE))/Math.log(BASE));
 	private static final int SUCCESSOR_LEVEL = 3;
-	private final Server server;
-	private String serverId;
+	private final SinchanaServer server;
+	private byte[] serverId;
 	private BigInteger serverIdAsBigInt;
 	private final Node[][] fingerTable = new Node[TABLE_SIZE][BASE];
 	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
@@ -39,9 +39,9 @@ public class PastryTable implements RoutingHandler{
     
 	/**
 	 * Class constructor with the server instance where the routing table is initialize.
-	 * @param server		Server instance. The routing table will be initialize based on this.
+	 * @param server		SinchanaServer instance. The routing table will be initialize based on this.
 	 */
-	public PastryTable(Server svr) {
+	public PastryTable(SinchanaServer svr) {
 		this.server = svr;
 		this.timer.scheduleAtFixedRate(new TimerTask() {
 
@@ -62,7 +62,7 @@ public class PastryTable implements RoutingHandler{
 	@Override
 	public void init() {
 		this.serverId = this.server.getServerId();
-		this.serverIdAsBigInt = new BigInteger(this.serverId, 16);
+		this.serverIdAsBigInt = new BigInteger(this.serverId);
 		synchronized (fingerTable) {
 			for (int i = 0; i < fingerTable.length; i++) {
 				/**
@@ -71,8 +71,8 @@ public class PastryTable implements RoutingHandler{
 				 * all the table entries.
 				 */
 //				fingerTable[i] = new FingerTableEntry();
-//				fingerTable[i].setStart(new BigInteger("2", 16).pow(i).add(serverIdAsBigInt).mod(Server.GRID_SIZE));
-//				fingerTable[i].setEnd(new BigInteger("2", 16).pow(i + 1).add(serverIdAsBigInt).subtract(new BigInteger("1", 16)).mod(Server.GRID_SIZE));
+//				fingerTable[i].setStart(new BigInteger("2", 16).pow(i).add(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE));
+//				fingerTable[i].setEnd(new BigInteger("2", 16).pow(i + 1).add(serverIdAsBigInt).subtract(new BigInteger("1", 16)).mod(SinchanaServer.GRID_SIZE));
 			}
 		}
 		this.initFingerTable();
@@ -136,7 +136,7 @@ public class PastryTable implements RoutingHandler{
 	}
 
 	@Override
-	public Node getNextNode(String destination) {
+	public Node getNextNode(byte[] destination) {
 		BigInteger destinationOffset;
 		//calculates the offset to the destination.
 		destinationOffset = getOffset(destination);
@@ -200,7 +200,7 @@ public class PastryTable implements RoutingHandler{
 		}
 		boolean updated = false;
 		//calculates offsets for the ids.
-		BigInteger newNodeOffset = getOffset(node.serverId);
+		BigInteger newNodeOffset = getOffset(node.getServerId());
 
 		synchronized (successors) {
 			BigInteger successorWRT = ZERO;
@@ -213,7 +213,7 @@ public class PastryTable implements RoutingHandler{
 				 * the new node will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger successorOffset = getOffset(this.successors[i].serverId);
+				BigInteger successorOffset = getOffset(this.successors[i].getServerId());
 				if (successorWRT.compareTo(newNodeOffset) == -1
 						&& (newNodeOffset.compareTo(successorOffset) == -1
 						|| successorOffset.equals(ZERO))) {
@@ -223,12 +223,12 @@ public class PastryTable implements RoutingHandler{
 					updated = true;
 				}
 				if (!successors[i].serverId.equals(this.serverId)) {
-					successorWRT = getOffset(successors[i].serverId);
+					successorWRT = getOffset(successors[i].getServerId());
 				}
 			}
 		}
 		synchronized (predecessors) {
-			BigInteger predecessorWRT = Server.GRID_SIZE;
+			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
 				/**
 				 * Checks whether the new node should be set as the predecessors or not. 
@@ -238,7 +238,7 @@ public class PastryTable implements RoutingHandler{
 				 * the new node will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger predecessorOffset = getOffset(this.predecessors[i].serverId);
+				BigInteger predecessorOffset = getOffset(this.predecessors[i].getServerId());
 				if (newNodeOffset.compareTo(predecessorWRT) == -1
 						&& (predecessorOffset.compareTo(newNodeOffset) == -1
 						|| predecessorOffset.equals(ZERO))) {
@@ -248,7 +248,7 @@ public class PastryTable implements RoutingHandler{
 					updated = true;
 				}
 				if (!predecessors[i].serverId.equals(this.serverId)) {
-					predecessorWRT = getOffset(predecessors[i].serverId);
+					predecessorWRT = getOffset(predecessors[i].getServerId());
 				}
 			}
 		}
@@ -309,12 +309,12 @@ public class PastryTable implements RoutingHandler{
 	 * @param id	Id to calculate the offset.
 	 * @return		Offset of the id relative to this server.
 	 */
-	private BigInteger getOffset(String id) {
-		return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(serverIdAsBigInt).mod(Server.GRID_SIZE);
+	private BigInteger getOffset(byte[] id) {
+		return SinchanaServer.GRID_SIZE.add(new BigInteger(id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
 
 	private BigInteger getOffset(BigInteger id) {
-		return Server.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(Server.GRID_SIZE);
+		return SinchanaServer.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
 }
 
