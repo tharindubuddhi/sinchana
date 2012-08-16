@@ -63,13 +63,6 @@ public class MessageHandler {
 	/**
 	 * 
 	 */
-	public void startAsRootNode() {
-		messageQueue.start();
-	}
-
-	/**
-	 * 
-	 */
 	public void terminate() {
 		messageQueue.reset();
 	}

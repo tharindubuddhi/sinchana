@@ -35,13 +35,13 @@ public class SinchanaServer extends Node {
 	private final ConnectionPool connectionPool = new ConnectionPool(this);
 	private final ClientHandler clientHandler = new ClientHandler(this);
 	private final SinchanaServiceStore sinchanaServiceStore = new SinchanaServiceStore();
+	private final String remoteNodeAddress;
+	private final BigInteger serverIdAsBigInt;
+	private final String serverIdAsString;
+	private boolean joined = false;
 	private SinchanaRequestHandler SinchanaRequestHandler = null;
 	private SinchanaTestInterface sinchanaTestInterface = null;
 	private SinchanaDataStoreInterface sinchanaDataStoreInterface = new SinchanaDataStoreImpl();
-	private String remoteNodeAddress = null;
-	private BigInteger serverIdAsBigInt;
-	private String serverIdAsString;
-	private boolean joined = false;
 
 	/**
 	 * Start a new node with the given server ID and next hop.
@@ -54,31 +54,39 @@ public class SinchanaServer extends Node {
 	public SinchanaServer(int localPortId) {
 		try {
 			InetAddress inetAddress = InetAddress.getLocalHost();
-			this.init(inetAddress.getHostAddress() + ":" + localPortId, null);
+			this.address = inetAddress.getHostAddress() + ":" + localPortId;
+			this.setServerId(CommonTools.generateId(this.address));
+			this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
+			this.serverIdAsString = CommonTools.toReadableString(this.getServerId());
+			this.remoteNodeAddress = null;
 		} catch (UnknownHostException ex) {
 			throw new RuntimeException("Error getting local host ip.", ex);
 		}
 	}
 
 	public SinchanaServer(String localAddress) {
-		this.init(localAddress, null);
+		this.address = localAddress;
+		this.setServerId(CommonTools.generateId(this.address));
+		this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
+		this.serverIdAsString = CommonTools.toReadableString(this.getServerId());
+		this.remoteNodeAddress = null;
 	}
 
 	public SinchanaServer(int localPortId, String remoteNodeAddress) {
 		try {
 			InetAddress inetAddress = InetAddress.getLocalHost();
-			this.init(inetAddress.getHostAddress() + ":" + localPortId, remoteNodeAddress);
+			this.address = inetAddress.getHostAddress() + ":" + localPortId;
+			this.setServerId(CommonTools.generateId(this.address));
+			this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
+			this.serverIdAsString = CommonTools.toReadableString(this.getServerId());
+			this.remoteNodeAddress = remoteNodeAddress;
 		} catch (UnknownHostException ex) {
 			throw new RuntimeException("Error getting local host ip.", ex);
 		}
 	}
 
 	public SinchanaServer(String localAddress, String remoteNodeAddress) {
-		this.init(localAddress, remoteNodeAddress);
-	}
-
-	private void init(String address, String remoteNodeAddress) {
-		this.address = address;
+		this.address = localAddress;
 		this.setServerId(CommonTools.generateId(this.address));
 		this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
 		this.serverIdAsString = CommonTools.toReadableString(this.getServerId());
@@ -112,10 +120,9 @@ public class SinchanaServer extends Node {
 				}
 			}
 		} else {
-			this.messageHandler.startAsRootNode();
-			if (this.sinchanaTestInterface != null) {
-				this.sinchanaTestInterface.setStable(true);
-			}
+			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+			msg.setStation(this);
+			messageHandler.queueMessage(msg);
 		}
 	}
 
