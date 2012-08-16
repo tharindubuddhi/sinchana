@@ -10,7 +10,7 @@ public class TestClass {
 	public static void main(String[] args) throws InterruptedException, UnknownHostException {
 
 		String localAddress = "127.0.0.1";
-
+		
 		final SinchanaServer sinchanaServer = new SinchanaServer(localAddress + ":" + 2000);
 
 		sinchanaServer.registerSinchanaRequestHandler(new SinchanaRequestHandler() {

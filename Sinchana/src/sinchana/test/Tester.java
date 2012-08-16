@@ -17,7 +17,6 @@ import java.util.concurrent.Semaphore;
 import sinchana.CONFIGURATIONS;
 import sinchana.dataStore.SinchanaDataStoreImpl;
 import sinchana.SinchanaResponseHandler;
-import sinchana.util.tools.CommonTools;
 
 /**
  *
@@ -56,8 +55,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				@Override
 				public synchronized byte[] request(byte[] message) {
 					endTime = System.currentTimeMillis();
-//					long c = TesterController.incCount();
-//					System.out.println(server.serverId + ": " + message + "\t\t" + c + "\t" + (endTime - startTime));
 					return ("Hi " + new String(message) + ", Greetings from " + server.getServerIdAsString()).getBytes();
 				}
 			});
