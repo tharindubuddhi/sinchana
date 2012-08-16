@@ -5,17 +5,18 @@
 package sinchana;
 
 import java.util.Arrays;
+import java.util.Set;
 import sinchana.connection.*;
 
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
 import sinchana.util.logging.Logger;
-import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
+import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.messagequeue.MessageQueue;
 
@@ -60,10 +61,15 @@ public class IOHandler implements PortHandler {
 					Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 							"Node " + message.destination + " is removed from the routing table!");
 					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
-					/**
-					 *
-					 * 
-					 */
+					if (updated) {
+						Message msg = new Message(server, MessageType.DISCOVER_NEIGHBORS, 2);
+						Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
+						msg.setFailedNodeSet(failedNodes);
+						Set<Node> neighbourSet = server.getRoutingHandler().getNeighbourSet();
+						for (Node node : neighbourSet) {
+							send(msg, node);
+						}
+					}
 					addBackToQueue(message);
 					break;
 			}
@@ -118,35 +124,7 @@ public class IOHandler implements PortHandler {
 				@Override
 				public void run() {
 					try {
-						DHTServer.Processor processor = new DHTServer.Processor(new DHTServer.Iface() {
-
-							/**
-							 * This method will be called when a message is received and the message 
-							 * will be passed as the argument. 
-							 * @param message Message transfered to the this node.
-							 * @return 
-							 * @throws TException
-							 */
-							@Override
-							public int transfer(Message message) throws TException {
-								if (CONFIGURATIONS.ROUND_TRIP_TIME != 0) {
-									try {
-										Thread.sleep(CONFIGURATIONS.ROUND_TRIP_TIME);
-									} catch (InterruptedException ex) {
-										throw new RuntimeException(ex);
-									}
-								}
-								if (server.getMessageHandler().queueMessage(message)) {
-									return PortHandler.SUCCESS;
-								}
-								return PortHandler.ACCEPT_ERROR;
-							}
-
-							@Override
-							public void ping() throws TException {
-								System.out.println(server.serverId + ": pinged :)");
-							}
-						});
+						DHTServer.Processor processor = new DHTServer.Processor(new ThriftServerImpl(server));
 						int localPortId = Integer.parseInt(server.getAddress().split(":")[1]);
 						TServerTransport serverTransport = new TServerSocket(localPortId);
 						tServer = new TThreadPoolServer(

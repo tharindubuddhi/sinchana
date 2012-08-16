@@ -12,17 +12,17 @@ public class HelloService implements sinchana.service.SinchanaServiceInterface {
 
 	@Override
 	public byte[] process(byte[] serviceKey, byte[] data) {
-		throw new UnsupportedOperationException("Not supported yet.");
+		return ("Hi " + new String(data) + ", Greetings from " + new String(serviceKey)).getBytes();
 	}
 
 	@Override
 	public void isPublished(byte[] serviceKey, Boolean success) {
-		throw new UnsupportedOperationException("Not supported yet.");
+		System.out.println(new String(serviceKey) + " is published");
 	}
 
 	@Override
 	public void isRemoved(byte[] serviceKey, Boolean success) {
-		throw new UnsupportedOperationException("Not supported yet.");
+		System.out.println(new String(serviceKey) + " is removed");
 	}
 	
 }

@@ -48,7 +48,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	@Override
 	public void init() {
 		this.serverId = this.server.getServerId();
-		this.serverIdAsBigInt = new BigInteger(this.serverId);
+		this.serverIdAsBigInt = new BigInteger(1, this.serverId);
 		synchronized (this) {
 			this.initFingerTable();
 		}
@@ -290,15 +290,15 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(byte[] id) {
-		return SinchanaServer.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(SinchanaServer.GRID_SIZE);
+		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(server.getServerIdAsBigInt()).mod(SinchanaServer.GRID_SIZE);
 	}
 
 	private int getRaw(byte[] id, byte[] newId) {
 		BigInteger factor, t1, t2;
 		for (int i = TABLE_SIZE - 1; i >= 0; i--) {
 			factor = new BigInteger("10", 16).pow(i);
-			t1 = new BigInteger(id).divide(factor);
-			t2 = new BigInteger(newId).divide(factor);
+			t1 = new BigInteger(1, id).divide(factor);
+			t2 = new BigInteger(1, newId).divide(factor);
 			if (!t1.equals(t2)) {
 				return i;
 			}
@@ -307,7 +307,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	}
 
 	private int getColumn(byte[] id, int raw) {
-		return (new BigInteger(id).mod(new BigInteger("10", 16).pow(raw + 1))
+		return (new BigInteger(1, id).mod(new BigInteger("10", 16).pow(raw + 1))
 				.divide(new BigInteger("10", 16).pow(raw))).intValue();
 	}
 }

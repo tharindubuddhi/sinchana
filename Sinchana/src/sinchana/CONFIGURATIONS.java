@@ -23,8 +23,7 @@ public class CONFIGURATIONS {
 	public static final int NUM_OF_MAX_CONNECT_RETRIES = 3;
 	public static final int FAILED_REACCEPT_TIME_OUT = 10 * 1000;	//milliseconds
 	public static final int JOIN_RETRY_TIME_OUT = 5; //Seconds
-	public static final String SERVICE_TAG = "SINCHANA_SERVICE_TAG";
-	
+	public static final byte[] SERVICE_TAG = "-@-SINCHANA_SERVICE".getBytes();
 	/**Test Configurations**/
 	public static final boolean GUI_ON = false;
 	public static final boolean USE_REMOTE_CACHE_SERVER = false;

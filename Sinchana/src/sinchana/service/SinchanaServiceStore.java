@@ -20,6 +20,7 @@ public class SinchanaServiceStore {
 	 * @return the relevant Set for a given serviceKey
 	 */
 	public SinchanaServiceInterface get(byte[] key) {
+		System.out.println("looking for " + new String(key));
 		return services.get(new String(key));
 	}
 
@@ -29,6 +30,7 @@ public class SinchanaServiceStore {
 	 * @return the success value of the storing action
 	 */
 	public boolean publishService(byte[] key, SinchanaServiceInterface sinchanaServiceInterface) {
+		System.out.println("storing " + new String(key));
 		services.put(new String(key), sinchanaServiceInterface);
 		return true;
 	}

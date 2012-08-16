@@ -17,8 +17,8 @@ public class TestClass {
 
 			@Override
 			public byte[] request(byte[] message) {
-				System.out.println("S1B: " + message);
-				return ("Hi " + message).getBytes();
+				System.out.println("S1B: " + new String(message));
+				return ("Hi " + new String(message)).getBytes();
 			}
 		});
 
@@ -33,8 +33,8 @@ public class TestClass {
 
 			@Override
 			public byte[] request(byte[] message) {
-				System.out.println("S2B: " + message);
-				return ("Hi " + message).getBytes();
+				System.out.println("S2B: " + new String(message));
+				return ("Hi " + new String(message)).getBytes();
 			}
 		});
 
@@ -46,7 +46,7 @@ public class TestClass {
 
 			@Override
 			public void response(byte[] message) {
-				System.out.println("S2S: " + message);
+				System.out.println("S2S: " + new String(message));
 			}
 
 			@Override
@@ -57,7 +57,7 @@ public class TestClass {
 		System.out.println("passed ;)");
 		byte[] resp = sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes());
 		sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes(), null);
-		System.out.println("done :) " + resp);
+		System.out.println("done :) " + new String(resp));
 
 
 

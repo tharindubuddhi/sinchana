@@ -6,6 +6,7 @@ package sinchana.util.tools;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,23 +22,29 @@ public class CommonTools {
 			cript.reset();
 			cript.update(address.getBytes("utf8"));
 			byte[] digest = cript.digest();
-			BigInteger bi = new BigInteger(1, digest);
-			//check(bi);
-			return bi.toByteArray();
+			if (digest.length != 20) {
+				throw new RuntimeException();
+			}
+			return digest;
 		} catch (Exception ex) {
 			throw new RuntimeException("Error calculating hash value", ex);
 		}
 	}
 
 	public static String toReadableString(byte[] arrayToRead) {
-		return new BigInteger(arrayToRead).toString(16);
+		return new BigInteger(1, arrayToRead).toString(16);
 	}
-	private static Set<BigInteger> ids = new HashSet<BigInteger>();
 
-	private static synchronized void check(BigInteger id) {
-		if (ids.contains(id) || id.toString(16).length() > 40) {
-			throw new RuntimeException("Wrong ID " + id + "! Go & find a new hash function :P");
+	public static byte[] arrayConcat(byte[] array1, byte[] array2) {
+		int length = array1.length + array2.length;
+		int pos = 0;
+		byte[] newArray = new byte[length];
+		for (byte b : array1) {
+			newArray[pos++] = b;
 		}
-		ids.add(id);
+		for (byte b : array2) {
+			newArray[pos++] = b;
+		}
+		return newArray;
 	}
 }
