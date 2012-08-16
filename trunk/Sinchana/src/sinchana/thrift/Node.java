@@ -39,7 +39,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     schemes.put(TupleScheme.class, new NodeTupleSchemeFactory());
   }
 
-  public String serverId; // required
+  public ByteBuffer serverId; // required
   public String address; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
@@ -108,7 +108,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.SERVER_ID, new org.apache.thrift.meta_data.FieldMetaData("serverId", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     tmpMap.put(_Fields.ADDRESS, new org.apache.thrift.meta_data.FieldMetaData("address", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
@@ -119,7 +119,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
   }
 
   public Node(
-    String serverId,
+    ByteBuffer serverId,
     String address)
   {
     this();
@@ -132,7 +132,8 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
    */
   public Node(Node other) {
     if (other.isSetServerId()) {
-      this.serverId = other.serverId;
+      this.serverId = org.apache.thrift.TBaseHelper.copyBinary(other.serverId);
+;
     }
     if (other.isSetAddress()) {
       this.address = other.address;
@@ -149,11 +150,21 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     this.address = null;
   }
 
-  public String getServerId() {
-    return this.serverId;
+  public byte[] getServerId() {
+    setServerId(org.apache.thrift.TBaseHelper.rightSize(serverId));
+    return serverId == null ? null : serverId.array();
   }
 
-  public Node setServerId(String serverId) {
+  public ByteBuffer bufferForServerId() {
+    return serverId;
+  }
+
+  public Node setServerId(byte[] serverId) {
+    setServerId(serverId == null ? (ByteBuffer)null : ByteBuffer.wrap(serverId));
+    return this;
+  }
+
+  public Node setServerId(ByteBuffer serverId) {
     this.serverId = serverId;
     return this;
   }
@@ -203,7 +214,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       if (value == null) {
         unsetServerId();
       } else {
-        setServerId((String)value);
+        setServerId((ByteBuffer)value);
       }
       break;
 
@@ -336,7 +347,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
     if (this.serverId == null) {
       sb.append("null");
     } else {
-      sb.append(this.serverId);
+      org.apache.thrift.TBaseHelper.toString(this.serverId, sb);
     }
     first = false;
     if (!first) sb.append(", ");
@@ -391,7 +402,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
         switch (schemeField.id) {
           case 1: // SERVER_ID
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.serverId = iprot.readString();
+              struct.serverId = iprot.readBinary();
               struct.setServerIdIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -422,7 +433,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       oprot.writeStructBegin(STRUCT_DESC);
       if (struct.serverId != null) {
         oprot.writeFieldBegin(SERVER_ID_FIELD_DESC);
-        oprot.writeString(struct.serverId);
+        oprot.writeBinary(struct.serverId);
         oprot.writeFieldEnd();
       }
       if (struct.address != null) {
@@ -456,7 +467,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       }
       oprot.writeBitSet(optionals, 2);
       if (struct.isSetServerId()) {
-        oprot.writeString(struct.serverId);
+        oprot.writeBinary(struct.serverId);
       }
       if (struct.isSetAddress()) {
         oprot.writeString(struct.address);
@@ -468,7 +479,7 @@ public class Node implements org.apache.thrift.TBase<Node, Node._Fields>, java.i
       TTupleProtocol iprot = (TTupleProtocol) prot;
       BitSet incoming = iprot.readBitSet(2);
       if (incoming.get(0)) {
-        struct.serverId = iprot.readString();
+        struct.serverId = iprot.readBinary();
         struct.setServerIdIsSet(true);
       }
       if (incoming.get(1)) {

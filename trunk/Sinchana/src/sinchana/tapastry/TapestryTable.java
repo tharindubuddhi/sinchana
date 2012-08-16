@@ -5,11 +5,12 @@
 package sinchana.tapastry;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
 import sinchana.PortHandler;
 import sinchana.RoutingHandler;
-import sinchana.Server;
+import sinchana.SinchanaServer;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -25,19 +26,18 @@ public class TapestryTable implements RoutingHandler, Runnable {
 
 	public static final int TABLE_SIZE = 37;
 	private static final int SUCCESSOR_LEVEL = 3;
-	private final Server server;
+	private final SinchanaServer server;
 	private final Node[] successor = new Node[SUCCESSOR_LEVEL];
 	private final Node[] predecessor = new Node[SUCCESSOR_LEVEL];
-	private String serverId;
+	private byte[] serverId;
 	private BigInteger serverIdAsBigInt;
 	private final Node[][] fingerTable = new Node[TABLE_SIZE][10];
-	private boolean neighboursImported = false;
 
 	/**
 	 * Class constructor with the server instance where the routing table is initialize.
-	 * @param server		Server instance. The routing table will be initialize based on this.
+	 * @param server		SinchanaServer instance. The routing table will be initialize based on this.
 	 */
-	public TapestryTable(Server server) {
+	public TapestryTable(SinchanaServer server) {
 		this.server = server;
 	}
 
@@ -48,10 +48,9 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	@Override
 	public void init() {
 		this.serverId = this.server.getServerId();
-		this.serverIdAsBigInt = new BigInteger(this.serverId, 16);
+		this.serverIdAsBigInt = new BigInteger(this.serverId);
 		synchronized (this) {
 			this.initFingerTable();
-			this.neighboursImported = false;
 		}
 	}
 
@@ -87,8 +86,8 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		Message msg;
 		for (Node[] nodes : fingerTable) {
 			for (Node node : nodes) {
-				if (node != null && !node.serverId.equals(this.serverId)) {
-					msg = new Message(this.server, MessageType.FIND_SUCCESSOR, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+				if (node != null && !Arrays.equals(node.getServerId(), this.serverId)) {
+					msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 					ph.send(msg, node);
 				}
 			}
@@ -100,7 +99,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	 * @param neighbour		Node to import neighbors.
 	 */
 	private void importNeighbours(Node neighbour) {
-		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 3,
+		Logger.log(this.server, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 3,
 				"Importing neighbour set from " + neighbour.serverId);
 		Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, 256);
 		this.server.getPortHandler().send(msg, neighbour);
@@ -117,7 +116,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	}
 
 	@Override
-	public Node getNextNode(String destination) {
+	public Node getNextNode(byte[] destination) {
 
 		int raw = getRaw(this.serverId, destination);
 		if (raw == -1) {
@@ -192,18 +191,18 @@ public class TapestryTable implements RoutingHandler, Runnable {
 				 * not this server it self. This is because the requester knows 
 				 * about this server, so sending it again is a waste.
 				 */
-				if (node != null && !node.serverId.equals(this.serverId)) {
+				if (node != null && !Arrays.equals(node.getServerId(), this.serverId)) {
 					neighbourSet.add(node);
 				}
 			}
 
 		}
 		//adds the predecessor.
-		if (this.predecessor != null && !this.predecessor[0].serverId.equals(this.serverId)) {
+		if (this.predecessor != null && !Arrays.equals(this.predecessor[0].getServerId(), this.serverId)) {
 			neighbourSet.add(this.predecessor[0]);
 		}
 		//adds the successor.
-		if (this.successor != null && !this.successor[0].serverId.equals(this.serverId)) {
+		if (this.successor != null && !Arrays.equals(this.successor[0].getServerId(), this.serverId)) {
 			neighbourSet.add(this.successor[0]);
 		}
 		//returns the node set.
@@ -212,15 +211,15 @@ public class TapestryTable implements RoutingHandler, Runnable {
 
 	@Override
 	public boolean updateTable(Node node, boolean add) {
-		if (node.serverId.equals(this.serverId)) {
+		if (Arrays.equals(node.getServerId(), this.serverId)) {
 			return false;
 		}
 		//calculates offsets for the ids.
-		BigInteger newNodeOffset = getOffset(node.serverId);
+		BigInteger newNodeOffset = getOffset(node.getServerId());
 		boolean updated = false;
 		synchronized (this) {
-			BigInteger successorOffset = getOffset(this.successor[0].serverId);
-			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 7,
+			BigInteger successorOffset = getOffset(this.successor[0].getServerId());
+			Logger.log(this.server, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 7,
 					"Updating table: S:" + this.successor[0].serverId + " P:" + this.predecessor[0].serverId
 					+ " N:" + node.serverId);
 			/**
@@ -234,7 +233,7 @@ public class TapestryTable implements RoutingHandler, Runnable {
 			if (successorOffset.equals(new BigInteger("0", 16))
 					|| (!newNodeOffset.equals(new BigInteger("0", 16))
 					&& newNodeOffset.compareTo(successorOffset) == -1)) {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
+				Logger.log(this.server, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
 						"Node " + node + " is set as successor overriding " + this.successor[0]);
 				this.successor[0] = node.deepCopy();
 				updated = true;
@@ -248,18 +247,18 @@ public class TapestryTable implements RoutingHandler, Runnable {
 			 * the new node will be set as the predecessor.
 			 * 0-----existing.predecessor.id------new.server.id-------this.server.id----------End.of.Grid
 			 */
-			BigInteger predecessorOffset = getOffset(this.predecessor[0].serverId);
+			BigInteger predecessorOffset = getOffset(this.predecessor[0].getServerId());
 			if (predecessorOffset.equals(new BigInteger("0", 16))
 					|| (!newNodeOffset.equals(new BigInteger("0", 16))
 					&& predecessorOffset.compareTo(newNodeOffset) == -1)) {
-				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
+				Logger.log(this.server, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
 						"Node " + node + " is set as predecessor overriding " + this.predecessor[0]);
 				this.predecessor[0] = node.deepCopy();
 				updated = true;
 			}
 
-			int raw = getRaw(this.serverId, node.serverId);
-			int column = getColumn(node.serverId, raw);
+			int raw = getRaw(this.serverId, node.getServerId());
+			int column = getColumn(node.getServerId(), raw);
 			updated = fingerTable[raw][column] == null;
 			fingerTable[raw][column] = node.deepCopy();
 
@@ -290,16 +289,16 @@ public class TapestryTable implements RoutingHandler, Runnable {
 	 * @param id	Id to calculate the offset.
 	 * @return		Offset of the id relative to this server.
 	 */
-	private BigInteger getOffset(String id) {
-		return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
+	private BigInteger getOffset(byte[] id) {
+		return SinchanaServer.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(SinchanaServer.GRID_SIZE);
 	}
 
-	private int getRaw(String id, String newId) {
+	private int getRaw(byte[] id, byte[] newId) {
 		BigInteger factor, t1, t2;
 		for (int i = TABLE_SIZE - 1; i >= 0; i--) {
 			factor = new BigInteger("10", 16).pow(i);
-			t1 = new BigInteger(id, 16).divide(factor);
-			t2 = new BigInteger(newId, 16).divide(factor);
+			t1 = new BigInteger(id).divide(factor);
+			t2 = new BigInteger(newId).divide(factor);
 			if (!t1.equals(t2)) {
 				return i;
 			}
@@ -307,7 +306,8 @@ public class TapestryTable implements RoutingHandler, Runnable {
 		return -1;
 	}
 
-	private int getColumn(String id, int raw) {
-		return (new BigInteger(id, 16).mod(new BigInteger("10", 16).pow(raw + 1)).divide(new BigInteger("10", 16).pow(raw))).intValue();
+	private int getColumn(byte[] id, int raw) {
+		return (new BigInteger(id).mod(new BigInteger("10", 16).pow(raw + 1))
+				.divide(new BigInteger("10", 16).pow(raw))).intValue();
 	}
 }

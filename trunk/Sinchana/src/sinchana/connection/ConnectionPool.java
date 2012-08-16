@@ -4,13 +4,14 @@
  */
 package sinchana.connection;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import sinchana.CONFIGURATIONS;
-import sinchana.Server;
+import sinchana.SinchanaServer;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 
@@ -21,14 +22,14 @@ import sinchana.util.logging.Logger;
 public class ConnectionPool {
 	
 	private final Map<String, Connection> pool = new HashMap<String, Connection>();
-	private Server server;
+	private SinchanaServer server;
 
 	/**
 	 * Class constructor. The server instance where the connection fool is 
 	 * initialized is passed as the argument
-	 * @param s		Server instance.
+	 * @param s		SinchanaServer instance.
 	 */
-	public ConnectionPool(Server svr) {
+	public ConnectionPool(SinchanaServer svr) {
 		this.server = svr;
 	}
 
@@ -36,20 +37,21 @@ public class ConnectionPool {
 	 * Returns the connection to the given destination. If the connection is
 	 * already opened and in the connection pool, it returns. Otherwise, open 
 	 * the connection to the destination and adds it to the connection pool.
-	 * @param serverId		Server id of the destination.
+	 * @param serverId		SinchanaServer id of the destination.
 	 * @param address		URL of the destination.
 	 * @param portId		Port id of the destination.
 	 * @return				TTransport connection opened to the destination.
 	 */
 	public Connection getConnection(Node node) {
+		String id = new String(node.getServerId());
 		synchronized (pool) {
-			if (pool.containsKey(node.serverId)) {
-				return pool.get(node.serverId);
+			if (pool.containsKey(id)) {
+				return pool.get(id);
 			} else {
 				Connection connection = new Connection(node);
 				int numberOfOpenedConnections = getNumberOfOpenedConnections();
 				if (CONFIGURATIONS.NODE_POOL_SIZE <= pool.size()) {
-					Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
+					Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
 							"Maximum number of nodes available exceeded! ("
 							+ numberOfOpenedConnections + "/" + pool.size() + ")");
 					getSpaceForNodes();
@@ -62,15 +64,15 @@ public class ConnectionPool {
 					getSpaceForConnections();
 					numberOfOpenedConnections = getNumberOfOpenedConnections();
 				}
-				pool.put(node.serverId, connection);
+				pool.put(id, connection);
 				connection.getClient();
 				return connection;
 			}
 		}
 	}
 	
-	public boolean isAlive(String nodeId) {
-		Connection connection = pool.get(nodeId);
+	public boolean isAlive(byte[] nodeId) {
+		Connection connection = pool.get(new String(nodeId));
 		return connection.isAlive();
 	}
 	
@@ -87,8 +89,9 @@ public class ConnectionPool {
 	
 	public boolean hasReportFailed(Node node) {
 		boolean result = false;
+		String id = new String(node.getServerId());
 		synchronized (pool) {
-			result = pool.containsKey(node.serverId) && pool.get(node.serverId).isFailed();
+			result = pool.containsKey(id) && pool.get(id).isFailed();
 		}
 		return result;
 	}
@@ -102,7 +105,7 @@ public class ConnectionPool {
 		for (String sid : keySet) {
 			terminate = true;
 			for (Node node : neighbourSet) {
-				if (node.serverId.equals(sid)) {
+				if (Arrays.equals(node.getServerId(), sid.getBytes())) {
 					terminate = false;
 					break;
 				}

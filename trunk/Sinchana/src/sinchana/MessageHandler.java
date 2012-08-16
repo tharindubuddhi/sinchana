@@ -4,12 +4,13 @@
  */
 package sinchana;
 
+import sinchana.service.SinchanaServiceInterface;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 import sinchana.connection.Connection;
-import sinchana.thrift.DataObject;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -22,7 +23,7 @@ import sinchana.util.messagequeue.MessageQueue;
  */
 public class MessageHandler {
 
-	private final Server server;
+	private final SinchanaServer server;
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
 	 * determined by MESSAGE_BUFFER_SIZE.
@@ -52,16 +53,16 @@ public class MessageHandler {
 
 	/**
 	 * Constructor of the class. The server instance is passed as an argument.
-	 * @param server Server instance. 
+	 * @param server SinchanaServer instance. 
 	 */
-	MessageHandler(Server server) {
+	MessageHandler(SinchanaServer server) {
 		this.server = server;
 	}
 
-    /**
-     * 
-     */
-    public void startAsRootNode() {
+	/**
+	 * 
+	 */
+	public void startAsRootNode() {
 		messageQueue.start();
 	}
 
@@ -80,10 +81,8 @@ public class MessageHandler {
 	public boolean queueMessage(Message message) {
 		if (!messageQueue.isStarted()
 				&& message.type == MessageType.JOIN
-				&& message.source.serverId.equals(this.server.serverId)) {
+				&& Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			messageQueue.start(message);
-//			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_MESSAGE_HANDLER, 0,
-//					"Message Queue is started");
 			this.server.setJoined(true);
 			if (this.server.getSinchanaTestInterface() != null) {
 				this.server.getSinchanaTestInterface().setStable(true);
@@ -96,11 +95,9 @@ public class MessageHandler {
 					this.server.getSinchanaTestInterface().incIncomingMessageCount();
 					this.server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
 				}
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 0,
-//						"Queued: " + message);
 				return true;
 			} else {
-				Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 0,
+				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 0,
 						"Message is unacceptable 'cos buffer is full! " + message);
 				return false;
 			}
@@ -129,17 +126,7 @@ public class MessageHandler {
 			case STORE_DATA:
 			case DELETE_DATA:
 			case GET_DATA:
-			case PUBLISH_SERVICE:
 			case GET_SERVICE:
-			case REMOVE_SERVICE:
-			case ERROR:
-			case RESPONSE:
-			case RESPONSE_DATA:
-			case RESPONSE_SERVICE:
-			case ACKNOWLEDGE_DATA_STORE:
-			case ACKNOWLEDGE_DATA_REMOVE:
-			case ACKNOWLEDGE_SERVICE_PUBLISH:
-			case ACKNOWLEDGE_SERVICE_REMOVE:
 				this.processGet(message);
 				break;
 			case JOIN:
@@ -151,6 +138,15 @@ public class MessageHandler {
 			case TEST_RING:
 				this.processTestRing(message);
 				break;
+			case ERROR:
+			case RESPONSE:
+			case RESPONSE_DATA:
+			case RESPONSE_SERVICE:
+			case ACKNOWLEDGE_DATA_STORE:
+			case ACKNOWLEDGE_DATA_REMOVE:
+				this.server.getClientHandler().setResponse(message);
+				break;
+
 		}
 	}
 
@@ -164,16 +160,16 @@ public class MessageHandler {
 			}
 		}
 		Set<Node> nodes = new HashSet<Node>();
-		if (!message.source.serverId.equals(this.server.serverId)) {
+		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			nodes.add(message.source);
 		}
-		if (!message.station.serverId.equals(this.server.serverId)) {
+		if (!Arrays.equals(message.station.getServerId(), this.server.getServerId())) {
 			nodes.add(message.station);
 		}
-		if (message.isSetPredecessor() && !message.predecessor.serverId.equals(this.server.serverId)) {
+		if (message.isSetPredecessor() && !Arrays.equals(message.predecessor.getServerId(), this.server.getServerId())) {
 			nodes.add(message.getPredecessor());
 		}
-		if (message.isSetSuccessor() && !message.successor.serverId.equals(this.server.serverId)) {
+		if (message.isSetSuccessor() && !Arrays.equals(message.successor.getServerId(), this.server.getServerId())) {
 			nodes.add(message.getSuccessor());
 		}
 		if (message.isSetNeighbourSet()) {
@@ -210,10 +206,10 @@ public class MessageHandler {
 
 	private void processGet(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
-		Node nextHop = this.server.getRoutingHandler().getNextNode(message.targetKey);
-		BigInteger targetKeyOffset = getOffset(message.targetKey);
-		BigInteger predecessorOffset = getOffset(predecessor.serverId);
-		BigInteger prevStationOffset = getOffset(message.station.serverId);
+		Node nextHop = this.server.getRoutingHandler().getNextNode(message.getTargetKey());
+		BigInteger targetKeyOffset = getOffset(message.getTargetKey());
+		BigInteger predecessorOffset = getOffset(predecessor.getServerId());
+		BigInteger prevStationOffset = getOffset(message.station.getServerId());
 
 		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(new BigInteger("0", 16))) {
 			deliverMessage(message);
@@ -226,35 +222,28 @@ public class MessageHandler {
 				this.server.getPortHandler().send(message, predecessor);
 
 			} else {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
-//						"Message is passing to the next node " + nextHop.serverId);
-				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().setStatus("routed: " + message.message);
-				}
 				this.server.getPortHandler().send(message, nextHop);
 			}
 		}
 	}
 
 	private void processJoin(Message message) {
-//		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
-//				"Join message " + message);
-		if (!message.source.serverId.equals(this.server.serverId)) {
+		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			if (this.server.getConnectionPool().hasReportFailed(message.source)) {
-				Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 4,
+				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 4,
 						"Node " + message.source + "has to wait.");
 				return;
 			}
-			BigInteger newServerIdOffset = getOffset(message.source.serverId);
-			BigInteger prevStationIdOffset = getOffset(message.station.serverId);
+			BigInteger newServerIdOffset = getOffset(message.source.getServerId());
+			BigInteger prevStationIdOffset = getOffset(message.station.getServerId());
 			BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
 			Node nextSuccessor = this.server;
 			Node nextPredecessor = this.server;
 			Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 			for (Node node : neighbourSet) {
-				tempNodeOffset = getOffset(node.serverId);
-				nextPredecessorOffset = getOffset(nextPredecessor.serverId);
-				nextSuccessorOffset = getOffset(nextSuccessor.serverId);
+				tempNodeOffset = getOffset(node.getServerId());
+				nextPredecessorOffset = getOffset(nextPredecessor.getServerId());
+				nextSuccessorOffset = getOffset(nextSuccessor.getServerId());
 
 //				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 //						"NewNode:" + message.source.serverId
@@ -279,7 +268,7 @@ public class MessageHandler {
 //			Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 //					"Analyze of state: \tPD: " + nextPredecessor + "\tSC: " + nextSuccessor);
 
-			if (!nextPredecessor.serverId.equals(this.server.serverId)) {
+			if (!Arrays.equals(nextPredecessor.getServerId(), this.server.getServerId())) {
 //				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 //						"Sending message to the predecessor " + nextPredecessor.serverId);
 				server.getPortHandler().send(message, nextPredecessor);
@@ -288,7 +277,7 @@ public class MessageHandler {
 //						"Sending message to the origin " + message.source.serverId);
 				server.getPortHandler().send(message, message.source);
 			}
-			if (!nextSuccessor.serverId.equals(this.server.serverId)) {
+			if (!Arrays.equals(nextSuccessor.getServerId(), this.server.getServerId())) {
 //				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 4,
 //						"Sending message to the successor " + nextSuccessor.serverId);
 				server.getPortHandler().send(message, nextSuccessor);
@@ -302,7 +291,7 @@ public class MessageHandler {
 	}
 
 	private void processDiscoverNeighbours(Message message) {
-		if (!message.source.serverId.equals(this.server.serverId)) {
+		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 			this.server.getPortHandler().send(message, message.source);
 		}
@@ -311,31 +300,25 @@ public class MessageHandler {
 	private void processTestRing(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
-		if (message.source.serverId.equals(this.server.serverId)) {
-			if (message.message.length() != 0) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_MESSAGE_HANDLER, 5,
-//						"Ring test completed - length: " + (message.message.split(" > ").length) + " :: " + message.message);
-				System.out.println("Ring test completed - length: " + (message.message.split(" > ").length) + " :: " + message.message);
+		if (Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
+			if (message.isSetData()) {
+				System.out.println("Ring test completed - length: " 
+						+ (new String(message.getData()).split(" > ").length) 
+						+ " :: " + new String(message.getData()));
 			} else {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
-//						"Start of Test Ring. Sending to " + predecessor.serverId + " & " + successor.serverId);
-				message.message += "" + this.server.serverId;
+				message.setData(this.server.getServerIdAsString().getBytes());
 				this.server.getPortHandler().send(message, predecessor);
 				this.server.getPortHandler().send(message, successor);
 			}
 		} else {
-			if (message.station.serverId.equals(predecessor.serverId)) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
-//						"Forwarding Ring Test to successor " + successor.serverId);
-				message.message += " > " + this.server.serverId;
+			if (Arrays.equals(message.station.getServerId(), predecessor.getServerId())) {
+				message.setData((new String(message.getData()) + " > " + this.server.getServerIdAsString()).getBytes());
 				this.server.getPortHandler().send(message, successor);
-			} else if (message.station.serverId.equals(successor.serverId)) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 5,
-//						"Forwarding Ring Test to predecessor " + predecessor.serverId);
-				message.message += " > " + this.server.serverId;
+			} else if (Arrays.equals(message.station.getServerId(), successor.getServerId())) {
+				message.setData((new String(message.getData()) + " > " + this.server.getServerIdAsString()).getBytes());
 				this.server.getPortHandler().send(message, predecessor);
 			} else {
-				Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
+				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
 						"Message Terminated! Received from " + message.station.serverId
 						+ " which is neither predecessor or successor.");
 			}
@@ -348,217 +331,87 @@ public class MessageHandler {
 	 * @param id	Id to calculate the offset.
 	 * @return		Offset of the id relative to this server.
 	 */
-	private BigInteger getOffset(String id) {
-		return Server.GRID_SIZE.add(new BigInteger(id, 16)).subtract(server.getServerIdAsBigInt()).mod(Server.GRID_SIZE);
+	private BigInteger getOffset(byte[] id) {
+		return SinchanaServer.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(SinchanaServer.GRID_SIZE);
 	}
 
-    /**	 
+	/**	 
 	 * Method which executes when the message is delivered to the relevant recipient node
 	 */
 	private void deliverMessage(Message message) {
 		Message returnMessage = null;
-		Node source = message.source.deepCopy();
-		boolean success = false;
+		boolean responseExpected = message.isSetResponseExpected() && message.responseExpected;
 		switch (message.type) {
 			case REQUEST:
-				if (this.server.getSinchanaInterface() != null) {
-					returnMessage = this.server.getSinchanaInterface().request(message);
+				if (this.server.getSinchanaRequestHandler() != null) {
+					if (responseExpected) {
+						returnMessage = new Message(this.server, MessageType.RESPONSE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+						returnMessage.setDestination(message.source);
+						returnMessage.setId(message.getId());
+						returnMessage.setTargetKey(message.targetKey);
+						returnMessage.setData(this.server.getSinchanaRequestHandler().request(message.getData()));
+					} else {
+						this.server.getSinchanaRequestHandler().request(message.getData());
+					}
 				}
 				break;
-			case RESPONSE:
-				if (this.server.getSinchanaInterface() != null) {
-					this.server.getSinchanaInterface().response(message);
-				}
-				break;
-			case ERROR:
-				if (this.server.getSinchanaInterface() != null) {
-					this.server.getSinchanaInterface().error(message);
-				}
-				break;
-
 			case STORE_DATA:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					DataObject dataObject = processStore(message);
-					this.server.getSinchanaStoreInterface().store(dataObject);
+				if (this.server.getSinchanaDataStoreInterface() != null) {
+					if (responseExpected) {
+						returnMessage = new Message(this.server, MessageType.ACKNOWLEDGE_DATA_STORE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+						returnMessage.setDestination(message.source);
+						returnMessage.setId(message.getId());
+						returnMessage.setTargetKey(message.targetKey);
+						returnMessage.setSuccess(this.server.getSinchanaDataStoreInterface().store(message.getTargetKey(), message.getData()));
+					} else {
+						this.server.getSinchanaDataStoreInterface().store(message.getTargetKey(), message.getData());
+					}
 				}
 				break;
 			case DELETE_DATA:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					DataObject dataObject = processRemove(message);
-					this.server.getSinchanaStoreInterface().remove(dataObject);
+				if (this.server.getSinchanaDataStoreInterface() != null) {
+					if (responseExpected) {
+						returnMessage = new Message(this.server, MessageType.ACKNOWLEDGE_DATA_REMOVE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+						returnMessage.setDestination(message.source);
+						returnMessage.setId(message.getId());
+						returnMessage.setTargetKey(message.targetKey);
+						returnMessage.setSuccess(this.server.getSinchanaDataStoreInterface().remove(message.getTargetKey()));
+					} else {
+						this.server.getSinchanaDataStoreInterface().remove(message.getTargetKey());
+					}
 
 				}
 				break;
 			case GET_DATA:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					Set<DataObject> objectSources = processGetStore(message);
-				}
-				break;
-			case ACKNOWLEDGE_DATA_REMOVE:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					this.server.getSinchanaStoreInterface().isRemoved(message.success);
-				}
-				break;
-			case ACKNOWLEDGE_DATA_STORE:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					this.server.getSinchanaStoreInterface().isStored(message.success);
-				}
-				break;
-			case RESPONSE_DATA:
-				if (this.server.getSinchanaStoreInterface() != null) {
-					this.server.getSinchanaStoreInterface().get(message.getDataSet());
-				}
-				break;
-
-			case PUBLISH_SERVICE:
-				if (this.server.getSinchanaServiceInterface() != null) {
-                    DataObject dataObject = processPublishService(message);
-					this.server.getSinchanaServiceInterface().publish(dataObject);
-                }
-				break;
-			case REMOVE_SERVICE:
-				if (this.server.getSinchanaServiceInterface() != null) {
-					DataObject dataObject = processRemoveService(message);
-					this.server.getSinchanaServiceInterface().remove(dataObject);
+				if (this.server.getSinchanaDataStoreInterface() != null) {
+					if (responseExpected) {
+						returnMessage = new Message(this.server, MessageType.RESPONSE_DATA, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+						returnMessage.setDestination(message.source);
+						returnMessage.setId(message.getId());
+						returnMessage.setTargetKey(message.targetKey);
+						returnMessage.setData(this.server.getSinchanaDataStoreInterface().get(message.getTargetKey()));
+					} else {
+						this.server.getSinchanaDataStoreInterface().get(message.getTargetKey());
+					}
 				}
 				break;
 			case GET_SERVICE:
-				if (this.server.getSinchanaServiceInterface() != null) {
-					Set<DataObject> services = processRetrieveService(message);
+				SinchanaServiceInterface ssi = this.server.getSinchanaServiceStore().get(message.getData());
+				if (ssi != null) {
+					if (responseExpected) {
+						returnMessage = new Message(this.server, MessageType.RESPONSE_SERVICE, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+						returnMessage.setDestination(message.source);
+						returnMessage.setId(message.getId());
+						returnMessage.setTargetKey(message.targetKey);
+						returnMessage.setData(ssi.process(message.getData(), message.getData()));
+					} else {
+						ssi.process(message.getData(), message.getData());
+					}
 				}
-				break;
-			case ACKNOWLEDGE_SERVICE_PUBLISH:
-                if(this.server.getSinchanaServiceInterface() != null){
-                this.server.getSinchanaStoreInterface().isStored(message.success);
-                }
-				break;
-			case ACKNOWLEDGE_SERVICE_REMOVE:
-                if(this.server.getSinchanaServiceInterface() != null){
-                this.server.getSinchanaServiceInterface().isRemoved(success);
-                }
-				break;
-			case RESPONSE_SERVICE:
 				break;
 		}
 		if (returnMessage != null) {
-			returnMessage.setSource(this.server);
-			returnMessage.setTargetKey(source.serverId);
-			this.server.getPortHandler().send(returnMessage, source);
-		} else if (success) {
+			this.server.getPortHandler().send(returnMessage, returnMessage.destination);
 		}
-	}
-
-    /**
-     * Method which stores the dataObject in the Sinchana Data Store
-     */
-	private DataObject processStore(Message msg) {
-
-		DataObject dataObject = new DataObject();
-		dataObject.setSourceID(msg.source.serverId);
-		dataObject.setSourceAddress(msg.source.address);
-		dataObject.setDataValue(msg.dataValue);
-		dataObject.setDataKey(msg.targetKey);
-
-		boolean success = this.server.getSinchanaDataStore().store(dataObject);
-		msg.setSuccess(success);
-		msg.setType(MessageType.ACKNOWLEDGE_DATA_STORE);
-		msg.setStation(this.server);
-		this.server.getPortHandler().send(msg, msg.source);
-		return dataObject;
-
-	}
-
-    /**
-     * Method which returns the Data Set of Data Objects 
-     */
-	private Set<DataObject> processGetStore(Message msg) {
-
-		String objectKey = msg.targetKey;
-		Set<DataObject> sourceServers = this.server.getSinchanaDataStore().get(objectKey);
-		if (sourceServers == null) {
-			msg.setSuccess(false);
-			msg.setMessage("does not exist");
-			msg.setLifetime(1);
-		} else {
-			msg.setSuccess(true);
-			msg.setMessage("exist");
-			msg.setDataSet(sourceServers);
-			msg.setLifetime(1);
-		}
-		msg.setType(MessageType.RESPONSE_DATA);
-		this.server.getPortHandler().send(msg, msg.source);
-		return sourceServers;
-
-	}
-
-	private DataObject processRemove(Message msg) {
-
-		DataObject dataObject = new DataObject();
-		dataObject.setSourceID(msg.source.serverId);
-		dataObject.setSourceAddress(msg.source.address);
-		dataObject.setDataKey(msg.targetKey);
-        dataObject.setDataValue(msg.dataValue);
-		boolean success = this.server.getSinchanaDataStore().removeData(dataObject);
-		msg.setType(MessageType.ACKNOWLEDGE_DATA_REMOVE);
-		msg.setSuccess(success);
-		msg.setLifetime(1);
-		this.server.getPortHandler().send(msg, msg.source);
-		return dataObject;
-
-
-	}
-    
-    private DataObject processPublishService(Message msg) {
-
-		DataObject dataObject = new DataObject();
-		dataObject.setSourceID(msg.source.serverId);
-		dataObject.setSourceAddress(msg.source.address);
-		dataObject.setDataValue(msg.dataValue);
-		dataObject.setDataKey(msg.targetKey);
-
-		boolean success = this.server.getSinchanaServiceStore().publishService(dataObject);		
-        msg.setSuccess(success);		
-		msg.setType(MessageType.ACKNOWLEDGE_SERVICE_PUBLISH);
-		msg.setStation(this.server);
-		this.server.getPortHandler().send(msg, msg.source);
-		return dataObject;
-
-	}
-
-	private Set<DataObject> processRetrieveService(Message msg) {
-
-		String objectKey = msg.targetKey;
-		Set<DataObject> sourceServers = this.server.getSinchanaServiceStore().get(objectKey);
-		if (sourceServers == null) {
-            msg.setSuccess(false);
-			msg.setMessage("does not exist");
-			msg.setLifetime(1);			
-		} else {		
-            msg.setSuccess(true);
-			msg.setMessage("exist");
-			msg.setDataSet(sourceServers);
-			msg.setLifetime(1);			
-		}
-        msg.setType(MessageType.RESPONSE_SERVICE);
-        this.server.getPortHandler().send(msg, msg.source);
-		return sourceServers;
-
-	}
-
-	private DataObject processRemoveService(Message msg) {
-
-		DataObject dataObject = new DataObject();
-		dataObject.setSourceID(msg.source.serverId);
-		dataObject.setSourceAddress(msg.source.address);
-		dataObject.setDataKey(msg.targetKey);
-        dataObject.setDataValue(msg.dataValue);
-		boolean success = this.server.getSinchanaServiceStore().removeService(dataObject);
-		msg.setType(MessageType.ACKNOWLEDGE_SERVICE_REMOVE);	
-        msg.setSuccess(success);	
-		msg.setLifetime(1);
-		this.server.getPortHandler().send(msg, msg.source);
-		return dataObject;
-
-
 	}
 }

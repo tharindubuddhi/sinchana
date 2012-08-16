@@ -4,13 +4,16 @@
  */
 package sinchana.util.logging;
 
+import sinchana.thrift.Node;
+
+
 /**
  *
  * @author Hiru
  */
 public class Log {
 
-	String nodeId;
+	Node node;
 	int level;
 	int classId;
 	int locId;
@@ -19,7 +22,7 @@ public class Log {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(nodeId).append(":");
+		sb.append(node).append(":");
 		switch (level) {
 			case Logger.LEVEL_FINE:
 				sb.append("\tFINE");

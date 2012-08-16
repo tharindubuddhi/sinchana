@@ -6,21 +6,18 @@ package sinchana.test;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
-import sinchana.Server;
-import sinchana.SinchanaInterface;
+import sinchana.SinchanaServer;
+import sinchana.SinchanaRequestHandler;
 import sinchana.SinchanaTestInterface;
 import sinchana.chord.FingerTableEntry;
-import sinchana.test.TesterController.TestData;
-import sinchana.thrift.Message;
-import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
 import sinchana.CONFIGURATIONS;
+import sinchana.dataStore.SinchanaDataStoreImpl;
+import sinchana.SinchanaResponseHandler;
+import sinchana.util.tools.CommonTools;
 
 /**
  *
@@ -28,15 +25,13 @@ import sinchana.CONFIGURATIONS;
  */
 public class Tester implements SinchanaTestInterface, Runnable {
 
-	private Server server;
+	private SinchanaServer server;
 	private int testId;
 	private ServerUI gui = null;
 	private TesterController testerController;
 	private Semaphore threadLock = new Semaphore(0);
 	private boolean running = false;
 	private long numOfTestingMessages = 0;
-	private TestService testService = null;
-	private TestDataStore testDataStore = null;
 
 	/**
 	 * 
@@ -53,58 +48,21 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			address = "127.0.0.1";
 			remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
 			remoteNodeAddress = address + ":8000";
-			server = new Server(address + ":" + portId, remoteNodeAddress);
-			server.registerSinchanaInterface(new SinchanaInterface() {
-
-				private Map<String, String> localDataMap = new HashMap<String, String>();
-
-				@Override
-				public synchronized Message request(Message message) {
-					Message returnMsg = new Message();
-					returnMsg.setLifetime(1);
-					returnMsg.setTargetKey(message.getTargetKey());
-					returnMsg.setType(MessageType.RESPONSE);
-					if (message.message.equals("GET")) {
-						if (localDataMap.containsKey(message.targetKey)) {
-							String data = localDataMap.remove(message.targetKey);
-							returnMsg.setMessage(data);
-						} else {
-							System.out.println("* * * ------- * * * :P");
-							localDataMap.put(message.targetKey, ":P");
-						}
-					} else {
-						if (!localDataMap.containsKey(message.targetKey)) {
-							localDataMap.put(message.targetKey, message.message);
-						} else {
-							System.out.println(localDataMap.get(message.targetKey));
-						}
-					}
-					Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
-							"Recieved REQUEST message : " + message);
-					requestCount++;
-					requestLifetime += message.lifetime;
-					return returnMsg;
-				}
+			server = new SinchanaServer(address + ":" + portId, remoteNodeAddress);
+			SinchanaDataStoreImpl sdsi = new SinchanaDataStoreImpl();
+			server.registerSinchanaStoreInterface(sdsi);
+			server.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
 
 				@Override
-				public void error(Message message) {
-					Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 2,
-							"Recieved ERROR message : " + message);
-				}
-
-				@Override
-				public void response(Message message) {
-					if (message.message == null) {
-						testerController.setResponse(message.targetKey);
-					} else {
-						testerController.setResponse(message.targetKey, message.message);
-					}
+				public synchronized byte[] request(byte[] message) {
+					endTime = System.currentTimeMillis();
+//					long c = TesterController.incCount();
+//					System.out.println(server.serverId + ": " + message + "\t\t" + c + "\t" + (endTime - startTime));
+					return ("Hi " + new String(message) + ", Greetings from " + server.getServerIdAsString()).getBytes();
 				}
 			});
 			server.registerSinchanaTestInterface(this);
 			server.startServer();
-			testService = new TestService(this, tc);
-			testDataStore = new TestDataStore(this, tc);
 			if (CONFIGURATIONS.GUI_ON) {
 				this.gui = new ServerUI(this);
 			}
@@ -129,12 +87,14 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		server.stopServer();
 		this.running = false;
 	}
-
 	/**
 	 * 
 	 */
+	private long startTime = -1, endTime = -1;
+
 	public void startTest(long numOfTestingMessages) {
-		this.numOfTestingMessages = numOfTestingMessages;
+		this.numOfTestingMessages += numOfTestingMessages;
+		startTime = System.currentTimeMillis();
 		threadLock.release();
 	}
 
@@ -142,30 +102,39 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 * 
 	 */
 	public void startRingTest() {
-		Message msg = new Message(this.server, MessageType.TEST_RING, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-		msg.setMessage("");
-		this.server.send(msg);
+		this.server.testRing();
 	}
-	public long temp;
+	private SinchanaResponseHandler srh = new SinchanaResponseHandler() {
+
+		@Override
+		public synchronized void response(byte[] message) {
+			endTime = System.currentTimeMillis();
+			long c = TesterController.incCount();
+			System.out.println(server.getServerIdAsString() + ": " 
+					+ new String(message) + "\t\t" + c + "\t" + (endTime - startTime));
+		}
+
+		@Override
+		public void error(byte[] message) {
+			throw new UnsupportedOperationException("Not supported yet.");
+		}
+	};
+	Random random = new Random();
 
 	@Override
 	public void run() {
 		try {
 			if (this.gui != null) {
-				this.gui.setServerId(server.serverId);
+				this.gui.setServerId(new String(server.getServerId()));
 				this.gui.setVisible(true);
 			}
 			server.join();
+			System.out.println(server.getServerIdAsString() + ": joined the ring");
 			while (true) {
 				threadLock.acquire();
 				while (numOfTestingMessages > 0) {
-					TestData nextData = testerController.getNextData();
-					if (nextData.verified) {
-						server.send(nextData.key, "GET");
-
-					} else {
-						server.send(nextData.key, nextData.data);
-					}
+					BigInteger bi = new BigInteger(160, random);
+					server.request(bi.toByteArray(), "Hiru".getBytes(), srh);
 					numOfTestingMessages--;
 				}
 			}
@@ -181,8 +150,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public void setStable(boolean isStable) {
 		if (isStable) {
-			Logger.log(this.server.serverId, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
-					this.server.serverId + " is now stable!");
+			Logger.log(this.server, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
+					this.server.getServerIdAsString() + " is now stable!");
 			if (this.gui != null) {
 				this.gui.setMessage("stabilized!");
 			}
@@ -197,7 +166,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public void setPredecessor(Node predecessor) {
 		if (this.gui != null) {
-			this.gui.setPredecessorId(predecessor != null ? predecessor.serverId : "n/a");
+			this.gui.setPredecessorId(predecessor != null ? new String(predecessor.getServerId()) : "n/a");
 		}
 	}
 
@@ -208,7 +177,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public void setSuccessor(Node successor) {
 		if (this.gui != null) {
-			this.gui.setSuccessorId(successor != null ? successor.serverId : "n/a");
+			this.gui.setSuccessorId(successor != null ? new String(successor.getServerId()) : "n/a");
 		}
 	}
 
@@ -238,8 +207,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 * 
 	 * @return
 	 */
-	public String getServerId() {
-		return server.serverId;
+	public byte[] getServerId() {
+		return server.getServerId();
 	}
 
 	public int getTestId() {
@@ -250,7 +219,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 * 
 	 * @return
 	 */
-	public Server getServer() {
+	public SinchanaServer getServer() {
 		return server;
 	}
 
@@ -274,7 +243,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	}
 
 	public void send(String dest, String msg) {
-		this.server.send(dest, msg);
+		this.server.request(dest.getBytes(), msg.getBytes());
 	}
 
 	@Override
@@ -285,10 +254,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public int hashCode() {
 		return this.server.serverId.hashCode();
-	}
-
-	void trigger() {
-		this.server.trigger();
 	}
 	private long inputMessageCount = 0;
 	private long avarageInputMessageQueueSize = 0;

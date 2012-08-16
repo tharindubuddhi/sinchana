@@ -18,20 +18,16 @@ public enum MessageType implements org.apache.thrift.TEnum {
   RESPONSE_DATA(3),
   ACKNOWLEDGE_DATA_STORE(4),
   ACKNOWLEDGE_DATA_REMOVE(5),
-  PUBLISH_SERVICE(6),
-  GET_SERVICE(7),
-  REMOVE_SERVICE(8),
-  RESPONSE_SERVICE(9),
-  ACKNOWLEDGE_SERVICE_PUBLISH(10),
-  ACKNOWLEDGE_SERVICE_REMOVE(11),
-  REQUEST(12),
-  RESPONSE(13),
-  ERROR(14),
-  JOIN(15),
-  DISCOVER_NEIGHBORS(16),
-  FIND_SUCCESSOR(17),
-  VERIFY_RING(18),
-  TEST_RING(19);
+  GET_SERVICE(6),
+  RESPONSE_SERVICE(7),
+  REQUEST(8),
+  RESPONSE(9),
+  ERROR(10),
+  JOIN(11),
+  DISCOVER_NEIGHBORS(12),
+  FIND_SUCCESSOR(13),
+  VERIFY_RING(14),
+  TEST_RING(15);
 
   private final int value;
 
@@ -65,32 +61,24 @@ public enum MessageType implements org.apache.thrift.TEnum {
       case 5:
         return ACKNOWLEDGE_DATA_REMOVE;
       case 6:
-        return PUBLISH_SERVICE;
-      case 7:
         return GET_SERVICE;
-      case 8:
-        return REMOVE_SERVICE;
-      case 9:
+      case 7:
         return RESPONSE_SERVICE;
-      case 10:
-        return ACKNOWLEDGE_SERVICE_PUBLISH;
-      case 11:
-        return ACKNOWLEDGE_SERVICE_REMOVE;
-      case 12:
+      case 8:
         return REQUEST;
-      case 13:
+      case 9:
         return RESPONSE;
-      case 14:
+      case 10:
         return ERROR;
-      case 15:
+      case 11:
         return JOIN;
-      case 16:
+      case 12:
         return DISCOVER_NEIGHBORS;
-      case 17:
+      case 13:
         return FIND_SUCCESSOR;
-      case 18:
+      case 14:
         return VERIFY_RING;
-      case 19:
+      case 15:
         return TEST_RING;
       default:
         return null;

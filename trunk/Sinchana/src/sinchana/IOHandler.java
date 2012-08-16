@@ -4,6 +4,7 @@
  */
 package sinchana;
 
+import java.util.Arrays;
 import sinchana.connection.*;
 
 import sinchana.thrift.Message;
@@ -24,7 +25,7 @@ import sinchana.util.messagequeue.MessageQueue;
  */
 public class IOHandler implements PortHandler {
 
-	private final Server server;
+	private final SinchanaServer server;
 	private TServer tServer;
 	private MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
@@ -46,7 +47,7 @@ public class IOHandler implements PortHandler {
 				case PortHandler.LOCAL_SERVER_ERROR:
 					message.retryCount++;
 					if (message.retryCount > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
-						Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+						Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 								"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
 					} else {
 						queueMessage(message);
@@ -56,9 +57,13 @@ public class IOHandler implements PortHandler {
 					queueMessage(message);
 					break;
 				case PortHandler.REMOTE_SERVER_ERROR_FAILURE:
-					Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+					Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 							"Node " + message.destination + " is removed from the routing table!");
 					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
+					/**
+					 *
+					 * 
+					 */
 					addBackToQueue(message);
 					break;
 			}
@@ -69,15 +74,15 @@ public class IOHandler implements PortHandler {
 	 * 
 	 * @param svr
 	 */
-	public IOHandler(Server svr) {
+	public IOHandler(SinchanaServer svr) {
 		this.server = svr;
 	}
 
 	private void addBackToQueue(Message message) {
 		switch (message.type) {
 			case JOIN:
-				if (message.source.serverId.equals(this.server.serverId)) {
-					Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+				if (Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
+					Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 							"Join failed 'cos " + message.destination + " is unreacheble!");
 					break;
 				}
@@ -86,9 +91,7 @@ public class IOHandler implements PortHandler {
 			case STORE_DATA:
 			case DELETE_DATA:
 			case GET_DATA:
-			case PUBLISH_SERVICE:
 			case GET_SERVICE:
-			case REMOVE_SERVICE:
 				message.lifetime++;
 				server.getMessageHandler().queueMessage(message);
 				break;
@@ -99,9 +102,7 @@ public class IOHandler implements PortHandler {
 			case RESPONSE_DATA:
 			case RESPONSE_SERVICE:
 			case ACKNOWLEDGE_DATA_STORE:
-			case ACKNOWLEDGE_SERVICE_PUBLISH:
 			case ACKNOWLEDGE_DATA_REMOVE:
-			case ACKNOWLEDGE_SERVICE_REMOVE:
 				break;
 		}
 	}
@@ -150,10 +151,10 @@ public class IOHandler implements PortHandler {
 						TServerTransport serverTransport = new TServerSocket(localPortId);
 						tServer = new TThreadPoolServer(
 								new TThreadPoolServer.Args(serverTransport).processor(processor));
-						Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 0,
+						Logger.log(server, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 0,
 								"Starting the server on port " + localPortId);
 						tServer.serve();
-						Logger.log(server.serverId, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
+						Logger.log(server, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 								"Server is shutting down...");
 					} catch (TTransportException ex) {
 						throw new RuntimeException(ex);
@@ -200,7 +201,7 @@ public class IOHandler implements PortHandler {
 		Message msg = message.deepCopy();
 		msg.lifetime--;
 		if (msg.lifetime < 0) {
-			Logger.log(server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+			Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 					"Messaage is terminated as lifetime expired! :: " + message);
 			return;
 		}
@@ -216,7 +217,7 @@ public class IOHandler implements PortHandler {
 		if (this.messageQueue.queueMessage(message)) {
 			return true;
 		} else {
-			Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
+			Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
 					"Message is unacceptable 'cos transport buffer is full! " + message);
 			return false;
 		}
