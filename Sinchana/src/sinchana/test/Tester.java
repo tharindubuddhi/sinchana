@@ -259,6 +259,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	private long maxOutputMessageQueueSize = 0;
 	private long outputMessageQueueTimesCount = 0;
 	private long requestCount = 0;
+	private long requestViaPredecessorsCount = 0;
 	private long requestLifetime = 0;
 
 	@Override
@@ -285,14 +286,15 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	}
 
 	public long[] getTestData() {
-		long[] data = new long[7];
+		long[] data = new long[8];
 		data[0] = inputMessageCount;
 		data[1] = inputMessageQueueTimesCount == 0 ? 0 : (avarageInputMessageQueueSize / inputMessageQueueTimesCount);
 		data[2] = outputMessageQueueTimesCount == 0 ? 0 : (avarageOutputMessageQueueSize / outputMessageQueueTimesCount);
 		data[3] = maxInputMessageQueueSize;
 		data[4] = maxOutputMessageQueueSize;
 		data[5] = requestCount;
-		data[6] = requestLifetime;
+		data[6] = requestViaPredecessorsCount;
+		data[7] = requestLifetime;
 		inputMessageCount = 0;
 		avarageInputMessageQueueSize = 0;
 		inputMessageQueueTimesCount = 0;
@@ -301,13 +303,17 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		maxInputMessageQueueSize = 0;
 		maxOutputMessageQueueSize = 0;
 		requestCount = 0;
+		requestViaPredecessorsCount = 0;
 		requestLifetime = 0;
 		return data;
 	}
 
 	@Override
-	public synchronized void incRequestCount(int lifetime) {
+	public synchronized void incRequestCount(int lifetime, boolean routedViaPredecessors) {
 		requestCount++;
+		if (routedViaPredecessors) {
+			requestViaPredecessorsCount++;
+		}
 		requestLifetime += lifetime;
 	}
 }

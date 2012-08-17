@@ -55,5 +55,5 @@ public interface SinchanaTestInterface {
 
 	public abstract void setOutMessageQueueSize(int size);
 	
-	public abstract void incRequestCount(int lifetime);
+	public abstract void incRequestCount(int lifetime, boolean routedViaPredecessors);
 }

@@ -7,7 +7,6 @@ package sinchana.test;
 import sinchana.SinchanaServer;
 import sinchana.service.SinchanaServiceHandler;
 import sinchana.util.tools.ByteArrays;
-import sinchana.util.tools.Hash;
 
 /**
  *
