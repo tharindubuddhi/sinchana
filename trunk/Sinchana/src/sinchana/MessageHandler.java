@@ -7,7 +7,6 @@ package sinchana;
 import sinchana.service.SinchanaServiceInterface;
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 import sinchana.connection.Connection;
@@ -22,7 +21,7 @@ import sinchana.util.messagequeue.MessageQueue;
  * @author Hiru
  */
 public class MessageHandler {
-	
+
 	private final SinchanaServer server;
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	/**
@@ -30,7 +29,7 @@ public class MessageHandler {
 	 * determined by MESSAGE_BUFFER_SIZE.
 	 */
 	private final MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
-		
+
 		@Override
 		public void process(Message message) {
 			/**
@@ -48,7 +47,7 @@ public class MessageHandler {
 				server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
 			}
 			processMessage(message);
-			
+
 		}
 	}, 1);
 
@@ -90,9 +89,9 @@ public class MessageHandler {
 	 * @param message
 	 */
 	private synchronized void processMessage(Message message) {
-		
+
 		this.updateTableWithMessage(message);
-		
+
 		switch (message.type) {
 			case REQUEST:
 			case STORE_DATA:
@@ -118,10 +117,10 @@ public class MessageHandler {
 			case ACKNOWLEDGE_DATA_REMOVE:
 				this.server.getClientHandler().setResponse(message);
 				break;
-			
+
 		}
 	}
-	
+
 	private void updateTableWithMessage(Message message) {
 		boolean updated = false;
 		if (message.isSetFailedNodeSet()) {
@@ -137,12 +136,6 @@ public class MessageHandler {
 		}
 		if (!Arrays.equals(message.station.getServerId(), this.server.getServerId())) {
 			nodes.add(message.station);
-		}
-		if (message.isSetPredecessor() && !Arrays.equals(message.predecessor.getServerId(), this.server.getServerId())) {
-			nodes.add(message.getPredecessor());
-		}
-		if (message.isSetSuccessor() && !Arrays.equals(message.successor.getServerId(), this.server.getServerId())) {
-			nodes.add(message.getSuccessor());
 		}
 		if (message.isSetNeighbourSet()) {
 			nodes.addAll(message.getNeighbourSet());
@@ -166,7 +159,7 @@ public class MessageHandler {
 			}
 		}
 		if (updated) {
-			Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, 2);
+			Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server, 2);
 			Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
 			msg.setFailedNodeSet(failedNodes);
 			Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
@@ -175,30 +168,31 @@ public class MessageHandler {
 			}
 		}
 	}
-	
+
 	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
-		Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
 		BigInteger targetKeyOffset = getOffset(message.getDestinationId());
 		BigInteger predecessorOffset = getOffset(predecessor.getServerId());
 		BigInteger prevStationOffset = getOffset(message.station.getServerId());
-		
+
 		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(ZERO)) {
 			deliverMessage(message);
 		} else {
 			if (!prevStationOffset.equals(ZERO)
 					&& prevStationOffset.compareTo(targetKeyOffset) == -1) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_MESSAGE_HANDLER, 3,
-//						"This should be an errornous receive of " + message.targetKey
-//						+ " - sending to the predecessor " + predecessor.serverId);
+//				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 3,
+//						"This should be an errornous receive of " + ByteArrays.toReadableString(message.destinationId)
+//						+ " - sending to the predecessor " + ByteArrays.toReadableString(predecessor.serverId));
+				message.setRoutedViaPredecessors(true);
 				this.server.getPortHandler().send(message, predecessor);
-				
+
 			} else {
+				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
 				this.server.getPortHandler().send(message, nextHop);
 			}
 		}
 	}
-	
+
 	private void processJoin(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			if (this.server.getConnectionPool().hasReportFailed(message.source)) {
@@ -207,7 +201,7 @@ public class MessageHandler {
 				return;
 			}
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
-			
+
 			BigInteger newServerIdOffset = getOffset(message.source.getServerId());
 			BigInteger prevStationIdOffset = getOffset(message.station.getServerId());
 			BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
@@ -218,7 +212,7 @@ public class MessageHandler {
 				tempNodeOffset = getOffset(node.getServerId());
 				nextPredecessorOffset = getOffset(nextPredecessor.getServerId());
 				nextSuccessorOffset = getOffset(nextSuccessor.getServerId());
-				
+
 				if (newServerIdOffset.compareTo(prevStationIdOffset) != 1
 						&& (nextSuccessorOffset.compareTo(tempNodeOffset) == -1
 						|| nextSuccessorOffset.equals(ZERO))
@@ -244,14 +238,14 @@ public class MessageHandler {
 			}
 		}
 	}
-	
+
 	private void processDiscoverNeighbours(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 			this.server.getPortHandler().send(message, message.source);
 		}
 	}
-	
+
 	private void processTestRing(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
@@ -308,6 +302,9 @@ public class MessageHandler {
 		}
 		switch (message.type) {
 			case REQUEST:
+				if (this.server.getSinchanaTestInterface() != null) {
+					this.server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.isRoutedViaPredecessors());
+				}
 				handlerAvailable = this.server.getSinchanaRequestHandler() != null;
 				if (responseExpected) {
 					returnMessage.setType(MessageType.RESPONSE);
@@ -319,9 +316,6 @@ public class MessageHandler {
 					}
 				} else if (handlerAvailable) {
 					this.server.getSinchanaRequestHandler().request(message.getData());
-				}
-				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().incRequestCount(message.lifetime);
 				}
 				break;
 			case STORE_DATA:

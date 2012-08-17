@@ -25,8 +25,7 @@ public enum MessageType implements org.apache.thrift.TEnum {
   ERROR(10),
   JOIN(11),
   DISCOVER_NEIGHBORS(12),
-  VERIFY_RING(13),
-  TEST_RING(14);
+  TEST_RING(13);
 
   private final int value;
 
@@ -74,8 +73,6 @@ public enum MessageType implements org.apache.thrift.TEnum {
       case 12:
         return DISCOVER_NEIGHBORS;
       case 13:
-        return VERIFY_RING;
-      case 14:
         return TEST_RING;
       default:
         return null;

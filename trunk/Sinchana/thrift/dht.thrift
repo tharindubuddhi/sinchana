@@ -19,29 +19,27 @@ enum MessageType {
     ERROR,
     JOIN,
     DISCOVER_NEIGHBORS,
-    VERIFY_RING,
     TEST_RING
 }
 
 struct Message {
-    1: optional i64 id,
+    1: required MessageType type,
     2: required Node source,
-    3: required MessageType type,
-    4: required i32 lifetime,
+    3: required i32 lifetime,
+    4: optional i64 id,
     5: optional Node destination,
     6: optional Node station,
     7: optional binary destinationId,
     8: optional binary key,
     9: optional binary data,
-    10: optional Node predecessor,
-    11: optional Node successor,
-    12: optional set<Node> neighbourSet,
-    13: optional set<Node> failedNodeSet,
-    14: optional i32 retryCount,
-    15: optional i64 timeStamp,
-    16: optional bool success,
-    17: optional bool responseExpected,
-    18: optional string error
+    10: optional set<Node> neighbourSet,
+    11: optional set<Node> failedNodeSet,
+    12: optional bool success,
+    13: optional bool responseExpected,
+    14: optional string error,
+    15: optional i32 retryCount,
+    16: optional i64 timeStamp,
+    17: optional bool routedViaPredecessors    
 }
 
 service DHTServer {

@@ -97,7 +97,7 @@ public class SinchanaServer extends Node {
 
 	public void join() {
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
-			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+			Message msg = new Message(MessageType.JOIN, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			Node remoteNode = new Node(ByteBuffer.wrap(Hash.generateId(remoteNodeAddress)), remoteNodeAddress);
 			int count = CONFIGURATIONS.JOIN_RETRY_TIME_OUT * 100;
 			while (!joined) {
@@ -114,7 +114,7 @@ public class SinchanaServer extends Node {
 				}
 			}
 		} else {
-			Message msg = new Message(this, MessageType.JOIN, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+			Message msg = new Message(MessageType.JOIN, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			msg.setStation(this);
 			messageHandler.queueMessage(msg, MessageQueue.PRIORITY_HIGH);
 		}
@@ -218,7 +218,7 @@ public class SinchanaServer extends Node {
 	 * @param message		Message to pass to the network.
 	 */
 	public void testRing() {
-		Message message = new Message(this, MessageType.TEST_RING, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		Message message = new Message(MessageType.TEST_RING, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		message.setStation(this);
 		this.getMessageHandler().queueMessage(message, MessageQueue.PRIORITY_LOW);
 	}

@@ -119,7 +119,7 @@ public class ClientHandler {
 	public ClientData addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBackHandler scbh, boolean waiting) {
 		ClientData clientData = null;
 		long requestId = -1;
-		Message message = new Message(this.server, type, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		Message message = new Message(type, this.server, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		switch (message.type) {
 			case REQUEST:
 				message.setDestinationId(key);

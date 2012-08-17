@@ -5,7 +5,6 @@
 package sinchana.test;
 
 import java.util.Set;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -15,7 +14,6 @@ import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.util.tools.ByteArrays;
-import sinchana.util.tools.Hash;
 
 /**
  *
@@ -52,7 +50,7 @@ public class TesterController {
 		timer.scheduleAtFixedRate(new TimerTask() {
 
 			long totalMessageIncome, totalInputMessageQueue,
-					totalOutputMessageQueue, totalResolves,
+					totalOutputMessageQueue, totalResolves, totalResolvesViaPredecessors,
 					maxInputMessageQueueSize, maxOutputMessageQueueSize,
 					totalLifeTime;
 			long newTime, oldTime = System.currentTimeMillis();
@@ -67,6 +65,7 @@ public class TesterController {
 				maxOutputMessageQueueSize = 0;
 				totalLifeTime = 0;
 				totalResolves = 0;
+				totalResolvesViaPredecessors = 0;
 				mxaTester = -1;
 				long[] testData;
 				Set<Integer> keySet = testServers.keySet();
@@ -83,26 +82,28 @@ public class TesterController {
 						mxaTester = tid;
 					}
 					totalResolves += testData[5];
-					totalLifeTime += testData[6];
+					totalResolvesViaPredecessors += testData[6];
+					totalLifeTime += testData[7];
 
 				}
 				newTime = System.currentTimeMillis();
 				if (completedCount != 0) {
 					cui.setStat("IC: " + (totalMessageIncome / completedCount)
-							+ "    IB: " + (totalInputMessageQueue / completedCount)
-							+ "    MI: " + maxInputMessageQueueSize
-							+ "    OB: " + (totalOutputMessageQueue / completedCount)
-							+ "    MO: " + maxOutputMessageQueueSize
-							+ "    TR: " + totalResolves
-							+ "    TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S"
-							+ "    AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA"));
+							+ "   IB: " + (totalInputMessageQueue / completedCount)
+							+ "   MI: " + maxInputMessageQueueSize
+							+ "   OB: " + (totalOutputMessageQueue / completedCount)
+							+ "   MO: " + maxOutputMessageQueueSize
+							+ "   TR: " + totalResolves
+							+ "   RP: " + (totalResolves != 0 ? totalResolvesViaPredecessors * 100 / totalResolves : "NA")
+							+ "   TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S"
+							+ "   AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA"));
 				}
 				oldTime = newTime;
 				if (mxaTester != -1) {
 //										System.out.println(mxaTester + ": " + testServers.get(mxaTester).temp);
 				}
 			}
-		}, 1000, 2000);
+		}, 1000, 1000);
 	}
 
 	/**
@@ -192,7 +193,7 @@ public class TesterController {
 		Set<Integer> keySet = testServers.keySet();
 		for (int key : keySet) {
 			if (testServers.get(key).getServerId().equals(requester)) {
-				Message msg = new Message(testServers.get(key).getServer(), MessageType.REQUEST, 10);
+				Message msg = new Message(MessageType.REQUEST, testServers.get(key).getServer(), 10);
 				msg.setDestinationId(destination.getBytes());
 				msg.setData(text.getBytes());
 //				testServers.get(key).getServer().send(msg);
@@ -204,13 +205,9 @@ public class TesterController {
 	int dataID = 1;
 
 	public void storeData(int noOfData) {
-		
-
 	}
 
 	public void retrieveData() {
-		
-
 	}
 
 	public void removeData(int randomAmount) {

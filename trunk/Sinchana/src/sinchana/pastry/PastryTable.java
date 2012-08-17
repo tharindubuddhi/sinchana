@@ -104,7 +104,7 @@ public class PastryTable implements RoutingHandler {
      */
     @Override
     public void optimize() {
-        Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, 2);
+        Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server, 2);
         Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
         msg.setFailedNodeSet(failedNodes);
         synchronized (predecessors) {

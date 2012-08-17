@@ -5,6 +5,7 @@
 package sinchana.util.tools;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -12,6 +13,10 @@ import java.util.Arrays;
  * @author Hiru
  */
 public class ByteArrays {
+
+	public static String toReadableString(ByteBuffer byteBuffer) {
+		return toReadableString(byteBuffer.array());
+	}
 
 	public static String toReadableString(byte[] arrayToRead) {
 		return new BigInteger(1, arrayToRead).toString(16);

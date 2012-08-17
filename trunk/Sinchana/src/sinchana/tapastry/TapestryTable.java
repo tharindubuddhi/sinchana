@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
+import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -23,8 +24,8 @@ import sinchana.CONFIGURATIONS;
  */
 public class TapestryTable implements RoutingHandler {
 
-	public static final int TABLE_SIZE = (int) Math.log10(Math.pow(2, 160));
-	public static final int NUMBER_BASE = 10;
+	public static final int TAPESTRY_TABLE_NUMBER_BASE = 16;
+	public static final int TABLE_SIZE = 40;
 	private static final int SUCCESSOR_LEVEL = 3;
 	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private final SinchanaServer server;
@@ -32,7 +33,7 @@ public class TapestryTable implements RoutingHandler {
 	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
 	private byte[] serverId;
 	private BigInteger serverIdAsBigInt;
-	private final Node[][] fingerTable = new Node[TABLE_SIZE][NUMBER_BASE];
+	private final Node[][] fingerTable = new Node[TABLE_SIZE][TAPESTRY_TABLE_NUMBER_BASE];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
@@ -73,7 +74,7 @@ public class TapestryTable implements RoutingHandler {
 	 */
 	private void initFingerTable() {
 		for (int i = 0; i < TABLE_SIZE; i++) {
-			for (int j = 0; j < NUMBER_BASE; j++) {
+			for (int j = 0; j < TAPESTRY_TABLE_NUMBER_BASE; j++) {
 				fingerTable[i][j] = null;
 			}
 		}
@@ -98,7 +99,7 @@ public class TapestryTable implements RoutingHandler {
 	 */
 	@Override
 	public void optimize() {
-		Message msg = new Message(this.server, MessageType.DISCOVER_NEIGHBORS, 2);
+		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server, 2);
 		Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
 		msg.setFailedNodeSet(failedNodes);
 		synchronized (predecessors) {
@@ -127,14 +128,23 @@ public class TapestryTable implements RoutingHandler {
 	@Override
 	public Node getNextNode(byte[] destination) {
 
+//		System.out.println(this.server.getServerIdAsString() + ": looking for "
+//				+ ByteArrays.toReadableString(destination));
+
 		int raw = getRaw(this.serverId, destination);
 		if (raw == -1) {
-//			System.out.println(this.serverId + ": next node for " + destination + " is this server.");
+//			System.out.println(this.server.getServerIdAsString() + ": next node for "
+//					+ ByteArrays.toReadableString(destination) + " is this server.");
 			return this.server;
 		}
 		int column = getColumn(destination, raw);
 		if (fingerTable[raw][column] != null) {
+//			System.out.println(this.server.getServerIdAsString() + ": found "
+//					+ ByteArrays.toReadableString(fingerTable[raw][column].serverId)
+//					+ " @ [" + raw + "," + column + "]");
 			return fingerTable[raw][column];
+		} else {
+//			System.out.println(this.server.getServerIdAsString() + ": No entry @ [" + raw + "," + column + "]");
 		}
 
 		int tColumn, iRaw, iColumn;
@@ -151,37 +161,32 @@ public class TapestryTable implements RoutingHandler {
 		}
 
 		while (true) {
-			try {
-				if (fingerTable[raw][column] != null) {
-//					System.out.println(this.serverId + ": found "
-//							+ fingerTable[raw][column].serverId + " @ [" + raw + "," + column + "]");
-					break;
-				}
-			} catch (Exception e) {
-				System.out.println(this.serverId + ":\tr:" + raw
-						+ "\tc:" + column + "\ttc" + getColumn(this.serverId, raw)
-						+ "\tt:" + traverseDown
-						+ "---------------------------------------------------------------------------------");
+			if (fingerTable[raw][column] != null) {
+//				System.out.println(this.server.getServerIdAsString() + ": found "
+//						+ ByteArrays.toReadableString(fingerTable[raw][column].serverId)
+//						+ " @ [" + raw + "," + column + "]");
+				break;
 			}
 			tColumn = getColumn(this.serverId, raw);
-//			System.out.println(this.serverId + ": analize:::\td:" + destination
-//								+ "\tr:" + raw + "\tc:" + column + "\ttc:" + tColumn);
+//			System.out.println(this.server.getServerIdAsString() + ": analize:::\td:"
+//					+ ByteArrays.toReadableString(destination)
+//					+ "\tr:" + raw + "\tc:" + column + "\ttc:" + tColumn);
 
 			if (traverseDown && tColumn == column) {
-//				System.out.println(this.serverId + ": go down");
+//				System.out.println(this.server.getServerIdAsString() + ": go down");
 				raw--;
 				traverseDown = raw != 0;
 				column = -1;
-			} else if (!traverseDown && column == NUMBER_BASE - 1) {
-//				System.out.println(this.serverId + ": go up");
+			} else if (!traverseDown && column == TAPESTRY_TABLE_NUMBER_BASE - 1) {
+//				System.out.println(this.server.getServerIdAsString() + ": go up");
 				raw++;
 				traverseDown = raw >= TapestryTable.TABLE_SIZE - 1;
 				column = getColumn(this.serverId, raw);
 			}
 
-			column = (column + 1) % NUMBER_BASE;
+			column = (column + 1) % TAPESTRY_TABLE_NUMBER_BASE;
 			if (iRaw == raw && iColumn == column) {
-				System.out.println(this.serverId + ": No result found!");
+				System.out.println(this.server.getServerIdAsString() + ": No result found!");
 				break;
 			}
 		}
@@ -221,6 +226,9 @@ public class TapestryTable implements RoutingHandler {
 
 	@Override
 	public boolean updateTable(Node node, boolean add) {
+		if (Arrays.equals(node.getServerId(), this.serverId)) {
+			return false;
+		}
 		boolean updated;
 		if (add) {
 			updated = addNode(node);
@@ -234,9 +242,6 @@ public class TapestryTable implements RoutingHandler {
 	}
 
 	private boolean addNode(Node node) {
-		if (Arrays.equals(node.getServerId(), this.serverId)) {
-			return false;
-		}
 		boolean updated = false;
 		//calculates offsets for the ids.
 		BigInteger newNodeOffset = getOffset(node.getServerId());
@@ -327,22 +332,24 @@ public class TapestryTable implements RoutingHandler {
 	private BigInteger getOffset(BigInteger id) {
 		return SinchanaServer.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
-	
+
 	private int getRaw(byte[] id, byte[] newId) {
-		BigInteger factor, t1, t2;
-		for (int i = TABLE_SIZE - 1; i >= 0; i--) {
-			factor = new BigInteger(Integer.toString(NUMBER_BASE)).pow(i);
-			t1 = new BigInteger(1, id).divide(factor);
-			t2 = new BigInteger(1, newId).divide(factor);
-			if (!t1.equals(t2)) {
-				return i;
-			}
+		BigInteger factor = new BigInteger(Integer.toString(TAPESTRY_TABLE_NUMBER_BASE));
+		BigInteger t1 = new BigInteger(1, id);
+		BigInteger t2 = new BigInteger(1, newId);
+		int i = -1;
+		while (!t1.equals(t2)) {
+			i++;
+			t1 = t1.divide(factor);
+			t2 = t2.divide(factor);
 		}
-		return -1;
+		return i;
 	}
 
 	private int getColumn(byte[] id, int raw) {
-		return (new BigInteger(1, id).mod(new BigInteger(Integer.toString(NUMBER_BASE))
-				.pow(raw + 1)).divide(new BigInteger(Integer.toString(NUMBER_BASE)).pow(raw))).intValue();
+		BigInteger val = new BigInteger(1, id);
+		val = val.divide(new BigInteger(Integer.toString(TAPESTRY_TABLE_NUMBER_BASE)).pow(raw));
+		val = val.mod(new BigInteger(Integer.toString(TAPESTRY_TABLE_NUMBER_BASE)));
+		return val.intValue();
 	}
 }

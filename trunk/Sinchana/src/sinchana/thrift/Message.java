@@ -30,24 +30,23 @@ import org.slf4j.LoggerFactory;
 public class Message implements org.apache.thrift.TBase<Message, Message._Fields>, java.io.Serializable, Cloneable {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Message");
 
-  private static final org.apache.thrift.protocol.TField ID_FIELD_DESC = new org.apache.thrift.protocol.TField("id", org.apache.thrift.protocol.TType.I64, (short)1);
+  private static final org.apache.thrift.protocol.TField TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("type", org.apache.thrift.protocol.TType.I32, (short)1);
   private static final org.apache.thrift.protocol.TField SOURCE_FIELD_DESC = new org.apache.thrift.protocol.TField("source", org.apache.thrift.protocol.TType.STRUCT, (short)2);
-  private static final org.apache.thrift.protocol.TField TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("type", org.apache.thrift.protocol.TType.I32, (short)3);
-  private static final org.apache.thrift.protocol.TField LIFETIME_FIELD_DESC = new org.apache.thrift.protocol.TField("lifetime", org.apache.thrift.protocol.TType.I32, (short)4);
+  private static final org.apache.thrift.protocol.TField LIFETIME_FIELD_DESC = new org.apache.thrift.protocol.TField("lifetime", org.apache.thrift.protocol.TType.I32, (short)3);
+  private static final org.apache.thrift.protocol.TField ID_FIELD_DESC = new org.apache.thrift.protocol.TField("id", org.apache.thrift.protocol.TType.I64, (short)4);
   private static final org.apache.thrift.protocol.TField DESTINATION_FIELD_DESC = new org.apache.thrift.protocol.TField("destination", org.apache.thrift.protocol.TType.STRUCT, (short)5);
   private static final org.apache.thrift.protocol.TField STATION_FIELD_DESC = new org.apache.thrift.protocol.TField("station", org.apache.thrift.protocol.TType.STRUCT, (short)6);
   private static final org.apache.thrift.protocol.TField DESTINATION_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("destinationId", org.apache.thrift.protocol.TType.STRING, (short)7);
   private static final org.apache.thrift.protocol.TField KEY_FIELD_DESC = new org.apache.thrift.protocol.TField("key", org.apache.thrift.protocol.TType.STRING, (short)8);
   private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRING, (short)9);
-  private static final org.apache.thrift.protocol.TField PREDECESSOR_FIELD_DESC = new org.apache.thrift.protocol.TField("predecessor", org.apache.thrift.protocol.TType.STRUCT, (short)10);
-  private static final org.apache.thrift.protocol.TField SUCCESSOR_FIELD_DESC = new org.apache.thrift.protocol.TField("successor", org.apache.thrift.protocol.TType.STRUCT, (short)11);
-  private static final org.apache.thrift.protocol.TField NEIGHBOUR_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("neighbourSet", org.apache.thrift.protocol.TType.SET, (short)12);
-  private static final org.apache.thrift.protocol.TField FAILED_NODE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("failedNodeSet", org.apache.thrift.protocol.TType.SET, (short)13);
-  private static final org.apache.thrift.protocol.TField RETRY_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("retryCount", org.apache.thrift.protocol.TType.I32, (short)14);
-  private static final org.apache.thrift.protocol.TField TIME_STAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStamp", org.apache.thrift.protocol.TType.I64, (short)15);
-  private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)16);
-  private static final org.apache.thrift.protocol.TField RESPONSE_EXPECTED_FIELD_DESC = new org.apache.thrift.protocol.TField("responseExpected", org.apache.thrift.protocol.TType.BOOL, (short)17);
-  private static final org.apache.thrift.protocol.TField ERROR_FIELD_DESC = new org.apache.thrift.protocol.TField("error", org.apache.thrift.protocol.TType.STRING, (short)18);
+  private static final org.apache.thrift.protocol.TField NEIGHBOUR_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("neighbourSet", org.apache.thrift.protocol.TType.SET, (short)10);
+  private static final org.apache.thrift.protocol.TField FAILED_NODE_SET_FIELD_DESC = new org.apache.thrift.protocol.TField("failedNodeSet", org.apache.thrift.protocol.TType.SET, (short)11);
+  private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)12);
+  private static final org.apache.thrift.protocol.TField RESPONSE_EXPECTED_FIELD_DESC = new org.apache.thrift.protocol.TField("responseExpected", org.apache.thrift.protocol.TType.BOOL, (short)13);
+  private static final org.apache.thrift.protocol.TField ERROR_FIELD_DESC = new org.apache.thrift.protocol.TField("error", org.apache.thrift.protocol.TType.STRING, (short)14);
+  private static final org.apache.thrift.protocol.TField RETRY_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("retryCount", org.apache.thrift.protocol.TType.I32, (short)15);
+  private static final org.apache.thrift.protocol.TField TIME_STAMP_FIELD_DESC = new org.apache.thrift.protocol.TField("timeStamp", org.apache.thrift.protocol.TType.I64, (short)16);
+  private static final org.apache.thrift.protocol.TField ROUTED_VIA_PREDECESSORS_FIELD_DESC = new org.apache.thrift.protocol.TField("routedViaPredecessors", org.apache.thrift.protocol.TType.BOOL, (short)17);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -55,53 +54,51 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     schemes.put(TupleScheme.class, new MessageTupleSchemeFactory());
   }
 
-  public long id; // optional
-  public Node source; // required
   /**
    * 
    * @see MessageType
    */
   public MessageType type; // required
+  public Node source; // required
   public int lifetime; // required
+  public long id; // optional
   public Node destination; // optional
   public Node station; // optional
   public ByteBuffer destinationId; // optional
   public ByteBuffer key; // optional
   public ByteBuffer data; // optional
-  public Node predecessor; // optional
-  public Node successor; // optional
   public Set<Node> neighbourSet; // optional
   public Set<Node> failedNodeSet; // optional
-  public int retryCount; // optional
-  public long timeStamp; // optional
   public boolean success; // optional
   public boolean responseExpected; // optional
   public String error; // optional
+  public int retryCount; // optional
+  public long timeStamp; // optional
+  public boolean routedViaPredecessors; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    ID((short)1, "id"),
-    SOURCE((short)2, "source"),
     /**
      * 
      * @see MessageType
      */
-    TYPE((short)3, "type"),
-    LIFETIME((short)4, "lifetime"),
+    TYPE((short)1, "type"),
+    SOURCE((short)2, "source"),
+    LIFETIME((short)3, "lifetime"),
+    ID((short)4, "id"),
     DESTINATION((short)5, "destination"),
     STATION((short)6, "station"),
     DESTINATION_ID((short)7, "destinationId"),
     KEY((short)8, "key"),
     DATA((short)9, "data"),
-    PREDECESSOR((short)10, "predecessor"),
-    SUCCESSOR((short)11, "successor"),
-    NEIGHBOUR_SET((short)12, "neighbourSet"),
-    FAILED_NODE_SET((short)13, "failedNodeSet"),
-    RETRY_COUNT((short)14, "retryCount"),
-    TIME_STAMP((short)15, "timeStamp"),
-    SUCCESS((short)16, "success"),
-    RESPONSE_EXPECTED((short)17, "responseExpected"),
-    ERROR((short)18, "error");
+    NEIGHBOUR_SET((short)10, "neighbourSet"),
+    FAILED_NODE_SET((short)11, "failedNodeSet"),
+    SUCCESS((short)12, "success"),
+    RESPONSE_EXPECTED((short)13, "responseExpected"),
+    ERROR((short)14, "error"),
+    RETRY_COUNT((short)15, "retryCount"),
+    TIME_STAMP((short)16, "timeStamp"),
+    ROUTED_VIA_PREDECESSORS((short)17, "routedViaPredecessors");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -116,14 +113,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // ID
-          return ID;
+        case 1: // TYPE
+          return TYPE;
         case 2: // SOURCE
           return SOURCE;
-        case 3: // TYPE
-          return TYPE;
-        case 4: // LIFETIME
+        case 3: // LIFETIME
           return LIFETIME;
+        case 4: // ID
+          return ID;
         case 5: // DESTINATION
           return DESTINATION;
         case 6: // STATION
@@ -134,24 +131,22 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           return KEY;
         case 9: // DATA
           return DATA;
-        case 10: // PREDECESSOR
-          return PREDECESSOR;
-        case 11: // SUCCESSOR
-          return SUCCESSOR;
-        case 12: // NEIGHBOUR_SET
+        case 10: // NEIGHBOUR_SET
           return NEIGHBOUR_SET;
-        case 13: // FAILED_NODE_SET
+        case 11: // FAILED_NODE_SET
           return FAILED_NODE_SET;
-        case 14: // RETRY_COUNT
-          return RETRY_COUNT;
-        case 15: // TIME_STAMP
-          return TIME_STAMP;
-        case 16: // SUCCESS
+        case 12: // SUCCESS
           return SUCCESS;
-        case 17: // RESPONSE_EXPECTED
+        case 13: // RESPONSE_EXPECTED
           return RESPONSE_EXPECTED;
-        case 18: // ERROR
+        case 14: // ERROR
           return ERROR;
+        case 15: // RETRY_COUNT
+          return RETRY_COUNT;
+        case 16: // TIME_STAMP
+          return TIME_STAMP;
+        case 17: // ROUTED_VIA_PREDECESSORS
+          return ROUTED_VIA_PREDECESSORS;
         default:
           return null;
       }
@@ -192,25 +187,26 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   }
 
   // isset id assignments
-  private static final int __ID_ISSET_ID = 0;
-  private static final int __LIFETIME_ISSET_ID = 1;
-  private static final int __RETRYCOUNT_ISSET_ID = 2;
-  private static final int __TIMESTAMP_ISSET_ID = 3;
-  private static final int __SUCCESS_ISSET_ID = 4;
-  private static final int __RESPONSEEXPECTED_ISSET_ID = 5;
-  private BitSet __isset_bit_vector = new BitSet(6);
-  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.DESTINATION_ID,_Fields.KEY,_Fields.DATA,_Fields.PREDECESSOR,_Fields.SUCCESSOR,_Fields.NEIGHBOUR_SET,_Fields.FAILED_NODE_SET,_Fields.RETRY_COUNT,_Fields.TIME_STAMP,_Fields.SUCCESS,_Fields.RESPONSE_EXPECTED,_Fields.ERROR};
+  private static final int __LIFETIME_ISSET_ID = 0;
+  private static final int __ID_ISSET_ID = 1;
+  private static final int __SUCCESS_ISSET_ID = 2;
+  private static final int __RESPONSEEXPECTED_ISSET_ID = 3;
+  private static final int __RETRYCOUNT_ISSET_ID = 4;
+  private static final int __TIMESTAMP_ISSET_ID = 5;
+  private static final int __ROUTEDVIAPREDECESSORS_ISSET_ID = 6;
+  private BitSet __isset_bit_vector = new BitSet(7);
+  private _Fields optionals[] = {_Fields.ID,_Fields.DESTINATION,_Fields.STATION,_Fields.DESTINATION_ID,_Fields.KEY,_Fields.DATA,_Fields.NEIGHBOUR_SET,_Fields.FAILED_NODE_SET,_Fields.SUCCESS,_Fields.RESPONSE_EXPECTED,_Fields.ERROR,_Fields.RETRY_COUNT,_Fields.TIME_STAMP,_Fields.ROUTED_VIA_PREDECESSORS};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.ID, new org.apache.thrift.meta_data.FieldMetaData("id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.SOURCE, new org.apache.thrift.meta_data.FieldMetaData("source", org.apache.thrift.TFieldRequirementType.REQUIRED, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class)));
     tmpMap.put(_Fields.TYPE, new org.apache.thrift.meta_data.FieldMetaData("type", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, MessageType.class)));
+    tmpMap.put(_Fields.SOURCE, new org.apache.thrift.meta_data.FieldMetaData("source", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class)));
     tmpMap.put(_Fields.LIFETIME, new org.apache.thrift.meta_data.FieldMetaData("lifetime", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+    tmpMap.put(_Fields.ID, new org.apache.thrift.meta_data.FieldMetaData("id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.DESTINATION, new org.apache.thrift.meta_data.FieldMetaData("destination", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class)));
     tmpMap.put(_Fields.STATION, new org.apache.thrift.meta_data.FieldMetaData("station", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -221,26 +217,24 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     tmpMap.put(_Fields.DATA, new org.apache.thrift.meta_data.FieldMetaData("data", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
-    tmpMap.put(_Fields.PREDECESSOR, new org.apache.thrift.meta_data.FieldMetaData("predecessor", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class)));
-    tmpMap.put(_Fields.SUCCESSOR, new org.apache.thrift.meta_data.FieldMetaData("successor", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class)));
     tmpMap.put(_Fields.NEIGHBOUR_SET, new org.apache.thrift.meta_data.FieldMetaData("neighbourSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
     tmpMap.put(_Fields.FAILED_NODE_SET, new org.apache.thrift.meta_data.FieldMetaData("failedNodeSet", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.SetMetaData(org.apache.thrift.protocol.TType.SET, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Node.class))));
-    tmpMap.put(_Fields.RETRY_COUNT, new org.apache.thrift.meta_data.FieldMetaData("retryCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.TIME_STAMP, new org.apache.thrift.meta_data.FieldMetaData("timeStamp", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.RESPONSE_EXPECTED, new org.apache.thrift.meta_data.FieldMetaData("responseExpected", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.ERROR, new org.apache.thrift.meta_data.FieldMetaData("error", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.RETRY_COUNT, new org.apache.thrift.meta_data.FieldMetaData("retryCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+    tmpMap.put(_Fields.TIME_STAMP, new org.apache.thrift.meta_data.FieldMetaData("timeStamp", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.ROUTED_VIA_PREDECESSORS, new org.apache.thrift.meta_data.FieldMetaData("routedViaPredecessors", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Message.class, metaDataMap);
   }
@@ -249,13 +243,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   }
 
   public Message(
-    Node source,
     MessageType type,
+    Node source,
     int lifetime)
   {
     this();
-    this.source = source;
     this.type = type;
+    this.source = source;
     this.lifetime = lifetime;
     setLifetimeIsSet(true);
   }
@@ -266,14 +260,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public Message(Message other) {
     __isset_bit_vector.clear();
     __isset_bit_vector.or(other.__isset_bit_vector);
-    this.id = other.id;
-    if (other.isSetSource()) {
-      this.source = new Node(other.source);
-    }
     if (other.isSetType()) {
       this.type = other.type;
     }
+    if (other.isSetSource()) {
+      this.source = new Node(other.source);
+    }
     this.lifetime = other.lifetime;
+    this.id = other.id;
     if (other.isSetDestination()) {
       this.destination = new Node(other.destination);
     }
@@ -292,12 +286,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       this.data = org.apache.thrift.TBaseHelper.copyBinary(other.data);
 ;
     }
-    if (other.isSetPredecessor()) {
-      this.predecessor = new Node(other.predecessor);
-    }
-    if (other.isSetSuccessor()) {
-      this.successor = new Node(other.successor);
-    }
     if (other.isSetNeighbourSet()) {
       Set<Node> __this__neighbourSet = new HashSet<Node>();
       for (Node other_element : other.neighbourSet) {
@@ -312,13 +300,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       this.failedNodeSet = __this__failedNodeSet;
     }
-    this.retryCount = other.retryCount;
-    this.timeStamp = other.timeStamp;
     this.success = other.success;
     this.responseExpected = other.responseExpected;
     if (other.isSetError()) {
       this.error = other.error;
     }
+    this.retryCount = other.retryCount;
+    this.timeStamp = other.timeStamp;
+    this.routedViaPredecessors = other.routedViaPredecessors;
   }
 
   public Message deepCopy() {
@@ -327,77 +316,30 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
 
   @Override
   public void clear() {
-    setIdIsSet(false);
-    this.id = 0;
-    this.source = null;
     this.type = null;
+    this.source = null;
     setLifetimeIsSet(false);
     this.lifetime = 0;
+    setIdIsSet(false);
+    this.id = 0;
     this.destination = null;
     this.station = null;
     this.destinationId = null;
     this.key = null;
     this.data = null;
-    this.predecessor = null;
-    this.successor = null;
     this.neighbourSet = null;
     this.failedNodeSet = null;
-    setRetryCountIsSet(false);
-    this.retryCount = 0;
-    setTimeStampIsSet(false);
-    this.timeStamp = 0;
     setSuccessIsSet(false);
     this.success = false;
     setResponseExpectedIsSet(false);
     this.responseExpected = false;
     this.error = null;
-  }
-
-  public long getId() {
-    return this.id;
-  }
-
-  public Message setId(long id) {
-    this.id = id;
-    setIdIsSet(true);
-    return this;
-  }
-
-  public void unsetId() {
-    __isset_bit_vector.clear(__ID_ISSET_ID);
-  }
-
-  /** Returns true if field id is set (has been assigned a value) and false otherwise */
-  public boolean isSetId() {
-    return __isset_bit_vector.get(__ID_ISSET_ID);
-  }
-
-  public void setIdIsSet(boolean value) {
-    __isset_bit_vector.set(__ID_ISSET_ID, value);
-  }
-
-  public Node getSource() {
-    return this.source;
-  }
-
-  public Message setSource(Node source) {
-    this.source = source;
-    return this;
-  }
-
-  public void unsetSource() {
-    this.source = null;
-  }
-
-  /** Returns true if field source is set (has been assigned a value) and false otherwise */
-  public boolean isSetSource() {
-    return this.source != null;
-  }
-
-  public void setSourceIsSet(boolean value) {
-    if (!value) {
-      this.source = null;
-    }
+    setRetryCountIsSet(false);
+    this.retryCount = 0;
+    setTimeStampIsSet(false);
+    this.timeStamp = 0;
+    setRoutedViaPredecessorsIsSet(false);
+    this.routedViaPredecessors = false;
   }
 
   /**
@@ -432,6 +374,30 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
+  public Node getSource() {
+    return this.source;
+  }
+
+  public Message setSource(Node source) {
+    this.source = source;
+    return this;
+  }
+
+  public void unsetSource() {
+    this.source = null;
+  }
+
+  /** Returns true if field source is set (has been assigned a value) and false otherwise */
+  public boolean isSetSource() {
+    return this.source != null;
+  }
+
+  public void setSourceIsSet(boolean value) {
+    if (!value) {
+      this.source = null;
+    }
+  }
+
   public int getLifetime() {
     return this.lifetime;
   }
@@ -453,6 +419,29 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
 
   public void setLifetimeIsSet(boolean value) {
     __isset_bit_vector.set(__LIFETIME_ISSET_ID, value);
+  }
+
+  public long getId() {
+    return this.id;
+  }
+
+  public Message setId(long id) {
+    this.id = id;
+    setIdIsSet(true);
+    return this;
+  }
+
+  public void unsetId() {
+    __isset_bit_vector.clear(__ID_ISSET_ID);
+  }
+
+  /** Returns true if field id is set (has been assigned a value) and false otherwise */
+  public boolean isSetId() {
+    return __isset_bit_vector.get(__ID_ISSET_ID);
+  }
+
+  public void setIdIsSet(boolean value) {
+    __isset_bit_vector.set(__ID_ISSET_ID, value);
   }
 
   public Node getDestination() {
@@ -605,54 +594,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
-  public Node getPredecessor() {
-    return this.predecessor;
-  }
-
-  public Message setPredecessor(Node predecessor) {
-    this.predecessor = predecessor;
-    return this;
-  }
-
-  public void unsetPredecessor() {
-    this.predecessor = null;
-  }
-
-  /** Returns true if field predecessor is set (has been assigned a value) and false otherwise */
-  public boolean isSetPredecessor() {
-    return this.predecessor != null;
-  }
-
-  public void setPredecessorIsSet(boolean value) {
-    if (!value) {
-      this.predecessor = null;
-    }
-  }
-
-  public Node getSuccessor() {
-    return this.successor;
-  }
-
-  public Message setSuccessor(Node successor) {
-    this.successor = successor;
-    return this;
-  }
-
-  public void unsetSuccessor() {
-    this.successor = null;
-  }
-
-  /** Returns true if field successor is set (has been assigned a value) and false otherwise */
-  public boolean isSetSuccessor() {
-    return this.successor != null;
-  }
-
-  public void setSuccessorIsSet(boolean value) {
-    if (!value) {
-      this.successor = null;
-    }
-  }
-
   public int getNeighbourSetSize() {
     return (this.neighbourSet == null) ? 0 : this.neighbourSet.size();
   }
@@ -731,52 +672,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
-  public int getRetryCount() {
-    return this.retryCount;
-  }
-
-  public Message setRetryCount(int retryCount) {
-    this.retryCount = retryCount;
-    setRetryCountIsSet(true);
-    return this;
-  }
-
-  public void unsetRetryCount() {
-    __isset_bit_vector.clear(__RETRYCOUNT_ISSET_ID);
-  }
-
-  /** Returns true if field retryCount is set (has been assigned a value) and false otherwise */
-  public boolean isSetRetryCount() {
-    return __isset_bit_vector.get(__RETRYCOUNT_ISSET_ID);
-  }
-
-  public void setRetryCountIsSet(boolean value) {
-    __isset_bit_vector.set(__RETRYCOUNT_ISSET_ID, value);
-  }
-
-  public long getTimeStamp() {
-    return this.timeStamp;
-  }
-
-  public Message setTimeStamp(long timeStamp) {
-    this.timeStamp = timeStamp;
-    setTimeStampIsSet(true);
-    return this;
-  }
-
-  public void unsetTimeStamp() {
-    __isset_bit_vector.clear(__TIMESTAMP_ISSET_ID);
-  }
-
-  /** Returns true if field timeStamp is set (has been assigned a value) and false otherwise */
-  public boolean isSetTimeStamp() {
-    return __isset_bit_vector.get(__TIMESTAMP_ISSET_ID);
-  }
-
-  public void setTimeStampIsSet(boolean value) {
-    __isset_bit_vector.set(__TIMESTAMP_ISSET_ID, value);
-  }
-
   public boolean isSuccess() {
     return this.success;
   }
@@ -847,13 +742,82 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
   }
 
+  public int getRetryCount() {
+    return this.retryCount;
+  }
+
+  public Message setRetryCount(int retryCount) {
+    this.retryCount = retryCount;
+    setRetryCountIsSet(true);
+    return this;
+  }
+
+  public void unsetRetryCount() {
+    __isset_bit_vector.clear(__RETRYCOUNT_ISSET_ID);
+  }
+
+  /** Returns true if field retryCount is set (has been assigned a value) and false otherwise */
+  public boolean isSetRetryCount() {
+    return __isset_bit_vector.get(__RETRYCOUNT_ISSET_ID);
+  }
+
+  public void setRetryCountIsSet(boolean value) {
+    __isset_bit_vector.set(__RETRYCOUNT_ISSET_ID, value);
+  }
+
+  public long getTimeStamp() {
+    return this.timeStamp;
+  }
+
+  public Message setTimeStamp(long timeStamp) {
+    this.timeStamp = timeStamp;
+    setTimeStampIsSet(true);
+    return this;
+  }
+
+  public void unsetTimeStamp() {
+    __isset_bit_vector.clear(__TIMESTAMP_ISSET_ID);
+  }
+
+  /** Returns true if field timeStamp is set (has been assigned a value) and false otherwise */
+  public boolean isSetTimeStamp() {
+    return __isset_bit_vector.get(__TIMESTAMP_ISSET_ID);
+  }
+
+  public void setTimeStampIsSet(boolean value) {
+    __isset_bit_vector.set(__TIMESTAMP_ISSET_ID, value);
+  }
+
+  public boolean isRoutedViaPredecessors() {
+    return this.routedViaPredecessors;
+  }
+
+  public Message setRoutedViaPredecessors(boolean routedViaPredecessors) {
+    this.routedViaPredecessors = routedViaPredecessors;
+    setRoutedViaPredecessorsIsSet(true);
+    return this;
+  }
+
+  public void unsetRoutedViaPredecessors() {
+    __isset_bit_vector.clear(__ROUTEDVIAPREDECESSORS_ISSET_ID);
+  }
+
+  /** Returns true if field routedViaPredecessors is set (has been assigned a value) and false otherwise */
+  public boolean isSetRoutedViaPredecessors() {
+    return __isset_bit_vector.get(__ROUTEDVIAPREDECESSORS_ISSET_ID);
+  }
+
+  public void setRoutedViaPredecessorsIsSet(boolean value) {
+    __isset_bit_vector.set(__ROUTEDVIAPREDECESSORS_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
-    case ID:
+    case TYPE:
       if (value == null) {
-        unsetId();
+        unsetType();
       } else {
-        setId((Long)value);
+        setType((MessageType)value);
       }
       break;
 
@@ -865,19 +829,19 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       break;
 
-    case TYPE:
-      if (value == null) {
-        unsetType();
-      } else {
-        setType((MessageType)value);
-      }
-      break;
-
     case LIFETIME:
       if (value == null) {
         unsetLifetime();
       } else {
         setLifetime((Integer)value);
+      }
+      break;
+
+    case ID:
+      if (value == null) {
+        unsetId();
+      } else {
+        setId((Long)value);
       }
       break;
 
@@ -921,22 +885,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       break;
 
-    case PREDECESSOR:
-      if (value == null) {
-        unsetPredecessor();
-      } else {
-        setPredecessor((Node)value);
-      }
-      break;
-
-    case SUCCESSOR:
-      if (value == null) {
-        unsetSuccessor();
-      } else {
-        setSuccessor((Node)value);
-      }
-      break;
-
     case NEIGHBOUR_SET:
       if (value == null) {
         unsetNeighbourSet();
@@ -950,22 +898,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         unsetFailedNodeSet();
       } else {
         setFailedNodeSet((Set<Node>)value);
-      }
-      break;
-
-    case RETRY_COUNT:
-      if (value == null) {
-        unsetRetryCount();
-      } else {
-        setRetryCount((Integer)value);
-      }
-      break;
-
-    case TIME_STAMP:
-      if (value == null) {
-        unsetTimeStamp();
-      } else {
-        setTimeStamp((Long)value);
       }
       break;
 
@@ -993,22 +925,46 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       break;
 
+    case RETRY_COUNT:
+      if (value == null) {
+        unsetRetryCount();
+      } else {
+        setRetryCount((Integer)value);
+      }
+      break;
+
+    case TIME_STAMP:
+      if (value == null) {
+        unsetTimeStamp();
+      } else {
+        setTimeStamp((Long)value);
+      }
+      break;
+
+    case ROUTED_VIA_PREDECESSORS:
+      if (value == null) {
+        unsetRoutedViaPredecessors();
+      } else {
+        setRoutedViaPredecessors((Boolean)value);
+      }
+      break;
+
     }
   }
 
   public Object getFieldValue(_Fields field) {
     switch (field) {
-    case ID:
-      return Long.valueOf(getId());
+    case TYPE:
+      return getType();
 
     case SOURCE:
       return getSource();
 
-    case TYPE:
-      return getType();
-
     case LIFETIME:
       return Integer.valueOf(getLifetime());
+
+    case ID:
+      return Long.valueOf(getId());
 
     case DESTINATION:
       return getDestination();
@@ -1025,23 +981,11 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     case DATA:
       return getData();
 
-    case PREDECESSOR:
-      return getPredecessor();
-
-    case SUCCESSOR:
-      return getSuccessor();
-
     case NEIGHBOUR_SET:
       return getNeighbourSet();
 
     case FAILED_NODE_SET:
       return getFailedNodeSet();
-
-    case RETRY_COUNT:
-      return Integer.valueOf(getRetryCount());
-
-    case TIME_STAMP:
-      return Long.valueOf(getTimeStamp());
 
     case SUCCESS:
       return Boolean.valueOf(isSuccess());
@@ -1051,6 +995,15 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
 
     case ERROR:
       return getError();
+
+    case RETRY_COUNT:
+      return Integer.valueOf(getRetryCount());
+
+    case TIME_STAMP:
+      return Long.valueOf(getTimeStamp());
+
+    case ROUTED_VIA_PREDECESSORS:
+      return Boolean.valueOf(isRoutedViaPredecessors());
 
     }
     throw new IllegalStateException();
@@ -1063,14 +1016,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
 
     switch (field) {
-    case ID:
-      return isSetId();
-    case SOURCE:
-      return isSetSource();
     case TYPE:
       return isSetType();
+    case SOURCE:
+      return isSetSource();
     case LIFETIME:
       return isSetLifetime();
+    case ID:
+      return isSetId();
     case DESTINATION:
       return isSetDestination();
     case STATION:
@@ -1081,24 +1034,22 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       return isSetKey();
     case DATA:
       return isSetData();
-    case PREDECESSOR:
-      return isSetPredecessor();
-    case SUCCESSOR:
-      return isSetSuccessor();
     case NEIGHBOUR_SET:
       return isSetNeighbourSet();
     case FAILED_NODE_SET:
       return isSetFailedNodeSet();
-    case RETRY_COUNT:
-      return isSetRetryCount();
-    case TIME_STAMP:
-      return isSetTimeStamp();
     case SUCCESS:
       return isSetSuccess();
     case RESPONSE_EXPECTED:
       return isSetResponseExpected();
     case ERROR:
       return isSetError();
+    case RETRY_COUNT:
+      return isSetRetryCount();
+    case TIME_STAMP:
+      return isSetTimeStamp();
+    case ROUTED_VIA_PREDECESSORS:
+      return isSetRoutedViaPredecessors();
     }
     throw new IllegalStateException();
   }
@@ -1116,12 +1067,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     if (that == null)
       return false;
 
-    boolean this_present_id = true && this.isSetId();
-    boolean that_present_id = true && that.isSetId();
-    if (this_present_id || that_present_id) {
-      if (!(this_present_id && that_present_id))
+    boolean this_present_type = true && this.isSetType();
+    boolean that_present_type = true && that.isSetType();
+    if (this_present_type || that_present_type) {
+      if (!(this_present_type && that_present_type))
         return false;
-      if (this.id != that.id)
+      if (!this.type.equals(that.type))
         return false;
     }
 
@@ -1134,21 +1085,21 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return false;
     }
 
-    boolean this_present_type = true && this.isSetType();
-    boolean that_present_type = true && that.isSetType();
-    if (this_present_type || that_present_type) {
-      if (!(this_present_type && that_present_type))
-        return false;
-      if (!this.type.equals(that.type))
-        return false;
-    }
-
     boolean this_present_lifetime = true;
     boolean that_present_lifetime = true;
     if (this_present_lifetime || that_present_lifetime) {
       if (!(this_present_lifetime && that_present_lifetime))
         return false;
       if (this.lifetime != that.lifetime)
+        return false;
+    }
+
+    boolean this_present_id = true && this.isSetId();
+    boolean that_present_id = true && that.isSetId();
+    if (this_present_id || that_present_id) {
+      if (!(this_present_id && that_present_id))
+        return false;
+      if (this.id != that.id)
         return false;
     }
 
@@ -1197,24 +1148,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return false;
     }
 
-    boolean this_present_predecessor = true && this.isSetPredecessor();
-    boolean that_present_predecessor = true && that.isSetPredecessor();
-    if (this_present_predecessor || that_present_predecessor) {
-      if (!(this_present_predecessor && that_present_predecessor))
-        return false;
-      if (!this.predecessor.equals(that.predecessor))
-        return false;
-    }
-
-    boolean this_present_successor = true && this.isSetSuccessor();
-    boolean that_present_successor = true && that.isSetSuccessor();
-    if (this_present_successor || that_present_successor) {
-      if (!(this_present_successor && that_present_successor))
-        return false;
-      if (!this.successor.equals(that.successor))
-        return false;
-    }
-
     boolean this_present_neighbourSet = true && this.isSetNeighbourSet();
     boolean that_present_neighbourSet = true && that.isSetNeighbourSet();
     if (this_present_neighbourSet || that_present_neighbourSet) {
@@ -1230,24 +1163,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (!(this_present_failedNodeSet && that_present_failedNodeSet))
         return false;
       if (!this.failedNodeSet.equals(that.failedNodeSet))
-        return false;
-    }
-
-    boolean this_present_retryCount = true && this.isSetRetryCount();
-    boolean that_present_retryCount = true && that.isSetRetryCount();
-    if (this_present_retryCount || that_present_retryCount) {
-      if (!(this_present_retryCount && that_present_retryCount))
-        return false;
-      if (this.retryCount != that.retryCount)
-        return false;
-    }
-
-    boolean this_present_timeStamp = true && this.isSetTimeStamp();
-    boolean that_present_timeStamp = true && that.isSetTimeStamp();
-    if (this_present_timeStamp || that_present_timeStamp) {
-      if (!(this_present_timeStamp && that_present_timeStamp))
-        return false;
-      if (this.timeStamp != that.timeStamp)
         return false;
     }
 
@@ -1278,6 +1193,33 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return false;
     }
 
+    boolean this_present_retryCount = true && this.isSetRetryCount();
+    boolean that_present_retryCount = true && that.isSetRetryCount();
+    if (this_present_retryCount || that_present_retryCount) {
+      if (!(this_present_retryCount && that_present_retryCount))
+        return false;
+      if (this.retryCount != that.retryCount)
+        return false;
+    }
+
+    boolean this_present_timeStamp = true && this.isSetTimeStamp();
+    boolean that_present_timeStamp = true && that.isSetTimeStamp();
+    if (this_present_timeStamp || that_present_timeStamp) {
+      if (!(this_present_timeStamp && that_present_timeStamp))
+        return false;
+      if (this.timeStamp != that.timeStamp)
+        return false;
+    }
+
+    boolean this_present_routedViaPredecessors = true && this.isSetRoutedViaPredecessors();
+    boolean that_present_routedViaPredecessors = true && that.isSetRoutedViaPredecessors();
+    if (this_present_routedViaPredecessors || that_present_routedViaPredecessors) {
+      if (!(this_present_routedViaPredecessors && that_present_routedViaPredecessors))
+        return false;
+      if (this.routedViaPredecessors != that.routedViaPredecessors)
+        return false;
+    }
+
     return true;
   }
 
@@ -1294,12 +1236,12 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     int lastComparison = 0;
     Message typedOther = (Message)other;
 
-    lastComparison = Boolean.valueOf(isSetId()).compareTo(typedOther.isSetId());
+    lastComparison = Boolean.valueOf(isSetType()).compareTo(typedOther.isSetType());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetId()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.id, typedOther.id);
+    if (isSetType()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.type, typedOther.type);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1314,22 +1256,22 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetType()).compareTo(typedOther.isSetType());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetType()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.type, typedOther.type);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     lastComparison = Boolean.valueOf(isSetLifetime()).compareTo(typedOther.isSetLifetime());
     if (lastComparison != 0) {
       return lastComparison;
     }
     if (isSetLifetime()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.lifetime, typedOther.lifetime);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetId()).compareTo(typedOther.isSetId());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetId()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.id, typedOther.id);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1384,26 +1326,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetPredecessor()).compareTo(typedOther.isSetPredecessor());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetPredecessor()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.predecessor, typedOther.predecessor);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = Boolean.valueOf(isSetSuccessor()).compareTo(typedOther.isSetSuccessor());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetSuccessor()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.successor, typedOther.successor);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     lastComparison = Boolean.valueOf(isSetNeighbourSet()).compareTo(typedOther.isSetNeighbourSet());
     if (lastComparison != 0) {
       return lastComparison;
@@ -1420,26 +1342,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
     if (isSetFailedNodeSet()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.failedNodeSet, typedOther.failedNodeSet);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = Boolean.valueOf(isSetRetryCount()).compareTo(typedOther.isSetRetryCount());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetRetryCount()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.retryCount, typedOther.retryCount);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = Boolean.valueOf(isSetTimeStamp()).compareTo(typedOther.isSetTimeStamp());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetTimeStamp()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.timeStamp, typedOther.timeStamp);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1474,6 +1376,36 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetRetryCount()).compareTo(typedOther.isSetRetryCount());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetRetryCount()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.retryCount, typedOther.retryCount);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetTimeStamp()).compareTo(typedOther.isSetTimeStamp());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetTimeStamp()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.timeStamp, typedOther.timeStamp);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetRoutedViaPredecessors()).compareTo(typedOther.isSetRoutedViaPredecessors());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetRoutedViaPredecessors()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.routedViaPredecessors, typedOther.routedViaPredecessors);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1494,11 +1426,13 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     StringBuilder sb = new StringBuilder("Message(");
     boolean first = true;
 
-    if (isSetId()) {
-      sb.append("id:");
-      sb.append(this.id);
-      first = false;
+    sb.append("type:");
+    if (this.type == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.type);
     }
+    first = false;
     if (!first) sb.append(", ");
     sb.append("source:");
     if (this.source == null) {
@@ -1508,17 +1442,15 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     }
     first = false;
     if (!first) sb.append(", ");
-    sb.append("type:");
-    if (this.type == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.type);
-    }
-    first = false;
-    if (!first) sb.append(", ");
     sb.append("lifetime:");
     sb.append(this.lifetime);
     first = false;
+    if (isSetId()) {
+      if (!first) sb.append(", ");
+      sb.append("id:");
+      sb.append(this.id);
+      first = false;
+    }
     if (isSetDestination()) {
       if (!first) sb.append(", ");
       sb.append("destination:");
@@ -1569,26 +1501,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       first = false;
     }
-    if (isSetPredecessor()) {
-      if (!first) sb.append(", ");
-      sb.append("predecessor:");
-      if (this.predecessor == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.predecessor);
-      }
-      first = false;
-    }
-    if (isSetSuccessor()) {
-      if (!first) sb.append(", ");
-      sb.append("successor:");
-      if (this.successor == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.successor);
-      }
-      first = false;
-    }
     if (isSetNeighbourSet()) {
       if (!first) sb.append(", ");
       sb.append("neighbourSet:");
@@ -1607,18 +1519,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       } else {
         sb.append(this.failedNodeSet);
       }
-      first = false;
-    }
-    if (isSetRetryCount()) {
-      if (!first) sb.append(", ");
-      sb.append("retryCount:");
-      sb.append(this.retryCount);
-      first = false;
-    }
-    if (isSetTimeStamp()) {
-      if (!first) sb.append(", ");
-      sb.append("timeStamp:");
-      sb.append(this.timeStamp);
       first = false;
     }
     if (isSetSuccess()) {
@@ -1643,17 +1543,35 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       first = false;
     }
+    if (isSetRetryCount()) {
+      if (!first) sb.append(", ");
+      sb.append("retryCount:");
+      sb.append(this.retryCount);
+      first = false;
+    }
+    if (isSetTimeStamp()) {
+      if (!first) sb.append(", ");
+      sb.append("timeStamp:");
+      sb.append(this.timeStamp);
+      first = false;
+    }
+    if (isSetRoutedViaPredecessors()) {
+      if (!first) sb.append(", ");
+      sb.append("routedViaPredecessors:");
+      sb.append(this.routedViaPredecessors);
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
 
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
-    if (source == null) {
-      throw new org.apache.thrift.protocol.TProtocolException("Required field 'source' was not present! Struct: " + toString());
-    }
     if (type == null) {
       throw new org.apache.thrift.protocol.TProtocolException("Required field 'type' was not present! Struct: " + toString());
+    }
+    if (source == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'source' was not present! Struct: " + toString());
     }
     // alas, we cannot check 'lifetime' because it's a primitive and you chose the non-beans generator.
   }
@@ -1694,10 +1612,10 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           break;
         }
         switch (schemeField.id) {
-          case 1: // ID
-            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-              struct.id = iprot.readI64();
-              struct.setIdIsSet(true);
+          case 1: // TYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.type = MessageType.findByValue(iprot.readI32());
+              struct.setTypeIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1711,18 +1629,18 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // TYPE
+          case 3: // LIFETIME
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.type = MessageType.findByValue(iprot.readI32());
-              struct.setTypeIsSet(true);
+              struct.lifetime = iprot.readI32();
+              struct.setLifetimeIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 4: // LIFETIME
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.lifetime = iprot.readI32();
-              struct.setLifetimeIsSet(true);
+          case 4: // ID
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.id = iprot.readI64();
+              struct.setIdIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1769,25 +1687,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 10: // PREDECESSOR
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.predecessor = new Node();
-              struct.predecessor.read(iprot);
-              struct.setPredecessorIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 11: // SUCCESSOR
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-              struct.successor = new Node();
-              struct.successor.read(iprot);
-              struct.setSuccessorIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 12: // NEIGHBOUR_SET
+          case 10: // NEIGHBOUR_SET
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
                 org.apache.thrift.protocol.TSet _set0 = iprot.readSetBegin();
@@ -1806,7 +1706,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 13: // FAILED_NODE_SET
+          case 11: // FAILED_NODE_SET
             if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
               {
                 org.apache.thrift.protocol.TSet _set3 = iprot.readSetBegin();
@@ -1825,23 +1725,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 14: // RETRY_COUNT
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.retryCount = iprot.readI32();
-              struct.setRetryCountIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 15: // TIME_STAMP
-            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-              struct.timeStamp = iprot.readI64();
-              struct.setTimeStampIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 16: // SUCCESS
+          case 12: // SUCCESS
             if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
               struct.success = iprot.readBool();
               struct.setSuccessIsSet(true);
@@ -1849,7 +1733,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 17: // RESPONSE_EXPECTED
+          case 13: // RESPONSE_EXPECTED
             if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
               struct.responseExpected = iprot.readBool();
               struct.setResponseExpectedIsSet(true);
@@ -1857,10 +1741,34 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 18: // ERROR
+          case 14: // ERROR
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.error = iprot.readString();
               struct.setErrorIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 15: // RETRY_COUNT
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.retryCount = iprot.readI32();
+              struct.setRetryCountIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 16: // TIME_STAMP
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.timeStamp = iprot.readI64();
+              struct.setTimeStampIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 17: // ROUTED_VIA_PREDECESSORS
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.routedViaPredecessors = iprot.readBool();
+              struct.setRoutedViaPredecessorsIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1883,9 +1791,9 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.isSetId()) {
-        oprot.writeFieldBegin(ID_FIELD_DESC);
-        oprot.writeI64(struct.id);
+      if (struct.type != null) {
+        oprot.writeFieldBegin(TYPE_FIELD_DESC);
+        oprot.writeI32(struct.type.getValue());
         oprot.writeFieldEnd();
       }
       if (struct.source != null) {
@@ -1893,14 +1801,14 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         struct.source.write(oprot);
         oprot.writeFieldEnd();
       }
-      if (struct.type != null) {
-        oprot.writeFieldBegin(TYPE_FIELD_DESC);
-        oprot.writeI32(struct.type.getValue());
-        oprot.writeFieldEnd();
-      }
       oprot.writeFieldBegin(LIFETIME_FIELD_DESC);
       oprot.writeI32(struct.lifetime);
       oprot.writeFieldEnd();
+      if (struct.isSetId()) {
+        oprot.writeFieldBegin(ID_FIELD_DESC);
+        oprot.writeI64(struct.id);
+        oprot.writeFieldEnd();
+      }
       if (struct.destination != null) {
         if (struct.isSetDestination()) {
           oprot.writeFieldBegin(DESTINATION_FIELD_DESC);
@@ -1936,20 +1844,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldEnd();
         }
       }
-      if (struct.predecessor != null) {
-        if (struct.isSetPredecessor()) {
-          oprot.writeFieldBegin(PREDECESSOR_FIELD_DESC);
-          struct.predecessor.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.successor != null) {
-        if (struct.isSetSuccessor()) {
-          oprot.writeFieldBegin(SUCCESSOR_FIELD_DESC);
-          struct.successor.write(oprot);
-          oprot.writeFieldEnd();
-        }
-      }
       if (struct.neighbourSet != null) {
         if (struct.isSetNeighbourSet()) {
           oprot.writeFieldBegin(NEIGHBOUR_SET_FIELD_DESC);
@@ -1978,16 +1872,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeFieldEnd();
         }
       }
-      if (struct.isSetRetryCount()) {
-        oprot.writeFieldBegin(RETRY_COUNT_FIELD_DESC);
-        oprot.writeI32(struct.retryCount);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetTimeStamp()) {
-        oprot.writeFieldBegin(TIME_STAMP_FIELD_DESC);
-        oprot.writeI64(struct.timeStamp);
-        oprot.writeFieldEnd();
-      }
       if (struct.isSetSuccess()) {
         oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
         oprot.writeBool(struct.success);
@@ -2004,6 +1888,21 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           oprot.writeString(struct.error);
           oprot.writeFieldEnd();
         }
+      }
+      if (struct.isSetRetryCount()) {
+        oprot.writeFieldBegin(RETRY_COUNT_FIELD_DESC);
+        oprot.writeI32(struct.retryCount);
+        oprot.writeFieldEnd();
+      }
+      if (struct.isSetTimeStamp()) {
+        oprot.writeFieldBegin(TIME_STAMP_FIELD_DESC);
+        oprot.writeI64(struct.timeStamp);
+        oprot.writeFieldEnd();
+      }
+      if (struct.isSetRoutedViaPredecessors()) {
+        oprot.writeFieldBegin(ROUTED_VIA_PREDECESSORS_FIELD_DESC);
+        oprot.writeBool(struct.routedViaPredecessors);
+        oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -2022,8 +1921,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     @Override
     public void write(org.apache.thrift.protocol.TProtocol prot, Message struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
-      struct.source.write(oprot);
       oprot.writeI32(struct.type.getValue());
+      struct.source.write(oprot);
       oprot.writeI32(struct.lifetime);
       BitSet optionals = new BitSet();
       if (struct.isSetId()) {
@@ -2044,34 +1943,31 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetData()) {
         optionals.set(5);
       }
-      if (struct.isSetPredecessor()) {
+      if (struct.isSetNeighbourSet()) {
         optionals.set(6);
       }
-      if (struct.isSetSuccessor()) {
+      if (struct.isSetFailedNodeSet()) {
         optionals.set(7);
       }
-      if (struct.isSetNeighbourSet()) {
+      if (struct.isSetSuccess()) {
         optionals.set(8);
       }
-      if (struct.isSetFailedNodeSet()) {
+      if (struct.isSetResponseExpected()) {
         optionals.set(9);
       }
-      if (struct.isSetRetryCount()) {
+      if (struct.isSetError()) {
         optionals.set(10);
       }
-      if (struct.isSetTimeStamp()) {
+      if (struct.isSetRetryCount()) {
         optionals.set(11);
       }
-      if (struct.isSetSuccess()) {
+      if (struct.isSetTimeStamp()) {
         optionals.set(12);
       }
-      if (struct.isSetResponseExpected()) {
+      if (struct.isSetRoutedViaPredecessors()) {
         optionals.set(13);
       }
-      if (struct.isSetError()) {
-        optionals.set(14);
-      }
-      oprot.writeBitSet(optionals, 15);
+      oprot.writeBitSet(optionals, 14);
       if (struct.isSetId()) {
         oprot.writeI64(struct.id);
       }
@@ -2089,12 +1985,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       }
       if (struct.isSetData()) {
         oprot.writeBinary(struct.data);
-      }
-      if (struct.isSetPredecessor()) {
-        struct.predecessor.write(oprot);
-      }
-      if (struct.isSetSuccessor()) {
-        struct.successor.write(oprot);
       }
       if (struct.isSetNeighbourSet()) {
         {
@@ -2114,12 +2004,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
           }
         }
       }
-      if (struct.isSetRetryCount()) {
-        oprot.writeI32(struct.retryCount);
-      }
-      if (struct.isSetTimeStamp()) {
-        oprot.writeI64(struct.timeStamp);
-      }
       if (struct.isSetSuccess()) {
         oprot.writeBool(struct.success);
       }
@@ -2129,19 +2013,28 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.isSetError()) {
         oprot.writeString(struct.error);
       }
+      if (struct.isSetRetryCount()) {
+        oprot.writeI32(struct.retryCount);
+      }
+      if (struct.isSetTimeStamp()) {
+        oprot.writeI64(struct.timeStamp);
+      }
+      if (struct.isSetRoutedViaPredecessors()) {
+        oprot.writeBool(struct.routedViaPredecessors);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, Message struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
+      struct.type = MessageType.findByValue(iprot.readI32());
+      struct.setTypeIsSet(true);
       struct.source = new Node();
       struct.source.read(iprot);
       struct.setSourceIsSet(true);
-      struct.type = MessageType.findByValue(iprot.readI32());
-      struct.setTypeIsSet(true);
       struct.lifetime = iprot.readI32();
       struct.setLifetimeIsSet(true);
-      BitSet incoming = iprot.readBitSet(15);
+      BitSet incoming = iprot.readBitSet(14);
       if (incoming.get(0)) {
         struct.id = iprot.readI64();
         struct.setIdIsSet(true);
@@ -2169,16 +2062,6 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         struct.setDataIsSet(true);
       }
       if (incoming.get(6)) {
-        struct.predecessor = new Node();
-        struct.predecessor.read(iprot);
-        struct.setPredecessorIsSet(true);
-      }
-      if (incoming.get(7)) {
-        struct.successor = new Node();
-        struct.successor.read(iprot);
-        struct.setSuccessorIsSet(true);
-      }
-      if (incoming.get(8)) {
         {
           org.apache.thrift.protocol.TSet _set10 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
           struct.neighbourSet = new HashSet<Node>(2*_set10.size);
@@ -2192,7 +2075,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         }
         struct.setNeighbourSetIsSet(true);
       }
-      if (incoming.get(9)) {
+      if (incoming.get(7)) {
         {
           org.apache.thrift.protocol.TSet _set13 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
           struct.failedNodeSet = new HashSet<Node>(2*_set13.size);
@@ -2206,25 +2089,29 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         }
         struct.setFailedNodeSetIsSet(true);
       }
-      if (incoming.get(10)) {
-        struct.retryCount = iprot.readI32();
-        struct.setRetryCountIsSet(true);
-      }
-      if (incoming.get(11)) {
-        struct.timeStamp = iprot.readI64();
-        struct.setTimeStampIsSet(true);
-      }
-      if (incoming.get(12)) {
+      if (incoming.get(8)) {
         struct.success = iprot.readBool();
         struct.setSuccessIsSet(true);
       }
-      if (incoming.get(13)) {
+      if (incoming.get(9)) {
         struct.responseExpected = iprot.readBool();
         struct.setResponseExpectedIsSet(true);
       }
-      if (incoming.get(14)) {
+      if (incoming.get(10)) {
         struct.error = iprot.readString();
         struct.setErrorIsSet(true);
+      }
+      if (incoming.get(11)) {
+        struct.retryCount = iprot.readI32();
+        struct.setRetryCountIsSet(true);
+      }
+      if (incoming.get(12)) {
+        struct.timeStamp = iprot.readI64();
+        struct.setTimeStampIsSet(true);
+      }
+      if (incoming.get(13)) {
+        struct.routedViaPredecessors = iprot.readBool();
+        struct.setRoutedViaPredecessorsIsSet(true);
       }
     }
   }

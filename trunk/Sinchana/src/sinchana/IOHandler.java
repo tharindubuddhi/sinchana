@@ -64,7 +64,7 @@ public class IOHandler implements PortHandler {
 							"Node " + message.destination + " is removed from the routing table!");
 					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
 					if (updated) {
-						Message msg = new Message(server, MessageType.DISCOVER_NEIGHBORS, 2);
+						Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, server, 2);
 						Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
 						msg.setFailedNodeSet(failedNodes);
 						Set<Node> neighbourSet = server.getRoutingHandler().getNeighbourSet();
