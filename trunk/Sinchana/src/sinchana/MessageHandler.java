@@ -171,6 +171,9 @@ public class MessageHandler {
 
 	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
+		if (predecessor == null) {
+			predecessor = this.server;
+		}
 		BigInteger targetKeyOffset = getOffset(message.getDestinationId());
 		BigInteger predecessorOffset = getOffset(predecessor.getServerId());
 		BigInteger prevStationOffset = getOffset(message.station.getServerId());
@@ -249,6 +252,12 @@ public class MessageHandler {
 	private void processTestRing(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
+		if (predecessor == null) {
+			predecessor = this.server;
+		}
+		if (successor == null) {
+			successor = this.server;
+		}
 		if (Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			if (message.isSetData()) {
 				System.out.println("Ring test completed - length: "

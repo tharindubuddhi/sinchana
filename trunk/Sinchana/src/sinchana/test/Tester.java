@@ -103,11 +103,14 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	private SinchanaResponseHandler srh = new SinchanaResponseHandler() {
 
 		@Override
-		public synchronized void response(byte[] message) {
-			endTime = System.currentTimeMillis();
+		public void response(byte[] message) {
 			long c = TesterController.incCount();
-			System.out.println(server.getServerIdAsString() + ": "
-					+ new String(message) + "\t\t" + c + "\t" + (endTime - startTime));
+//			System.out.println(server.getServerIdAsString() + ": "
+//					+ new String(message) + "\t\t" + c + "\t" + (endTime - startTime));
+			if (c % 1000 == 0) {
+				endTime = System.currentTimeMillis();
+				System.out.println("Num of Messages " + c + " @ " + (endTime - startTime) + "ms");
+			}
 		}
 
 		@Override
@@ -124,14 +127,15 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				this.gui.setServerId(new String(server.getServerId()));
 				this.gui.setVisible(true);
 			}
-			server.join();
-			System.out.println(server.getServerIdAsString() + ": joined the ring");
-			while (true) {
-				threadLock.acquire();
-				while (numOfTestingMessages > 0) {
-					BigInteger bi = new BigInteger(160, random);
-					server.request(bi.toByteArray(), "Hiru".getBytes(), srh);
-					numOfTestingMessages--;
+			if (server.join()) {
+				System.out.println(server.getServerIdAsString() + ": joined the ring");
+				while (true) {
+					threadLock.acquire();
+					while (numOfTestingMessages > 0) {
+						BigInteger bi = new BigInteger(160, random);
+						server.request(bi.toByteArray(), "Hiru".getBytes(), srh);
+						numOfTestingMessages--;
+					}
 				}
 			}
 		} catch (InterruptedException ex) {
