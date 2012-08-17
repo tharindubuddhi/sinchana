@@ -301,12 +301,6 @@ public class ChordTable implements RoutingHandler {
 		return updated;
 	}
 
-	/**
-	 * Remove the node from the routing table, temporary update the table and 
-	 * send messages to the nodes in the routing table to get the optimal neighbors.
-	 * 
-	 * @param nodeToRemove Node to remove from the finger table. 
-	 */
 	private boolean removeNode(Node nodeToRemove) {
 		Set<Node> neighbourSet = getNeighbourSet();
 		if (neighbourSet.contains(nodeToRemove)) {

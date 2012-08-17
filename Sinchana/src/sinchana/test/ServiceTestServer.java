@@ -6,7 +6,8 @@ package sinchana.test;
 
 import sinchana.SinchanaServer;
 import sinchana.service.SinchanaServiceHandler;
-import sinchana.util.tools.CommonTools;
+import sinchana.util.tools.ByteArrays;
+import sinchana.util.tools.Hash;
 
 /**
  *
@@ -40,7 +41,7 @@ public class ServiceTestServer {
 		byte[] reference, resp;
 		reference = sinchanaServer3.discoverService("HelloService".getBytes());
 		if (reference != null) {
-			System.out.println("Found at " + CommonTools.toReadableString(reference));
+			System.out.println("Found at " + ByteArrays.toReadableString(reference));
 			resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
 			if (resp != null) {
 				System.out.println("resp: " + new String(resp));
@@ -52,7 +53,7 @@ public class ServiceTestServer {
 		}
 		reference = sinchanaServer3.discoverService("GreetingsService".getBytes());
 		if (reference != null) {
-			System.out.println("Found at " + CommonTools.toReadableString(reference));
+			System.out.println("Found at " + ByteArrays.toReadableString(reference));
 			resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
 			if (resp != null) {
 				System.out.println("resp: " + new String(resp));

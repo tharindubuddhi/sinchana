@@ -14,11 +14,18 @@ import sinchana.thrift.Message;
  */
 public class MessageQueue {
 
+	public static final int PRIORITY_NONE = 0;
+	public static final int PRIORITY_LOW = 1;
+	public static final int PRIORITY_HIGH = 2;
 	private final int MESSAGE_BUFFER_SIZE;
 	private int head = 0;
 	private int tail = 0;
 	private final Message[] messageQueue;
 	private final Semaphore messagesAvailable = new Semaphore(0);
+	private final Semaphore queueLockLowPriority = new Semaphore(0);
+	private final Semaphore queueLockHighPriority = new Semaphore(0);
+	private boolean waitOnLowPriorityQueue = false;
+	private boolean waitOnHighPriorityQueue = false;
 	private final MessageEventHandler messageEventHandler;
 	private final Thread[] threads;
 	private boolean started;
@@ -45,6 +52,7 @@ public class MessageQueue {
 					synchronized (messageQueue) {
 						if (firstMessage != null) {
 							messageEventHandler.process(firstMessage);
+							firstMessage = null;
 						}
 					}
 					Message message;
@@ -54,6 +62,13 @@ public class MessageQueue {
 							synchronized (messageQueue) {
 								message = messageQueue[tail];
 								tail = (tail + 1) % MESSAGE_BUFFER_SIZE;
+								if (waitOnHighPriorityQueue) {
+									waitOnHighPriorityQueue = false;
+									queueLockHighPriority.release();
+								} else if (waitOnLowPriorityQueue) {
+									waitOnLowPriorityQueue = false;
+									queueLockLowPriority.release();
+								}
 							}
 							messageEventHandler.process(message);
 						} catch (InterruptedException ex) {
@@ -131,7 +146,7 @@ public class MessageQueue {
 	 * @param message		Message to add in to the queue
 	 * @return				True if message is added to the queue. False if the queue is full.
 	 */
-	public synchronized boolean queueMessage(Message message) {
+	private synchronized boolean queueMessage(Message message) {
 		if ((tail + MESSAGE_BUFFER_SIZE - head) % MESSAGE_BUFFER_SIZE == 1) {
 			return false;
 		}
@@ -139,6 +154,26 @@ public class MessageQueue {
 		head = (head + 1) % MESSAGE_BUFFER_SIZE;
 		messagesAvailable.release();
 		return true;
+	}
+
+	public boolean queueMessageAndWait(Message message, int priority) {
+		switch (priority) {
+			case PRIORITY_HIGH:
+				while (!queueMessage(message)) {
+					waitOnHighPriorityQueue = true;
+					queueLockHighPriority.acquireUninterruptibly();
+				}
+				return true;
+			case PRIORITY_LOW:
+				while (!queueMessage(message)) {
+					waitOnLowPriorityQueue = true;
+					queueLockLowPriority.acquireUninterruptibly();
+				}
+				return true;
+			case PRIORITY_NONE:
+			default:
+				return !waitOnHighPriorityQueue && !waitOnLowPriorityQueue && queueMessage(message);
+		}
 	}
 
 	/**

@@ -58,8 +58,5 @@ public class TestClass {
 		byte[] resp = sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes());
 		sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes(), null);
 		System.out.println("done :) " + new String(resp));
-
-
-
 	}
 }
