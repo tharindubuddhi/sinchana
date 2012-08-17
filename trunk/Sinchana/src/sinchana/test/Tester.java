@@ -53,8 +53,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			server.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
 
 				@Override
-				public synchronized byte[] request(byte[] message) {
-					endTime = System.currentTimeMillis();
+				public byte[] request(byte[] message) {
 					return ("Hi " + new String(message) + ", Greetings from " + server.getServerIdAsString()).getBytes();
 				}
 			});
@@ -107,7 +106,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		public synchronized void response(byte[] message) {
 			endTime = System.currentTimeMillis();
 			long c = TesterController.incCount();
-			System.out.println(server.getServerIdAsString() + ": " 
+			System.out.println(server.getServerIdAsString() + ": "
 					+ new String(message) + "\t\t" + c + "\t" + (endTime - startTime));
 		}
 
@@ -304,5 +303,11 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		requestCount = 0;
 		requestLifetime = 0;
 		return data;
+	}
+
+	@Override
+	public synchronized void incRequestCount(int lifetime) {
+		requestCount++;
+		requestLifetime += lifetime;
 	}
 }

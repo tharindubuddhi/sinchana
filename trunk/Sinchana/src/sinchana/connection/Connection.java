@@ -47,7 +47,7 @@ public class Connection {
 		if (opened) {
 			return;
 		}
-		lastOpenTime = Calendar.getInstance().getTimeInMillis();
+		lastOpenTime = System.currentTimeMillis();
 		try {
 			transport = new TSocket(node.address.split(":")[0],
 					Integer.parseInt(node.address.split(":")[1]));
@@ -62,7 +62,7 @@ public class Connection {
 			lastKnownFailedTime = lastOpenTime;
 			numOfOpenTries++;
 		} catch (NullPointerException ex) {
-			System.out.println("errrrrrrrr........................ " + node);
+			System.out.println("errrrrrrrr........................ " + transport.toString());
 			ex.printStackTrace();
 		}
 	}
@@ -76,7 +76,7 @@ public class Connection {
 			}
 			return PortHandler.REMOTE_SERVER_ERROR;
 		}
-		long st = Calendar.getInstance().getTimeInMillis();
+		long st = System.currentTimeMillis();
 		int resp;
 		try {
 			resp = client.transfer(message);
@@ -91,7 +91,7 @@ public class Connection {
 			}
 			return PortHandler.REMOTE_SERVER_ERROR;
 		}
-		long et = Calendar.getInstance().getTimeInMillis();
+		long et = System.currentTimeMillis();
 		roundTripTime = et - st;
 		return resp;
 	}
@@ -102,7 +102,7 @@ public class Connection {
 		if (!opened) {
 			return false;
 		}
-		long st = Calendar.getInstance().getTimeInMillis();
+		long st = System.currentTimeMillis();
 		try {
 			client.ping();
 			failed = false;
@@ -112,7 +112,7 @@ public class Connection {
 			close();
 			return false;
 		}
-		long et = Calendar.getInstance().getTimeInMillis();
+		long et = System.currentTimeMillis();
 		roundTripTime = et - st;
 		if (!prevOpened) {
 			transport.close();
@@ -135,14 +135,14 @@ public class Connection {
 	}
 
 	public void failed() {
-		lastKnownFailedTime = Calendar.getInstance().getTimeInMillis();
+		lastKnownFailedTime = System.currentTimeMillis();
 		numOfOpenTries++;
 		failed = true;
 		close();
 	}
 
 	void failedByInfo() {
-		lastHeardFailedTime = Calendar.getInstance().getTimeInMillis();
+		lastHeardFailedTime = System.currentTimeMillis();
 		failed = true;
 		close();
 	}
@@ -156,7 +156,7 @@ public class Connection {
 	}
 
 	public Client getClient() {
-		lastUsedTime = Calendar.getInstance().getTimeInMillis();
+		lastUsedTime = System.currentTimeMillis();
 		return client;
 	}
 

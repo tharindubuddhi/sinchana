@@ -14,7 +14,8 @@ import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
-import sinchana.util.tools.CommonTools;
+import sinchana.util.tools.ByteArrays;
+import sinchana.util.tools.Hash;
 
 /**
  *
@@ -54,7 +55,7 @@ public class TesterController {
 					totalOutputMessageQueue, totalResolves,
 					maxInputMessageQueueSize, maxOutputMessageQueueSize,
 					totalLifeTime;
-			long newTime, oldTime = Calendar.getInstance().getTimeInMillis();
+			long newTime, oldTime = System.currentTimeMillis();
 			int mxaTester = -1;
 
 			@Override
@@ -85,7 +86,7 @@ public class TesterController {
 					totalLifeTime += testData[6];
 
 				}
-				newTime = Calendar.getInstance().getTimeInMillis();
+				newTime = System.currentTimeMillis();
 				if (completedCount != 0) {
 					cui.setStat("IC: " + (totalMessageIncome / completedCount)
 							+ "    IB: " + (totalInputMessageQueue / completedCount)
@@ -122,7 +123,7 @@ public class TesterController {
 		}
 
 		for (byte[] id : testServerIds) {
-			System.out.print(CommonTools.toReadableString(id) + " ");
+			System.out.print(ByteArrays.toReadableString(id) + " ");
 		}
 		System.out.println("");
 		Set<Integer> keySet = testServers.keySet();

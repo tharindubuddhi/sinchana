@@ -13,7 +13,8 @@ import java.util.concurrent.Semaphore;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.util.logging.Logger;
-import sinchana.util.tools.CommonTools;
+import sinchana.util.messagequeue.MessageQueue;
+import sinchana.util.tools.Hash;
 
 /**
  *
@@ -131,7 +132,7 @@ public class ClientHandler {
 			case GET_DATA:
 			case STORE_DATA:
 			case DELETE_DATA:
-				message.setDestinationId(CommonTools.generateId(new String(key)));
+				message.setDestinationId(Hash.generateId(new String(key)));
 				message.setKey(key);
 				break;
 		}
@@ -152,7 +153,7 @@ public class ClientHandler {
 		} else {
 			message.setResponseExpected(false);
 		}
-		if (server.getMessageHandler().queueMessage(message)) {
+		if (server.getMessageHandler().queueMessage(message, MessageQueue.PRIORITY_LOW)) {
 			if (waiting) {
 				try {
 					clientData.lock.acquire();

@@ -14,7 +14,7 @@ import java.util.Set;
  *
  * @author Hiru
  */
-public class CommonTools {
+public class Hash {
 
 	public static byte[] generateId(String address) {
 		try {
@@ -29,22 +29,5 @@ public class CommonTools {
 		} catch (Exception ex) {
 			throw new RuntimeException("Error calculating hash value", ex);
 		}
-	}
-
-	public static String toReadableString(byte[] arrayToRead) {
-		return new BigInteger(1, arrayToRead).toString(16);
-	}
-
-	public static byte[] arrayConcat(byte[] array1, byte[] array2) {
-		int length = array1.length + array2.length;
-		int pos = 0;
-		byte[] newArray = new byte[length];
-		for (byte b : array1) {
-			newArray[pos++] = b;
-		}
-		for (byte b : array2) {
-			newArray[pos++] = b;
-		}
-		return newArray;
 	}
 }

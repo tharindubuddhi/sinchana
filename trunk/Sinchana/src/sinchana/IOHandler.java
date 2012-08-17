@@ -6,6 +6,7 @@ package sinchana;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import sinchana.connection.*;
 
 import sinchana.thrift.Message;
@@ -28,7 +29,8 @@ public class IOHandler implements PortHandler {
 
 	private final SinchanaServer server;
 	private TServer tServer;
-	private MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
+	private final Semaphore messageQueueLock = new Semaphore(0);
+	private final MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
 
 		@Override
 		public void process(Message message) {
@@ -47,15 +49,15 @@ public class IOHandler implements PortHandler {
 				case PortHandler.ACCEPT_ERROR:
 				case PortHandler.LOCAL_SERVER_ERROR:
 					message.retryCount++;
-					if (message.retryCount > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
+					if (CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES != -1 && message.retryCount > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
 						Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
 								"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
 					} else {
-						queueMessage(message);
+						queueMessage(message, MessageQueue.PRIORITY_HIGH);
 					}
 					break;
 				case PortHandler.REMOTE_SERVER_ERROR:
-					queueMessage(message);
+					queueMessage(message, MessageQueue.PRIORITY_HIGH);
 					break;
 				case PortHandler.REMOTE_SERVER_ERROR_FAILURE:
 					Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
@@ -99,7 +101,7 @@ public class IOHandler implements PortHandler {
 			case GET_DATA:
 			case GET_SERVICE:
 				message.lifetime++;
-				server.getMessageHandler().queueMessage(message);
+				server.getMessageHandler().queueMessage(message, MessageQueue.PRIORITY_HIGH);
 				break;
 			case DISCOVER_NEIGHBORS:
 				break;
@@ -185,20 +187,14 @@ public class IOHandler implements PortHandler {
 		}
 		msg.setDestination(destination.deepCopy());
 		msg.setRetryCount(0);
-		queueMessage(msg);
+		queueMessage(msg, MessageQueue.PRIORITY_LOW);
 		if (this.server.getSinchanaTestInterface() != null) {
 			this.server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
 		}
 	}
 
-	private boolean queueMessage(Message message) {
-		if (this.messageQueue.queueMessage(message)) {
-			return true;
-		} else {
-			Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
-					"Message is unacceptable 'cos transport buffer is full! " + message);
-			return false;
-		}
+	private boolean queueMessage(Message message, int priority) {
+		return this.messageQueue.queueMessageAndWait(message, priority);
 	}
 
 	private int send(Message message) {
