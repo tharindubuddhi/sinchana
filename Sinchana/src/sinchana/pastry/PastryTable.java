@@ -179,14 +179,14 @@ public class PastryTable implements RoutingHandler {
                 raw--;
                 traverseDown = raw != 0;
                 column = -1;
-            } else if (!traverseDown && column == 9) {
+            } else if (!traverseDown && column == BASE-1) {
 //								System.out.println(this.serverId + ": go up");
                 raw++;
                 traverseDown = raw >= TABLE_SIZE - 1;
                 column = getColumn(this.serverId, raw);
             }
 
-            column = (column + 1) % 10;
+            column = (column + 1) % BASE;
             if (iRaw == raw && iColumn == column) {
                 System.out.println(this.serverId + ": No result found!");
                 break;
