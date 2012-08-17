@@ -27,13 +27,14 @@ public class TapestryTable implements RoutingHandler {
 	public static final int TAPESTRY_TABLE_NUMBER_BASE = 16;
 	public static final int TABLE_SIZE = 40;
 	private static final int SUCCESSOR_LEVEL = 3;
+	private static final int NUMBER_OF_ENTRIES = 3;
 	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private final SinchanaServer server;
 	private final Node[] successors = new Node[SUCCESSOR_LEVEL];
 	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
 	private byte[] serverId;
 	private BigInteger serverIdAsBigInt;
-	private final Node[][] fingerTable = new Node[TABLE_SIZE][TAPESTRY_TABLE_NUMBER_BASE];
+	private final Node[][][] fingerTable = new Node[TABLE_SIZE][TAPESTRY_TABLE_NUMBER_BASE][NUMBER_OF_ENTRIES];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
@@ -75,7 +76,9 @@ public class TapestryTable implements RoutingHandler {
 	private void initFingerTable() {
 		for (int i = 0; i < TABLE_SIZE; i++) {
 			for (int j = 0; j < TAPESTRY_TABLE_NUMBER_BASE; j++) {
-				fingerTable[i][j] = null;
+				for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+					fingerTable[i][j][k] = null;
+				}
 			}
 		}
 		/**
@@ -83,12 +86,12 @@ public class TapestryTable implements RoutingHandler {
 		 */
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				predecessors[i] = this.server.deepCopy();
+				predecessors[i] = null;
 			}
 		}
 		synchronized (successors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				successors[i] = this.server.deepCopy();
+				successors[i] = null;
 			}
 		}
 	}
@@ -103,12 +106,12 @@ public class TapestryTable implements RoutingHandler {
 		Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
 		msg.setFailedNodeSet(failedNodes);
 		synchronized (predecessors) {
-			if (!Arrays.equals(this.serverId, this.predecessors[0].getServerId())) {
+			if (predecessors[0] != null) {
 				this.server.getPortHandler().send(msg, this.predecessors[0]);
 			}
 		}
 		synchronized (successors) {
-			if (!Arrays.equals(this.serverId, this.successors[0].getServerId())) {
+			if (successors[0] != null) {
 				this.server.getPortHandler().send(msg, this.successors[0]);
 			}
 		}
@@ -138,14 +141,15 @@ public class TapestryTable implements RoutingHandler {
 			return this.server;
 		}
 		int column = getColumn(destination, raw);
-		if (fingerTable[raw][column] != null) {
-//			System.out.println(this.server.getServerIdAsString() + ": found "
-//					+ ByteArrays.toReadableString(fingerTable[raw][column].serverId)
-//					+ " @ [" + raw + "," + column + "]");
-			return fingerTable[raw][column];
-		} else {
-//			System.out.println(this.server.getServerIdAsString() + ": No entry @ [" + raw + "," + column + "]");
+		for (Node node : fingerTable[raw][column]) {
+			if (node != null) {
+//				System.out.println(this.server.getServerIdAsString() + ": found "
+//						+ ByteArrays.toReadableString(node.serverId)
+//						+ " @ [" + raw + "," + column + "]");
+				return node;
+			}
 		}
+//		System.out.println(this.server.getServerIdAsString() + ": No entry @ [" + raw + "," + column + "]");
 
 		int tColumn, iRaw, iColumn;
 
@@ -161,12 +165,15 @@ public class TapestryTable implements RoutingHandler {
 		}
 
 		while (true) {
-			if (fingerTable[raw][column] != null) {
-//				System.out.println(this.server.getServerIdAsString() + ": found "
-//						+ ByteArrays.toReadableString(fingerTable[raw][column].serverId)
-//						+ " @ [" + raw + "," + column + "]");
-				break;
+			for (Node node : fingerTable[raw][column]) {
+				if (node != null) {
+//					System.out.println(this.server.getServerIdAsString() + ": found "
+//							+ ByteArrays.toReadableString(node.serverId)
+//							+ " @ [" + raw + "," + column + "]");
+					return node;
+				}
 			}
+
 			tColumn = getColumn(this.serverId, raw);
 //			System.out.println(this.server.getServerIdAsString() + ": analize:::\td:"
 //					+ ByteArrays.toReadableString(destination)
@@ -190,17 +197,19 @@ public class TapestryTable implements RoutingHandler {
 				break;
 			}
 		}
-		return fingerTable[raw][column];
+		return null;
 	}
 
 	@Override
 	public Set<Node> getNeighbourSet() {
 		//initializes an empty node set.
 		Set<Node> neighbourSet = new HashSet<Node>();
-		for (Node[] nodes : fingerTable) {
-			for (Node node : nodes) {
-				if (node != null && !Arrays.equals(node.getServerId(), this.serverId)) {
-					neighbourSet.add(node);
+		for (Node[][] nodeRaw : fingerTable) {
+			for (Node[] nodeColumn : nodeRaw) {
+				for (Node node : nodeColumn) {
+					if (node != null && !Arrays.equals(node.getServerId(), this.serverId)) {
+						neighbourSet.add(node);
+					}
 				}
 			}
 
@@ -208,14 +217,14 @@ public class TapestryTable implements RoutingHandler {
 		//adds the predecessors & the successors.
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				if (!Arrays.equals(this.predecessors[i].getServerId(), this.serverId)) {
+				if (predecessors[i] != null) {
 					neighbourSet.add(this.predecessors[i]);
 				}
 			}
 		}
 		synchronized (successors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				if (!Arrays.equals(this.successors[i].getServerId(), this.serverId)) {
+				if (successors[i] != null) {
 					neighbourSet.add(this.successors[i]);
 				}
 			}
@@ -242,10 +251,8 @@ public class TapestryTable implements RoutingHandler {
 	}
 
 	private boolean addNode(Node node) {
-		boolean updated = false;
-		//calculates offsets for the ids.
-		BigInteger newNodeOffset = getOffset(node.getServerId());
-
+		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
+		Node tempNodeToUpdate = node;
 		synchronized (successors) {
 			BigInteger successorWRT = ZERO;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
@@ -257,20 +264,22 @@ public class TapestryTable implements RoutingHandler {
 				 * the new node will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger successorOffset = getOffset(this.successors[i].getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
 				if (successorWRT.compareTo(newNodeOffset) == -1
-						&& (newNodeOffset.compareTo(successorOffset) == -1
-						|| successorOffset.equals(ZERO))) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
-//							"Node " + node + " is set as successor overriding " + this.successors[i]);
-					this.successors[i] = node.deepCopy();
-					updated = true;
+						&& (successors[i] == null
+						|| newNodeOffset.compareTo(getOffset(successors[i].getServerId())) == -1)) {
+					Node temp = this.successors[i];
+					this.successors[i] = tempNodeToUpdate.deepCopy();
+					tempNodeToUpdate = temp;
+					updatedSuccessors = true;
 				}
-				if (!Arrays.equals(successors[i].getServerId(), this.serverId)) {
-					successorWRT = getOffset(successors[i].getServerId());
+				if (tempNodeToUpdate == null || successors[i] == null) {
+					break;
 				}
+				successorWRT = getOffset(successors[i].getServerId());
 			}
 		}
+		tempNodeToUpdate = node;
 		synchronized (predecessors) {
 			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
@@ -282,25 +291,32 @@ public class TapestryTable implements RoutingHandler {
 				 * the new node will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger predecessorOffset = getOffset(this.predecessors[i].getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
 				if (newNodeOffset.compareTo(predecessorWRT) == -1
-						&& (predecessorOffset.compareTo(newNodeOffset) == -1
-						|| predecessorOffset.equals(ZERO))) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
-//							"Node " + node + " is set as predecessor overriding " + this.predecessors[i]);
-					this.predecessors[i] = node.deepCopy();
-					updated = true;
+						&& (predecessors[i] == null || getOffset(predecessors[i].getServerId()).compareTo(newNodeOffset) == -1)) {
+					Node temp = this.predecessors[i];
+					this.predecessors[i] = tempNodeToUpdate.deepCopy();
+					tempNodeToUpdate = temp;
+					updatedPredecessors = true;
 				}
-				if (!Arrays.equals(predecessors[i].getServerId(), this.serverId)) {
-					predecessorWRT = getOffset(predecessors[i].getServerId());
+				if (tempNodeToUpdate == null || predecessors[i] == null) {
+					break;
 				}
+				predecessorWRT = getOffset(predecessors[i].getServerId());
 			}
 		}
 		int raw = getRaw(this.serverId, node.getServerId());
 		int column = getColumn(node.getServerId(), raw);
-		updated = fingerTable[raw][column] == null;
-		fingerTable[raw][column] = node.deepCopy();
-		return updated;
+		for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+			if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].getServerId(), node.getServerId())) {
+				break;
+			} else if (fingerTable[raw][column][i] == null) {
+				fingerTable[raw][column][i] = node.deepCopy();
+				updatedTable = true;
+				break;
+			}
+		}
+		return updatedPredecessors || updatedSuccessors || updatedTable;
 	}
 
 	private boolean removeNode(Node nodeToRemove) {

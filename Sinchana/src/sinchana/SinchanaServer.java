@@ -95,17 +95,22 @@ public class SinchanaServer extends Node {
 		this.portHandler.startServer();
 	}
 
-	public void join() {
+	public boolean join() {
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
 			Message msg = new Message(MessageType.JOIN, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			Node remoteNode = new Node(ByteBuffer.wrap(Hash.generateId(remoteNodeAddress)), remoteNodeAddress);
 			int count = CONFIGURATIONS.JOIN_RETRY_TIME_OUT * 100;
+			int joinAttempt = 0;
 			while (!joined) {
 				try {
 					count++;
 					if (count > CONFIGURATIONS.JOIN_RETRY_TIME_OUT * 100) {
 						count = 0;
-						System.out.println("Connecting to " + remoteNodeAddress);
+						if (++joinAttempt > CONFIGURATIONS.MAX_JOIN_RETRIES) {
+							System.out.println(this + ": Join failed!");
+							return false;
+						}
+						System.out.println(this + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
 						this.portHandler.send(msg, remoteNode);
 					}
 					Thread.sleep(10);
@@ -118,6 +123,7 @@ public class SinchanaServer extends Node {
 			msg.setStation(this);
 			messageHandler.queueMessage(msg, MessageQueue.PRIORITY_HIGH);
 		}
+		return true;
 	}
 
 	void setJoined(boolean joined) {

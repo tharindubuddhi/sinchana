@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
+import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -91,12 +92,12 @@ public class ChordTable implements RoutingHandler {
 		 */
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				predecessors[i] = this.server.deepCopy();
+				predecessors[i] = null;
 			}
 		}
 		synchronized (successors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				successors[i] = this.server.deepCopy();
+				successors[i] = null;
 			}
 		}
 	}
@@ -111,12 +112,12 @@ public class ChordTable implements RoutingHandler {
 		Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
 		msg.setFailedNodeSet(failedNodes);
 		synchronized (predecessors) {
-			if (!Arrays.equals(this.serverId, this.predecessors[0].getServerId())) {
+			if (this.predecessors[0] != null) {
 				this.server.getPortHandler().send(msg, this.predecessors[0]);
 			}
 		}
 		synchronized (successors) {
-			if (!Arrays.equals(this.serverId, this.successors[0].getServerId())) {
+			if (this.successors[0] != null) {
 				this.server.getPortHandler().send(msg, this.successors[0]);
 			}
 		}
@@ -135,6 +136,7 @@ public class ChordTable implements RoutingHandler {
 
 	@Override
 	public Node getNextNode(byte[] destination) {
+
 		BigInteger destinationOffset, startOffset, endOffset;
 		//calculates the offset to the destination.
 		destinationOffset = getOffset(destination);
@@ -185,14 +187,14 @@ public class ChordTable implements RoutingHandler {
 		//adds the predecessors & the successors.
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				if (!Arrays.equals(this.predecessors[i].getServerId(), this.serverId)) {
+				if (predecessors[i] != null) {
 					neighbourSet.add(this.predecessors[i]);
 				}
 			}
 		}
 		synchronized (successors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				if (!Arrays.equals(this.successors[i].getServerId(), this.serverId)) {
+				if (successors[i] != null) {
 					neighbourSet.add(this.successors[i]);
 				}
 			}
@@ -202,6 +204,9 @@ public class ChordTable implements RoutingHandler {
 
 	@Override
 	public boolean updateTable(Node node, boolean add) {
+		if (Arrays.equals(node.getServerId(), this.serverId)) {
+			return false;
+		}
 		boolean updated;
 		if (add) {
 			updated = addNode(node);
@@ -215,13 +220,9 @@ public class ChordTable implements RoutingHandler {
 	}
 
 	private boolean addNode(Node node) {
-		if (Arrays.equals(node.getServerId(), this.serverId)) {
-			return false;
-		}
-		boolean updated = false;
-		//calculates offsets for the ids.
-		BigInteger newNodeOffset = getOffset(node.getServerId());
-
+		
+		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
+		Node tempNodeToUpdate = node;
 		synchronized (successors) {
 			BigInteger successorWRT = ZERO;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
@@ -233,20 +234,22 @@ public class ChordTable implements RoutingHandler {
 				 * the new node will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger successorOffset = getOffset(this.successors[i].getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
 				if (successorWRT.compareTo(newNodeOffset) == -1
-						&& (newNodeOffset.compareTo(successorOffset) == -1
-						|| successorOffset.equals(ZERO))) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
-//							"Node " + node + " is set as successor overriding " + this.successors[i]);
-					this.successors[i] = node.deepCopy();
-					updated = true;
+						&& (successors[i] == null
+						|| newNodeOffset.compareTo(getOffset(successors[i].getServerId())) == -1)) {
+					Node temp = this.successors[i];
+					this.successors[i] = tempNodeToUpdate.deepCopy();
+					tempNodeToUpdate = temp;
+					updatedSuccessors = true;
 				}
-				if (!Arrays.equals(successors[i].getServerId(), this.serverId)) {
-					successorWRT = getOffset(successors[i].getServerId());
+				if (tempNodeToUpdate == null || successors[i] == null) {
+					break;
 				}
+				successorWRT = getOffset(successors[i].getServerId());
 			}
 		}
+		tempNodeToUpdate = node;
 		synchronized (predecessors) {
 			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
@@ -258,22 +261,23 @@ public class ChordTable implements RoutingHandler {
 				 * the new node will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger predecessorOffset = getOffset(this.predecessors[i].getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
 				if (newNodeOffset.compareTo(predecessorWRT) == -1
-						&& (predecessorOffset.compareTo(newNodeOffset) == -1
-						|| predecessorOffset.equals(ZERO))) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
-//							"Node " + node + " is set as predecessor overriding " + this.predecessors[i]);
-					this.predecessors[i] = node.deepCopy();
-					updated = true;
+						&& (predecessors[i] == null || getOffset(predecessors[i].getServerId()).compareTo(newNodeOffset) == -1)) {
+					Node temp = this.predecessors[i];
+					this.predecessors[i] = tempNodeToUpdate.deepCopy();
+					tempNodeToUpdate = temp;
+					updatedPredecessors = true;
 				}
-				if (!Arrays.equals(predecessors[i].getServerId(), this.serverId)) {
-					predecessorWRT = getOffset(predecessors[i].getServerId());
+				if (tempNodeToUpdate == null || predecessors[i] == null) {
+					break;
 				}
+				predecessorWRT = getOffset(predecessors[i].getServerId());
 			}
 		}
 		synchronized (fingerTable) {
 			BigInteger startOffset, successorOffset;
+			BigInteger newNodeOffset = getOffset(node.getServerId());
 			for (int i = 0; i < fingerTable.length; i++) {
 				startOffset = getOffset(fingerTable[i].getStart());
 				successorOffset = getOffset(fingerTable[i].getSuccessor().getServerId());
@@ -294,11 +298,25 @@ public class ChordTable implements RoutingHandler {
 //							+ fingerTable[i].getStart() + "-" + fingerTable[i].getEnd()
 //							+ " overriding " + fingerTable[i].getSuccessor().serverId);
 					fingerTable[i].setSuccessor(node.deepCopy());
-					updated = true;
+					updatedTable = true;
 				}
 			}
 		}
-		return updated;
+		if (updatedPredecessors && predecessors[SUCCESSOR_LEVEL - 1] != null) {
+			System.out.println(this.server.getServerIdAsString() + " p: ");
+			for (Node n : predecessors) {
+				System.out.print(" " + (n == null ? "n/a" : ByteArrays.toReadableString(n.serverId)));
+			}
+			System.out.println("");
+		}
+		if (updatedSuccessors && successors[SUCCESSOR_LEVEL - 1] != null) {
+			System.out.println(this.server.getServerIdAsString() + " s: ");
+			for (Node n : successors) {
+				System.out.print(" " + (n == null ? "n/a" : ByteArrays.toReadableString(n.serverId)));
+			}
+			System.out.println("");
+		}
+		return updatedPredecessors || updatedSuccessors || updatedTable;
 	}
 
 	private boolean removeNode(Node nodeToRemove) {
@@ -329,5 +347,12 @@ public class ChordTable implements RoutingHandler {
 
 	private BigInteger getOffset(BigInteger id) {
 		return SinchanaServer.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
+	}
+
+	private BigInteger getOffset(Node node) {
+		if (node == null) {
+			return ZERO;
+		}
+		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, node.getServerId())).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
 }
