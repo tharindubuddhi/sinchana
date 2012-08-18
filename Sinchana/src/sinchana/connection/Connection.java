@@ -4,7 +4,6 @@
  */
 package sinchana.connection;
 
-import java.util.Calendar;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -12,7 +11,6 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.CONFIGURATIONS;
-import sinchana.PortHandler;
 import sinchana.thrift.DHTServer;
 import sinchana.thrift.DHTServer.Client;
 import sinchana.thrift.Message;
@@ -65,35 +63,6 @@ public class Connection {
 			System.out.println("errrrrrrrr........................ " + transport.toString());
 			ex.printStackTrace();
 		}
-	}
-
-	private int transmit(Message message) {
-		open();
-		if (!opened) {
-			if (numOfOpenTries >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-				failed();
-				return PortHandler.REMOTE_SERVER_ERROR_FAILURE;
-			}
-			return PortHandler.REMOTE_SERVER_ERROR;
-		}
-		long st = System.currentTimeMillis();
-		int resp;
-		try {
-			resp = client.transfer(message);
-			failed = false;
-		} catch (TException ex) {
-			lastKnownFailedTime = st;
-			numOfOpenTries++;
-			close();
-			if (numOfOpenTries >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-				failed();
-				return PortHandler.REMOTE_SERVER_ERROR_FAILURE;
-			}
-			return PortHandler.REMOTE_SERVER_ERROR;
-		}
-		long et = System.currentTimeMillis();
-		roundTripTime = et - st;
-		return resp;
 	}
 
 	public boolean isAlive() {

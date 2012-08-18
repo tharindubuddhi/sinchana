@@ -13,7 +13,6 @@ import java.util.concurrent.Semaphore;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.util.logging.Logger;
-import sinchana.util.messagequeue.MessageQueue;
 import sinchana.util.tools.Hash;
 
 /**
@@ -153,7 +152,7 @@ public class ClientHandler {
 		} else {
 			message.setResponseExpected(false);
 		}
-		if (server.getMessageHandler().queueMessage(message, MessageQueue.PRIORITY_LOW)) {
+		if (server.getMessageHandler().queueMessage(message)) {
 			if (waiting) {
 				try {
 					clientData.lock.acquire();

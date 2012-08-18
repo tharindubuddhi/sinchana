@@ -51,7 +51,6 @@ import sinchana.tapastry.TapestryTable;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
-import sinchana.util.messagequeue.MessageQueue;
 import sinchana.util.tools.ByteArrays;
 import sinchana.util.tools.Hash;
 
@@ -62,7 +61,7 @@ import sinchana.util.tools.Hash;
 public class SinchanaServer extends Node {
 
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
-	private final PortHandler portHandler = new IOHandler(this);
+	private final IOHandler iOHandler = new IOHandler(this);
 //	private final RoutingHandler routingHandler = new ChordTable(this);
 //    private final RoutingHandler routingHandler = new TapestryTable(this);
     private final RoutingHandler routingHandler = new PastryTable(this);
@@ -125,7 +124,7 @@ public class SinchanaServer extends Node {
 	 */
 	public void startServer() {
 		this.routingHandler.init();
-		this.portHandler.startServer();
+		this.iOHandler.startServer();
 	}
 
 	public boolean join() {
@@ -144,7 +143,7 @@ public class SinchanaServer extends Node {
 							return false;
 						}
 						System.out.println(this + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
-						this.portHandler.send(msg, remoteNode);
+						this.iOHandler.send(msg, remoteNode);
 					}
 					Thread.sleep(10);
 				} catch (InterruptedException ex) {
@@ -154,7 +153,7 @@ public class SinchanaServer extends Node {
 		} else {
 			Message msg = new Message(MessageType.JOIN, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			msg.setStation(this);
-			messageHandler.queueMessage(msg, MessageQueue.PRIORITY_HIGH);
+			messageHandler.queueMessage(msg);
 		}
 		return true;
 	}
@@ -167,7 +166,7 @@ public class SinchanaServer extends Node {
 	 * Stop the server.
 	 */
 	public void stopServer() {
-		portHandler.stopServer();
+		iOHandler.stopServer();
 	}
 
 	/**
@@ -204,8 +203,8 @@ public class SinchanaServer extends Node {
 	 * 
 	 * @return
 	 */
-	public PortHandler getPortHandler() {
-		return portHandler;
+	public IOHandler getIOHandler() {
+		return iOHandler;
 	}
 
 	/**
@@ -259,7 +258,7 @@ public class SinchanaServer extends Node {
 	public void testRing() {
 		Message message = new Message(MessageType.TEST_RING, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		message.setStation(this);
-		this.getMessageHandler().queueMessage(message, MessageQueue.PRIORITY_LOW);
+		this.getMessageHandler().queueMessage(message);
 	}
 
     

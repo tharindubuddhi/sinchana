@@ -6,7 +6,7 @@ package sinchana;
 
 import java.util.Arrays;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.ArrayBlockingQueue;
 import sinchana.connection.*;
 
 import sinchana.thrift.Message;
@@ -19,64 +19,76 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
-import sinchana.util.messagequeue.MessageQueue;
 
 /**
  *
  * @author Hiru
  */
-public class IOHandler implements PortHandler {
+public class IOHandler {
 
+	public static final int ACCEPT_ERROR = 0;
+	public static final int LOCAL_SERVER_ERROR = 1;
+	public static final int REMOTE_SERVER_ERROR = 2;
+	public static final int REMOTE_SERVER_ERROR_FAILURE = 3;
+	public static final int SUCCESS = 4;
+	private final int BUFFER_LIMIT = CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE * 95 / 100;
 	private final SinchanaServer server;
 	private TServer tServer;
-	private final Semaphore messageQueueLock = new Semaphore(0);
-	private final MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
+	private boolean running = false;
+	private final ArrayBlockingQueue<Message> outGoingMessageQueue = new ArrayBlockingQueue<Message>(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE);
+	private final Runnable outGoingMessageQueueProcessor = new Runnable() {
 
 		@Override
-		public void process(Message message) {
-			if (server.getSinchanaTestInterface() != null) {
-				server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
-			}
-			if (server.getConnectionPool().hasReportFailed(message.destination)) {
-				addBackToQueue(message);
-				return;
-			}
-			Node prevStation = message.getStation();
-			message.setStation(server);
-			int result = send(message);
-			message.setStation(prevStation);
-			switch (result) {
-				case PortHandler.ACCEPT_ERROR:
-				case PortHandler.LOCAL_SERVER_ERROR:
-					message.retryCount++;
-					if (CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES != -1 && message.retryCount > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
-						Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-								"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
-					} else {
-						queueMessage(message, MessageQueue.PRIORITY_HIGH);
+		public void run() {
+			while (running) {
+				try {
+					Message message = outGoingMessageQueue.take();
+					if (server.getSinchanaTestInterface() != null) {
+						server.getSinchanaTestInterface().setOutMessageQueueSize(outGoingMessageQueue.size());
 					}
-					break;
-				case PortHandler.REMOTE_SERVER_ERROR:
-					queueMessage(message, MessageQueue.PRIORITY_HIGH);
-					break;
-				case PortHandler.REMOTE_SERVER_ERROR_FAILURE:
-					Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-							"Node " + message.destination + " is removed from the routing table!");
-					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
-					if (updated) {
-						Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, server, 2);
-						Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
-						msg.setFailedNodeSet(failedNodes);
-						Set<Node> neighbourSet = server.getRoutingHandler().getNeighbourSet();
-						for (Node node : neighbourSet) {
-							send(msg, node);
-						}
+					if (server.getConnectionPool().hasReportFailed(message.destination)) {
+						addBackToQueue(message);
+						return;
 					}
-					addBackToQueue(message);
-					break;
+					Node prevStation = message.getStation();
+					message.setStation(server);
+					int result = send(message);
+					message.setStation(prevStation);
+					switch (result) {
+						case ACCEPT_ERROR:
+						case LOCAL_SERVER_ERROR:
+							message.retryCount++;
+							if (CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES != -1 && message.retryCount > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
+								Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+										"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
+							} else {
+								queueMessage(message);
+							}
+							break;
+						case REMOTE_SERVER_ERROR:
+							queueMessage(message);
+							break;
+						case REMOTE_SERVER_ERROR_FAILURE:
+							Logger.log(server, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
+									"Node " + message.destination + " is removed from the routing table!");
+							boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
+							if (updated) {
+								Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, server, 2);
+								Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
+								msg.setFailedNodeSet(failedNodes);
+								Set<Node> neighbourSet = server.getRoutingHandler().getNeighbourSet();
+								for (Node node : neighbourSet) {
+									send(msg, node);
+								}
+							}
+							addBackToQueue(message);
+							break;
+					}
+				} catch (InterruptedException ex) {
+				}
 			}
 		}
-	}, CONFIGURATIONS.NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS);
+	};
 
 	/**
 	 * 
@@ -84,6 +96,26 @@ public class IOHandler implements PortHandler {
 	 */
 	public IOHandler(SinchanaServer svr) {
 		this.server = svr;
+	}
+
+	private int send(Message message) {
+		Connection connection = this.server.getConnectionPool().getConnection(message.destination);
+		connection.open();
+		if (!connection.isOpened()) {
+			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
+				connection.failed();
+				return REMOTE_SERVER_ERROR_FAILURE;
+			}
+			return REMOTE_SERVER_ERROR;
+		}
+		try {
+			synchronized (connection) {
+				return connection.getClient().transfer(message);
+			}
+		} catch (Exception ex) {
+			connection.close();
+			return REMOTE_SERVER_ERROR;
+		}
 	}
 
 	private void addBackToQueue(Message message) {
@@ -101,7 +133,7 @@ public class IOHandler implements PortHandler {
 			case GET_DATA:
 			case GET_SERVICE:
 				message.lifetime++;
-				server.getMessageHandler().queueMessage(message, MessageQueue.PRIORITY_HIGH);
+				server.getMessageHandler().queueMessage(message);
 				break;
 			case DISCOVER_NEIGHBORS:
 				break;
@@ -115,10 +147,6 @@ public class IOHandler implements PortHandler {
 		}
 	}
 
-	/**
-	 * 
-	 */
-	@Override
 	public synchronized void startServer() {
 		if (tServer == null || !tServer.isServing()) {
 			Thread thread = new Thread(new Runnable() {
@@ -150,18 +178,18 @@ public class IOHandler implements PortHandler {
 				}
 			}
 		}
-		messageQueue.start();
+		running = true;
+		for (int i = 0; i < CONFIGURATIONS.NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS; i++) {
+			new Thread(outGoingMessageQueueProcessor).start();
+		}
 		if (this.server.getSinchanaTestInterface() != null) {
 			this.server.getSinchanaTestInterface().setServerIsRunning(true);
 		}
 	}
 
-	/**
-	 * 
-	 */
-	@Override
 	public void stopServer() {
-		messageQueue.reset();
+		running = false;
+		outGoingMessageQueue.clear();
 		if (tServer != null && tServer.isServing()) {
 			tServer.stop();
 		}
@@ -171,12 +199,6 @@ public class IOHandler implements PortHandler {
 		}
 	}
 
-	/**
-	 * 
-	 * @param message
-	 * @param destination
-	 */
-	@Override
 	public void send(Message message, Node destination) {
 		Message msg = message.deepCopy();
 		msg.lifetime--;
@@ -187,33 +209,21 @@ public class IOHandler implements PortHandler {
 		}
 		msg.setDestination(destination.deepCopy());
 		msg.setRetryCount(0);
-		queueMessage(msg, MessageQueue.PRIORITY_LOW);
-		if (this.server.getSinchanaTestInterface() != null) {
-			this.server.getSinchanaTestInterface().setOutMessageQueueSize(messageQueue.size());
-		}
+		queueMessage(msg);
 	}
 
-	private boolean queueMessage(Message message, int priority) {
-		return this.messageQueue.queueMessageAndWait(message, priority);
-	}
-
-	private int send(Message message) {
-		Connection connection = this.server.getConnectionPool().getConnection(message.destination);
-		connection.open();
-		if (!connection.isOpened()) {
-			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-				connection.failed();
-				return PortHandler.REMOTE_SERVER_ERROR_FAILURE;
-			}
-			return PortHandler.REMOTE_SERVER_ERROR;
-		}
+	private void queueMessage(Message message) {
 		try {
-			synchronized (connection) {
-				return connection.getClient().transfer(message);
+			this.outGoingMessageQueue.put(message);
+			if (this.server.getSinchanaTestInterface() != null) {
+				this.server.getSinchanaTestInterface().setOutMessageQueueSize(outGoingMessageQueue.size());
 			}
-		} catch (Exception ex) {
-			connection.close();
-			return PortHandler.REMOTE_SERVER_ERROR;
+		} catch (InterruptedException ex) {
+			throw new RuntimeException(ex);
 		}
+	}
+
+	public boolean hasReachedLimit() {
+		return outGoingMessageQueue.size() > BUFFER_LIMIT;	
 	}
 }
