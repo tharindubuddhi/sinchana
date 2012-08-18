@@ -60,7 +60,7 @@ public class ChordTable implements RoutingHandler {
 	 */
 	@Override
 	public void init() {
-		this.serverId = this.server.getServerId();
+		this.serverId = this.server.getNode().getServerId();
 		this.serverIdAsBigInt = new BigInteger(1, serverId);
 		synchronized (fingerTable) {
 			for (int i = 0; i < fingerTable.length; i++) {
@@ -84,7 +84,7 @@ public class ChordTable implements RoutingHandler {
 	private void initFingerTable() {
 		synchronized (fingerTable) {
 			for (int i = 0; i < fingerTable.length; i++) {
-				fingerTable[i].setSuccessor(this.server.deepCopy());
+				fingerTable[i].setSuccessor(this.server.getNode().deepCopy());
 			}
 		}
 		/**
@@ -108,17 +108,21 @@ public class ChordTable implements RoutingHandler {
 	 */
 	@Override
 	public void optimize() {
-		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server, 2);
-		Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
-		msg.setFailedNodeSet(failedNodes);
+		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
+		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
+		msg.setNeighbourSet(getNeighbourSet());
 		synchronized (predecessors) {
-			if (this.predecessors[0] != null) {
-				this.server.getIOHandler().send(msg, this.predecessors[0]);
+			for (Node node : predecessors) {
+				if (node != null) {
+					this.server.getIOHandler().send(msg.deepCopy(), node);
+				}
 			}
 		}
 		synchronized (successors) {
-			if (this.successors[0] != null) {
-				this.server.getIOHandler().send(msg, this.successors[0]);
+			for (Node node : successors) {
+				if (node != null) {
+					this.server.getIOHandler().send(msg.deepCopy(), node);
+				}
 			}
 		}
 		timeOutCount = 0;
@@ -164,7 +168,7 @@ public class ChordTable implements RoutingHandler {
 		 */
 //		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 4,
 //				"Next hop for the destination " + destination + " is this server");
-		return this.server;
+		return this.server.getNode();
 	}
 
 	@Override
@@ -220,7 +224,7 @@ public class ChordTable implements RoutingHandler {
 	}
 
 	private boolean addNode(Node node) {
-		
+
 		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
 		Node tempNodeToUpdate = node;
 		synchronized (successors) {

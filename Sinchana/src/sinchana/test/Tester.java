@@ -124,7 +124,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	public void run() {
 		try {
 			if (this.gui != null) {
-				this.gui.setServerId(new String(server.getServerId()));
+				this.gui.setServerId(new String(server.getNode().getServerId()));
 				this.gui.setVisible(true);
 			}
 			if (server.join()) {
@@ -150,7 +150,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public void setStable(boolean isStable) {
 		if (isStable) {
-			Logger.log(this.server, Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
+			Logger.log(this.server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
 					this.server.getServerIdAsString() + " is now stable!");
 			if (this.gui != null) {
 				this.gui.setMessage("stabilized!");
@@ -208,7 +208,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 * @return
 	 */
 	public byte[] getServerId() {
-		return server.getServerId();
+		return server.getNode().getServerId();
 	}
 
 	public int getTestId() {
@@ -253,7 +253,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 	@Override
 	public int hashCode() {
-		return this.server.serverId.hashCode();
+		return this.server.getNode().serverId.hashCode();
 	}
 	private long inputMessageCount = 0;
 	private long avarageInputMessageQueueSize = 0;

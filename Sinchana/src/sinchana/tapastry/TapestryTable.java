@@ -61,7 +61,7 @@ public class TapestryTable implements RoutingHandler {
 	 */
 	@Override
 	public void init() {
-		this.serverId = this.server.getServerId();
+		this.serverId = this.server.getNode().getServerId();
 		this.serverIdAsBigInt = new BigInteger(1, this.serverId);
 		synchronized (this) {
 			this.initFingerTable();
@@ -101,17 +101,21 @@ public class TapestryTable implements RoutingHandler {
 	 */
 	@Override
 	public void optimize() {
-		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server, 2);
-		Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
-		msg.setFailedNodeSet(failedNodes);
+		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
+		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
+		msg.setNeighbourSet(getNeighbourSet());
 		synchronized (predecessors) {
-			if (predecessors[0] != null) {
-				this.server.getIOHandler().send(msg, this.predecessors[0]);
+			for (Node node : predecessors) {
+				if (node != null) {
+					this.server.getIOHandler().send(msg.deepCopy(), node);
+				}
 			}
 		}
 		synchronized (successors) {
-			if (successors[0] != null) {
-				this.server.getIOHandler().send(msg, this.successors[0]);
+			for (Node node : successors) {
+				if (node != null) {
+					this.server.getIOHandler().send(msg.deepCopy(), node);
+				}
 			}
 		}
 		timeOutCount = 0;
@@ -137,7 +141,7 @@ public class TapestryTable implements RoutingHandler {
 		if (raw == -1) {
 //			System.out.println(this.server.getServerIdAsString() + ": next node for "
 //					+ ByteArrays.toReadableString(destination) + " is this server.");
-			return this.server;
+			return this.server.getNode();
 		}
 		int column = getColumn(destination, raw);
 		for (Node node : fingerTable[raw][column]) {

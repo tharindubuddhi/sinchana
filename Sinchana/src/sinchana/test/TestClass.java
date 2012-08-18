@@ -22,7 +22,7 @@ public class TestClass {
 			}
 		});
 
-		System.out.println("starting " + sinchanaServer.getServerId());
+		System.out.println("starting " + sinchanaServer.getNode().getServerId());
 		sinchanaServer.startServer();
 		sinchanaServer.join();
 
@@ -38,11 +38,11 @@ public class TestClass {
 			}
 		});
 
-		System.out.println("starting " + sinchanaServer2.getServerId());
+		System.out.println("starting " + sinchanaServer2.getNode().getServerId());
 		sinchanaServer2.startServer();
 		sinchanaServer2.join();
-		sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes(), null);
-		sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes(), new SinchanaResponseHandler() {
+		sinchanaServer2.request(sinchanaServer.getNode().getServerId(), "Hello".getBytes(), null);
+		sinchanaServer2.request(sinchanaServer.getNode().getServerId(), "Hello".getBytes(), new SinchanaResponseHandler() {
 
 			@Override
 			public void response(byte[] message) {
@@ -55,8 +55,8 @@ public class TestClass {
 			}
 		});
 		System.out.println("passed ;)");
-		byte[] resp = sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes());
-		sinchanaServer2.request(sinchanaServer.getServerId(), "Hello".getBytes(), null);
+		byte[] resp = sinchanaServer2.request(sinchanaServer.getNode().getServerId(), "Hello".getBytes());
+		sinchanaServer2.request(sinchanaServer.getNode().getServerId(), "Hello".getBytes(), null);
 		System.out.println("done :) " + new String(resp));
 	}
 }

@@ -51,7 +51,7 @@ public class ConnectionPool {
 				Connection connection = new Connection(node);
 				int numberOfOpenedConnections = getNumberOfOpenedConnections();
 				if (CONFIGURATIONS.NODE_POOL_SIZE <= pool.size()) {
-					Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
+					Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
 							"Maximum number of nodes available exceeded! ("
 							+ numberOfOpenedConnections + "/" + pool.size() + ")");
 					getSpaceForNodes();

@@ -63,7 +63,7 @@ public class PastryTable implements RoutingHandler {
      */
     @Override
     public void init() {
-        this.serverId = this.server.getServerId();
+        this.serverId = this.server.getNode().getServerId();
         this.serverIdAsBigInt = new BigInteger(1,this.serverId);
         synchronized (this) {
             this.initFingerTable();
@@ -88,12 +88,12 @@ public class PastryTable implements RoutingHandler {
          */
         synchronized (predecessors) {
             for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-                predecessors[i] = this.server.deepCopy();
+                predecessors[i] = this.server.getNode();
             }
         }
         synchronized (successors) {
             for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-                successors[i] = this.server.deepCopy();
+                successors[i] = this.server.getNode();
             }
         }
     }
@@ -104,20 +104,25 @@ public class PastryTable implements RoutingHandler {
      */
     @Override
     public void optimize() {
-        Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server, 2);
-        Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
-        msg.setFailedNodeSet(failedNodes);
-        synchronized (predecessors) {
-            if (!this.serverId.equals(this.predecessors[0].serverId)) {
-                this.server.getIOHandler().send(msg, this.predecessors[0]);
-            }
-        }
-        synchronized (successors) {
-            if (!this.serverId.equals(this.successors[0].serverId)) {
-                this.server.getIOHandler().send(msg, this.successors[0]);
-            }
-        }
-        timeOutCount = 0;
+        Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
+		Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
+		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
+		msg.setNeighbourSet(getNeighbourSet());
+		synchronized (predecessors) {
+			for (Node node : predecessors) {
+				if (node != null) {
+					this.server.getIOHandler().send(msg.deepCopy(), node);
+				}
+			}
+		}
+		synchronized (successors) {
+			for (Node node : successors) {
+				if (node != null) {
+					this.server.getIOHandler().send(msg.deepCopy(), node);
+				}
+			}
+		}
+		timeOutCount = 0;
     }
 
     @Override
@@ -136,7 +141,7 @@ public class PastryTable implements RoutingHandler {
         int raw = getRaw(this.serverId, destination);
         if (raw == -1) {
 //						System.out.println(this.serverId + ": next node for " + destination + " is this server.");
-            return this.server;
+            return this.server.getNode();
         }
         int column = getColumn(destination, raw);
         if (fingerTable[raw][column] != null) {

@@ -118,7 +118,7 @@ public class ClientHandler {
 	public ClientData addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBackHandler scbh, boolean waiting) {
 		ClientData clientData = null;
 		long requestId = -1;
-		Message message = new Message(type, this.server, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		Message message = new Message(type, this.server.getNode(), CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 		switch (message.type) {
 			case REQUEST:
 				message.setDestinationId(key);
@@ -136,7 +136,7 @@ public class ClientHandler {
 				break;
 		}
 		message.setData(data);
-		message.setStation(this.server);
+		message.setStation(this.server.getNode());
 		if (scbh != null || waiting) {
 			requestId = System.currentTimeMillis();
 			clientData = new ClientData();
@@ -163,7 +163,7 @@ public class ClientHandler {
 			}
 		} else {
 			clientsMap.remove(requestId);
-			Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_CLIENT_HANDLER, 0,
+			Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_CLIENT_HANDLER, 0,
 					"Message is unacceptable 'cos buffer is full! " + message);
 		}
 		return clientData;
