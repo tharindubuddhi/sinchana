@@ -1,7 +1,7 @@
 /************************************************************************************
-     
+
  * Sinchana Distributed Hash table 
- 
+
  * Copyright (C) 2012 Sinchana DHT - Department of Computer Science &               
  * Engineering, University of Moratuwa, Sri Lanka. Permission is hereby 
  * granted, free of charge, to any person obtaining a copy of this 
@@ -31,7 +31,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
  * SOFTWARE.                                                                    
  ************************************************************************************/
-
 package sinchana;
 
 import sinchana.dataStore.SinchanaDataStoreInterface;
@@ -58,19 +57,20 @@ import sinchana.util.tools.Hash;
  *
  * @author S.A.H.S.Subasinghe
  */
-public class SinchanaServer extends Node {
+public class SinchanaServer {
 
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final IOHandler iOHandler = new IOHandler(this);
 //	private final RoutingHandler routingHandler = new ChordTable(this);
 //    private final RoutingHandler routingHandler = new TapestryTable(this);
-    private final RoutingHandler routingHandler = new PastryTable(this);
+	private final RoutingHandler routingHandler = new PastryTable(this);
 	private final MessageHandler messageHandler = new MessageHandler(this);
 	private final ConnectionPool connectionPool = new ConnectionPool(this);
 	private final ClientHandler clientHandler = new ClientHandler(this);
 	private final SinchanaServiceStore sinchanaServiceStore = new SinchanaServiceStore();
 	private final String remoteNodeAddress;
 	private final BigInteger serverIdAsBigInt;
+	private final Node node;
 	private final String serverIdAsString;
 	private boolean joined = false;
 	private SinchanaRequestHandler SinchanaRequestHandler = null;
@@ -87,35 +87,33 @@ public class SinchanaServer extends Node {
 	 */
 	public SinchanaServer(int localPortId) throws UnknownHostException {
 		InetAddress inetAddress = InetAddress.getLocalHost();
-		this.address = inetAddress.getHostAddress() + ":" + localPortId;
-		this.setServerId(Hash.generateId(this.address));
-		this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
-		this.serverIdAsString = ByteArrays.toReadableString(this.getServerId());
+		String localAddress = inetAddress.getHostAddress() + ":" + localPortId;
+		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
+		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
 		this.remoteNodeAddress = null;
 	}
 
 	public SinchanaServer(String localAddress) {
-		this.address = localAddress;
-		this.setServerId(Hash.generateId(this.address));
-		this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
-		this.serverIdAsString = ByteArrays.toReadableString(this.getServerId());
+		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
+		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
 		this.remoteNodeAddress = null;
 	}
 
 	public SinchanaServer(int localPortId, String remoteNodeAddress) throws UnknownHostException {
 		InetAddress inetAddress = InetAddress.getLocalHost();
-		this.address = inetAddress.getHostAddress() + ":" + localPortId;
-		this.setServerId(Hash.generateId(this.address));
-		this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
-		this.serverIdAsString = ByteArrays.toReadableString(this.getServerId());
+		String localAddress = inetAddress.getHostAddress() + ":" + localPortId;
+		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
+		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
 		this.remoteNodeAddress = remoteNodeAddress;
 	}
 
 	public SinchanaServer(String localAddress, String remoteNodeAddress) {
-		this.address = localAddress;
-		this.setServerId(Hash.generateId(this.address));
-		this.serverIdAsBigInt = new BigInteger(1, this.getServerId());
-		this.serverIdAsString = ByteArrays.toReadableString(this.getServerId());
+		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
+		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
 		this.remoteNodeAddress = remoteNodeAddress;
 	}
 
@@ -128,8 +126,8 @@ public class SinchanaServer extends Node {
 	}
 
 	public boolean join() {
-		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.address)) {
-			Message msg = new Message(MessageType.JOIN, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.node.address)) {
+			Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			Node remoteNode = new Node(ByteBuffer.wrap(Hash.generateId(remoteNodeAddress)), remoteNodeAddress);
 			int count = CONFIGURATIONS.JOIN_RETRY_TIME_OUT * 100;
 			int joinAttempt = 0;
@@ -151,8 +149,8 @@ public class SinchanaServer extends Node {
 				}
 			}
 		} else {
-			Message msg = new Message(MessageType.JOIN, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-			msg.setStation(this);
+			Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+			msg.setStation(this.node);
 			messageHandler.queueMessage(msg);
 		}
 		return true;
@@ -231,6 +229,10 @@ public class SinchanaServer extends Node {
 		return sinchanaDataStoreInterface;
 	}
 
+	public Node getNode() {
+		return node;
+	}
+
 	public BigInteger getServerIdAsBigInt() {
 		return serverIdAsBigInt;
 	}
@@ -256,12 +258,11 @@ public class SinchanaServer extends Node {
 	 * @param message		Message to pass to the network.
 	 */
 	public void testRing() {
-		Message message = new Message(MessageType.TEST_RING, this, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
-		message.setStation(this);
+		Message message = new Message(MessageType.TEST_RING, this.node, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		message.setStation(this.node);
 		this.getMessageHandler().queueMessage(message);
 	}
 
-    
 	public byte[] request(byte[] destination, byte[] message) {
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, null, true).data;
 	}
@@ -314,7 +315,7 @@ public class SinchanaServer extends Node {
 
 	public void publishService(byte[] key, SinchanaServiceInterface ssi) {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
-		byte[] formattedReference = ByteArrays.arrayConcat(this.getServerId(), formattedKey);
+		byte[] formattedReference = ByteArrays.arrayConcat(this.node.getServerId(), formattedKey);
 		boolean success = this.sinchanaServiceStore.publishService(formattedKey, ssi);
 		if (success) {
 			this.clientHandler.addRequest(formattedKey, formattedReference, MessageType.STORE_DATA, ssi, false);

@@ -72,7 +72,7 @@ public class MessageHandler {
 		 * completed and all the messages are processed with no restriction.
 		 */
 		if (!running && message.type == MessageType.JOIN
-				&& Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
+				&& Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			Collection<Message> ms = new ArrayList<Message>();
 			synchronized (incomingMessageQueue) {
 				if (!incomingMessageQueueThread.isAlive()) {
@@ -146,10 +146,10 @@ public class MessageHandler {
 			}
 		}
 		Set<Node> nodes = new HashSet<Node>();
-		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
+		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			nodes.add(message.source);
 		}
-		if (!Arrays.equals(message.station.getServerId(), this.server.getServerId())) {
+		if (!Arrays.equals(message.station.getServerId(), this.server.getNode().getServerId())) {
 			nodes.add(message.station);
 		}
 		if (message.isSetNeighbourSet()) {
@@ -174,20 +174,14 @@ public class MessageHandler {
 			}
 		}
 		if (updated) {
-			Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server, 2);
-			Set<Node> failedNodes = server.getConnectionPool().getFailedNodes();
-			msg.setFailedNodeSet(failedNodes);
-			Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
-			for (Node node : neighbourSet) {
-				this.server.getIOHandler().send(msg, node);
-			}
+			this.server.getRoutingHandler().optimize();
 		}
 	}
 
 	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		if (predecessor == null) {
-			predecessor = this.server;
+			predecessor = this.server.getNode();
 		}
 		BigInteger targetKeyOffset = getOffset(message.getDestinationId());
 		BigInteger predecessorOffset = getOffset(predecessor.getServerId());
@@ -198,9 +192,9 @@ public class MessageHandler {
 		} else {
 			if (!prevStationOffset.equals(ZERO)
 					&& prevStationOffset.compareTo(targetKeyOffset) == -1) {
-//				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 3,
-//						"This should be an errornous receive of " + ByteArrays.toReadableString(message.destinationId)
-//						+ " - sending to the predecessor " + ByteArrays.toReadableString(predecessor.serverId));
+				/*
+				 * This should be an errornous receive. Sending to the predecessor.
+				 */
 				message.setRoutedViaPredecessors(true);
 				this.server.getIOHandler().send(message, predecessor);
 
@@ -212,9 +206,9 @@ public class MessageHandler {
 	}
 
 	private void processJoin(Message message) {
-		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
+		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			if (this.server.getConnectionPool().hasReportFailed(message.source)) {
-				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 4,
+				Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 4,
 						"Node " + message.source + "has to wait.");
 				return;
 			}
@@ -223,8 +217,8 @@ public class MessageHandler {
 			BigInteger newServerIdOffset = getOffset(message.source.getServerId());
 			BigInteger prevStationIdOffset = getOffset(message.station.getServerId());
 			BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
-			Node nextSuccessor = this.server;
-			Node nextPredecessor = this.server;
+			Node nextSuccessor = this.server.getNode();
+			Node nextPredecessor = this.server.getNode();
 			Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 			for (Node node : neighbourSet) {
 				tempNodeOffset = getOffset(node.getServerId());
@@ -244,21 +238,21 @@ public class MessageHandler {
 					nextPredecessor = node;
 				}
 			}
-			if (!Arrays.equals(nextPredecessor.getServerId(), this.server.getServerId())) {
-				server.getIOHandler().send(message, nextPredecessor);
+			if (!Arrays.equals(nextPredecessor.getServerId(), this.server.getNode().getServerId())) {
+				server.getIOHandler().send(message.deepCopy(), nextPredecessor);
 			} else {
-				server.getIOHandler().send(message, message.source);
+				server.getIOHandler().send(message.deepCopy(), message.source);
 			}
-			if (!Arrays.equals(nextSuccessor.getServerId(), this.server.getServerId())) {
-				server.getIOHandler().send(message, nextSuccessor);
+			if (!Arrays.equals(nextSuccessor.getServerId(), this.server.getNode().getServerId())) {
+				server.getIOHandler().send(message.deepCopy(), nextSuccessor);
 			} else {
-				server.getIOHandler().send(message, message.source);
+				server.getIOHandler().send(message.deepCopy(), message.source);
 			}
 		}
 	}
 
 	private void processDiscoverNeighbours(Message message) {
-		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
+		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 			this.server.getIOHandler().send(message, message.source);
 		}
@@ -268,20 +262,20 @@ public class MessageHandler {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
 		if (predecessor == null) {
-			predecessor = this.server;
+			predecessor = this.server.getNode();
 		}
 		if (successor == null) {
-			successor = this.server;
+			successor = this.server.getNode();
 		}
-		if (Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
+		if (Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			if (message.isSetData()) {
 				System.out.println("Ring test completed - length: "
 						+ (new String(message.getData()).split(" > ").length)
 						+ " :: " + new String(message.getData()));
 			} else {
 				message.setData(this.server.getServerIdAsString().getBytes());
-				this.server.getIOHandler().send(message, predecessor);
-				this.server.getIOHandler().send(message, successor);
+				this.server.getIOHandler().send(message.deepCopy(), predecessor);
+				this.server.getIOHandler().send(message.deepCopy(), successor);
 			}
 		} else {
 			if (Arrays.equals(message.station.getServerId(), predecessor.getServerId())) {
@@ -291,7 +285,7 @@ public class MessageHandler {
 				message.setData((new String(message.getData()) + " > " + this.server.getServerIdAsString()).getBytes());
 				this.server.getIOHandler().send(message, predecessor);
 			} else {
-				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
+				Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
 						"Message Terminated! Received from " + message.station.serverId
 						+ " which is neither predecessor or successor.");
 			}
@@ -317,7 +311,7 @@ public class MessageHandler {
 		boolean responseExpected = message.isSetResponseExpected() && message.responseExpected;
 		if (responseExpected) {
 			returnMessage = new Message();
-			returnMessage.setSource(server);
+			returnMessage.setSource(server.getNode());
 			returnMessage.setLifetime(CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			returnMessage.setDestination(message.source);
 			returnMessage.setDestinationId(message.source.serverId);
