@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
-import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -107,12 +106,12 @@ public class TapestryTable implements RoutingHandler {
 		msg.setFailedNodeSet(failedNodes);
 		synchronized (predecessors) {
 			if (predecessors[0] != null) {
-				this.server.getPortHandler().send(msg, this.predecessors[0]);
+				this.server.getIOHandler().send(msg, this.predecessors[0]);
 			}
 		}
 		synchronized (successors) {
 			if (successors[0] != null) {
-				this.server.getPortHandler().send(msg, this.successors[0]);
+				this.server.getIOHandler().send(msg, this.successors[0]);
 			}
 		}
 		timeOutCount = 0;

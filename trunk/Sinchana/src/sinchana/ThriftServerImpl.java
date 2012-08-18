@@ -9,9 +9,7 @@ import org.apache.thrift.TException;
 import sinchana.thrift.DHTServer;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
-import sinchana.util.messagequeue.MessageQueue;
 import sinchana.util.tools.ByteArrays;
-import sinchana.util.tools.Hash;
 
 /**
  *
@@ -41,10 +39,10 @@ public class ThriftServerImpl implements DHTServer.Iface {
 				throw new RuntimeException(ex);
 			}
 		}
-		if (server.getMessageHandler().queueMessage(message, MessageQueue.PRIORITY_NONE)) {
-			return PortHandler.SUCCESS;
+		if (server.getMessageHandler().queueMessage(message)) {
+			return IOHandler.SUCCESS;
 		}
-		return PortHandler.ACCEPT_ERROR;
+		return IOHandler.ACCEPT_ERROR;
 	}
 
 	@Override

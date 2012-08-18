@@ -6,15 +6,17 @@ package sinchana;
 
 import sinchana.service.SinchanaServiceInterface;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import sinchana.connection.Connection;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
-import sinchana.util.messagequeue.MessageQueue;
 
 /**
  *
@@ -22,34 +24,27 @@ import sinchana.util.messagequeue.MessageQueue;
  */
 public class MessageHandler {
 
+	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * 95 / 100;
 	private final SinchanaServer server;
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
+	private boolean running = false;
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
 	 * determined by MESSAGE_BUFFER_SIZE.
 	 */
-	private final MessageQueue messageQueue = new MessageQueue(CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE, new MessageQueue.MessageEventHandler() {
+	private final ArrayBlockingQueue<Message> incomingMessageQueue = new ArrayBlockingQueue<Message>(CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE);
+	private final Thread incomingMessageQueueThread = new Thread(new Runnable() {
 
 		@Override
-		public void process(Message message) {
-			/**
-			 * A node's join is considered completed if and only if 
-			 * it's predecessor and successor are set. Typically, 
-			 * receiving at least 1 of 2 MessageType.JOIN messages it 
-			 * sends at the beginning is enough to identify and to set 
-			 * predecessor and successor. Until the node receives 1 of 
-			 * those 2 messages, all the other messages are added back 
-			 * to the queue to process later.
-			 * Once the node receives it's JOIN message, the joining is 
-			 * completed and all the messages are processed with no restriction.
-			 */
-			if (server.getSinchanaTestInterface() != null) {
-				server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
+		public void run() {
+			while (true) {
+				try {
+					processMessage(incomingMessageQueue.take());
+				} catch (InterruptedException ex) {
+				}
 			}
-			processMessage(message);
-
 		}
-	}, 1);
+	});
 
 	/**
 	 * Constructor of the class. The server instance is passed as an argument.
@@ -64,23 +59,43 @@ public class MessageHandler {
 	 * @param message
 	 * @return
 	 */
-	public boolean queueMessage(Message message, int priority) {
-		if (!messageQueue.isStarted()
-				&& message.type == MessageType.JOIN
+	public boolean queueMessage(Message message) {
+		/**
+		 * A node's join is considered completed if and only if 
+		 * it's predecessor and successor are set. Typically, 
+		 * receiving at least 1 of 2 MessageType.JOIN messages it 
+		 * sends at the beginning is enough to identify and to set 
+		 * predecessor and successor. Until the node receives 1 of 
+		 * those 2 messages, all the other messages are added back 
+		 * to the queue to process later.
+		 * Once the node receives it's JOIN message, the joining is 
+		 * completed and all the messages are processed with no restriction.
+		 */
+		if (!running && message.type == MessageType.JOIN
 				&& Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
-			messageQueue.start(message);
+			Collection<Message> ms = new ArrayList<Message>();
+			synchronized (incomingMessageQueue) {
+				if (!incomingMessageQueueThread.isAlive()) {
+					incomingMessageQueue.drainTo(ms);
+					incomingMessageQueueThread.start();
+					incomingMessageQueue.offer(message);
+					incomingMessageQueue.addAll(ms);
+				}
+				running = true;
+			}
 			this.server.setJoined(true);
 			if (this.server.getSinchanaTestInterface() != null) {
 				this.server.getSinchanaTestInterface().setStable(true);
 			}
 			return true;
 		} else {
-			boolean success = messageQueue.queueMessageAndWait(message, priority);
 			if (this.server.getSinchanaTestInterface() != null) {
 				this.server.getSinchanaTestInterface().incIncomingMessageCount();
-				this.server.getSinchanaTestInterface().setMessageQueueSize(messageQueue.size());
+				this.server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
 			}
-			return success;
+			synchronized (incomingMessageQueue) {
+				return incomingMessageQueue.offer(message);
+			}
 		}
 	}
 
@@ -164,7 +179,7 @@ public class MessageHandler {
 			msg.setFailedNodeSet(failedNodes);
 			Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 			for (Node node : neighbourSet) {
-				this.server.getPortHandler().send(msg, node);
+				this.server.getIOHandler().send(msg, node);
 			}
 		}
 	}
@@ -187,11 +202,11 @@ public class MessageHandler {
 //						"This should be an errornous receive of " + ByteArrays.toReadableString(message.destinationId)
 //						+ " - sending to the predecessor " + ByteArrays.toReadableString(predecessor.serverId));
 				message.setRoutedViaPredecessors(true);
-				this.server.getPortHandler().send(message, predecessor);
+				this.server.getIOHandler().send(message, predecessor);
 
 			} else {
 				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
-				this.server.getPortHandler().send(message, nextHop);
+				this.server.getIOHandler().send(message, nextHop);
 			}
 		}
 	}
@@ -230,14 +245,14 @@ public class MessageHandler {
 				}
 			}
 			if (!Arrays.equals(nextPredecessor.getServerId(), this.server.getServerId())) {
-				server.getPortHandler().send(message, nextPredecessor);
+				server.getIOHandler().send(message, nextPredecessor);
 			} else {
-				server.getPortHandler().send(message, message.source);
+				server.getIOHandler().send(message, message.source);
 			}
 			if (!Arrays.equals(nextSuccessor.getServerId(), this.server.getServerId())) {
-				server.getPortHandler().send(message, nextSuccessor);
+				server.getIOHandler().send(message, nextSuccessor);
 			} else {
-				server.getPortHandler().send(message, message.source);
+				server.getIOHandler().send(message, message.source);
 			}
 		}
 	}
@@ -245,7 +260,7 @@ public class MessageHandler {
 	private void processDiscoverNeighbours(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getServerId())) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
-			this.server.getPortHandler().send(message, message.source);
+			this.server.getIOHandler().send(message, message.source);
 		}
 	}
 
@@ -265,16 +280,16 @@ public class MessageHandler {
 						+ " :: " + new String(message.getData()));
 			} else {
 				message.setData(this.server.getServerIdAsString().getBytes());
-				this.server.getPortHandler().send(message, predecessor);
-				this.server.getPortHandler().send(message, successor);
+				this.server.getIOHandler().send(message, predecessor);
+				this.server.getIOHandler().send(message, successor);
 			}
 		} else {
 			if (Arrays.equals(message.station.getServerId(), predecessor.getServerId())) {
 				message.setData((new String(message.getData()) + " > " + this.server.getServerIdAsString()).getBytes());
-				this.server.getPortHandler().send(message, successor);
+				this.server.getIOHandler().send(message, successor);
 			} else if (Arrays.equals(message.station.getServerId(), successor.getServerId())) {
 				message.setData((new String(message.getData()) + " > " + this.server.getServerIdAsString()).getBytes());
-				this.server.getPortHandler().send(message, predecessor);
+				this.server.getIOHandler().send(message, predecessor);
 			} else {
 				Logger.log(this.server, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
 						"Message Terminated! Received from " + message.station.serverId
@@ -384,7 +399,7 @@ public class MessageHandler {
 				break;
 		}
 		if (responseExpected) {
-			this.server.getPortHandler().send(returnMessage, returnMessage.destination);
+			this.server.getIOHandler().send(returnMessage, returnMessage.destination);
 		}
 	}
 }

@@ -109,12 +109,12 @@ public class PastryTable implements RoutingHandler {
         msg.setFailedNodeSet(failedNodes);
         synchronized (predecessors) {
             if (!this.serverId.equals(this.predecessors[0].serverId)) {
-                this.server.getPortHandler().send(msg, this.predecessors[0]);
+                this.server.getIOHandler().send(msg, this.predecessors[0]);
             }
         }
         synchronized (successors) {
             if (!this.serverId.equals(this.successors[0].serverId)) {
-                this.server.getPortHandler().send(msg, this.successors[0]);
+                this.server.getIOHandler().send(msg, this.successors[0]);
             }
         }
         timeOutCount = 0;
