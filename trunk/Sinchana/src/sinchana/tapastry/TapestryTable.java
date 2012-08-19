@@ -63,9 +63,7 @@ public class TapestryTable implements RoutingHandler {
 	public void init() {
 		this.serverId = this.server.getNode().getServerId();
 		this.serverIdAsBigInt = new BigInteger(1, this.serverId);
-		synchronized (this) {
-			this.initFingerTable();
-		}
+		this.initFingerTable();
 	}
 
 	/**
@@ -73,10 +71,12 @@ public class TapestryTable implements RoutingHandler {
 	 * predecessor, successor and as all the successor entries in the finger table.
 	 */
 	private void initFingerTable() {
-		for (int i = 0; i < TABLE_SIZE; i++) {
-			for (int j = 0; j < TAPESTRY_TABLE_NUMBER_BASE; j++) {
-				for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
-					fingerTable[i][j][k] = null;
+		synchronized (fingerTable) {
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				for (int j = 0; j < TAPESTRY_TABLE_NUMBER_BASE; j++) {
+					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+						fingerTable[i][j][k] = null;
+					}
 				}
 			}
 		}
@@ -95,27 +95,35 @@ public class TapestryTable implements RoutingHandler {
 		}
 	}
 
+	@Override
+	public void triggerOptimize() {
+		timeOutCount = CONFIGURATIONS.ROUTING_OPTIMIZATION_TIME_OUT;
+	}
+
 	/**
 	 * Optimizes the finger table. Sends messages to the each successor in 
 	 * the finger table entries to find the optimal successor for those entries.
 	 */
-	@Override
-	public void optimize() {
+	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
-		msg.setNeighbourSet(getNeighbourSet());
-		synchronized (predecessors) {
-			for (Node node : predecessors) {
-				if (node != null) {
-					this.server.getIOHandler().send(msg.deepCopy(), node);
-				}
+//		msg.setNeighbourSet(getNeighbourSet());
+		for (Node node : predecessors) {
+			if (node == null) {
+				break;
+			}
+			synchronized (node) {
+				this.server.getIOHandler().send(msg.deepCopy(), node);
+				break;
 			}
 		}
-		synchronized (successors) {
-			for (Node node : successors) {
-				if (node != null) {
-					this.server.getIOHandler().send(msg.deepCopy(), node);
-				}
+		for (Node node : successors) {
+			if (node == null) {
+				break;
+			}
+			synchronized (node) {
+				this.server.getIOHandler().send(msg.deepCopy(), node);
+				break;
 			}
 		}
 		timeOutCount = 0;
@@ -133,89 +141,75 @@ public class TapestryTable implements RoutingHandler {
 
 	@Override
 	public Node getNextNode(byte[] destination) {
+		synchronized (fingerTable) {
 
-//		System.out.println(this.server.getServerIdAsString() + ": looking for "
-//				+ ByteArrays.toReadableString(destination));
-
-		int raw = getRaw(this.serverId, destination);
-		if (raw == -1) {
-//			System.out.println(this.server.getServerIdAsString() + ": next node for "
-//					+ ByteArrays.toReadableString(destination) + " is this server.");
-			return this.server.getNode();
-		}
-		int column = getColumn(destination, raw);
-		for (Node node : fingerTable[raw][column]) {
-			if (node != null) {
-//				System.out.println(this.server.getServerIdAsString() + ": found "
-//						+ ByteArrays.toReadableString(node.serverId)
-//						+ " @ [" + raw + "," + column + "]");
-				return node;
+			int raw = getRaw(this.serverId, destination);
+			if (raw == -1) {
+				return this.server.getNode();
 			}
-		}
-//		System.out.println(this.server.getServerIdAsString() + ": No entry @ [" + raw + "," + column + "]");
-
-		int tColumn, iRaw, iColumn;
-
-		iRaw = raw;
-		iColumn = column;
-		tColumn = getColumn(this.serverId, raw);
-		boolean traverseDown = column < tColumn;
-		if (raw == 0) {
-			traverseDown = false;
-		}
-		if (raw == TABLE_SIZE - 1) {
-			traverseDown = true;
-		}
-
-		while (true) {
+			int column = getColumn(destination, raw);
 			for (Node node : fingerTable[raw][column]) {
 				if (node != null) {
-//					System.out.println(this.server.getServerIdAsString() + ": found "
-//							+ ByteArrays.toReadableString(node.serverId)
-//							+ " @ [" + raw + "," + column + "]");
 					return node;
 				}
 			}
 
+			int tColumn, iRaw, iColumn;
+
+			iRaw = raw;
+			iColumn = column;
 			tColumn = getColumn(this.serverId, raw);
-//			System.out.println(this.server.getServerIdAsString() + ": analize:::\td:"
-//					+ ByteArrays.toReadableString(destination)
-//					+ "\tr:" + raw + "\tc:" + column + "\ttc:" + tColumn);
-
-			if (traverseDown && tColumn == column) {
-//				System.out.println(this.server.getServerIdAsString() + ": go down");
-				raw--;
-				traverseDown = raw != 0;
-				column = -1;
-			} else if (!traverseDown && column == TAPESTRY_TABLE_NUMBER_BASE - 1) {
-//				System.out.println(this.server.getServerIdAsString() + ": go up");
-				raw++;
-				traverseDown = raw >= TapestryTable.TABLE_SIZE - 1;
-				column = getColumn(this.serverId, raw);
+			boolean traverseDown = column < tColumn;
+			if (raw == 0) {
+				traverseDown = false;
+			}
+			if (raw == TABLE_SIZE - 1) {
+				traverseDown = true;
 			}
 
-			column = (column + 1) % TAPESTRY_TABLE_NUMBER_BASE;
-			if (iRaw == raw && iColumn == column) {
-				System.out.println(this.server.getServerIdAsString() + ": No result found!");
-				break;
+			while (true) {
+				for (Node node : fingerTable[raw][column]) {
+					if (node != null) {
+						return node;
+					}
+				}
+
+				tColumn = getColumn(this.serverId, raw);
+
+				if (traverseDown && tColumn == column) {
+					raw--;
+					traverseDown = raw != 0;
+					column = -1;
+				} else if (!traverseDown && column == TAPESTRY_TABLE_NUMBER_BASE - 1) {
+					raw++;
+					traverseDown = raw >= TapestryTable.TABLE_SIZE - 1;
+					column = getColumn(this.serverId, raw);
+				}
+
+				column = (column + 1) % TAPESTRY_TABLE_NUMBER_BASE;
+				if (iRaw == raw && iColumn == column) {
+					System.out.println(this.server.getServerIdAsString() + ": No result found!");
+					break;
+				}
 			}
+			return null;
 		}
-		return null;
 	}
 
 	@Override
 	public Set<Node> getNeighbourSet() {
 		//initializes an empty node set.
 		Set<Node> neighbourSet = new HashSet<Node>();
-		for (Node[][] nodeRaw : fingerTable) {
-			for (Node[] nodeColumn : nodeRaw) {
-				for (Node node : nodeColumn) {
-					if (node != null && !Arrays.equals(node.getServerId(), this.serverId)) {
-						neighbourSet.add(node);
+		synchronized (fingerTable) {
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				for (int j = 0; j < TAPESTRY_TABLE_NUMBER_BASE; j++) {
+					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+						if (fingerTable[i][j][k] != null) {
+							neighbourSet.add(fingerTable[i][j][k]);
+						}
 					}
 				}
 			}
-
 		}
 		//adds the predecessors & the successors.
 		synchronized (predecessors) {
@@ -310,13 +304,15 @@ public class TapestryTable implements RoutingHandler {
 		}
 		int raw = getRaw(this.serverId, node.getServerId());
 		int column = getColumn(node.getServerId(), raw);
-		for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
-			if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].getServerId(), node.getServerId())) {
-				break;
-			} else if (fingerTable[raw][column][i] == null) {
-				fingerTable[raw][column][i] = node.deepCopy();
-				updatedTable = true;
-				break;
+		synchronized (fingerTable) {
+			for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+				if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].getServerId(), node.getServerId())) {
+					break;
+				} else if (fingerTable[raw][column][i] == null) {
+					fingerTable[raw][column][i] = node.deepCopy();
+					updatedTable = true;
+					break;
+				}
 			}
 		}
 		return updatedPredecessors || updatedSuccessors || updatedTable;
@@ -327,7 +323,6 @@ public class TapestryTable implements RoutingHandler {
 		if (neighbourSet.contains(nodeToRemove)) {
 			neighbourSet.remove(nodeToRemove);
 			//reset the predecessors, successors and finger table entries.
-
 			initFingerTable();
 			for (Node node : neighbourSet) {
 				addNode(node);

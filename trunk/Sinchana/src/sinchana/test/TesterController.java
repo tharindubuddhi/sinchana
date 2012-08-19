@@ -28,7 +28,8 @@ public class TesterController {
 	private final ControllerUI cui = new ControllerUI(this);
 	private int completedCount = 0;
 	private final Timer timer = new Timer();
-	private static long count = 0;
+	public volatile static long count = 0;
+	public volatile static long count2 = 0;
 
 	/**
 	 * 
@@ -50,58 +51,51 @@ public class TesterController {
 		timer.scheduleAtFixedRate(new TimerTask() {
 
 			long totalMessageIncome, totalInputMessageQueue,
-					totalOutputMessageQueue, totalResolves, totalResolvesViaPredecessors,
-					maxInputMessageQueueSize, maxOutputMessageQueueSize,
-					totalLifeTime;
+					totalResolves, totalResolvesViaPredecessors,
+					maxInputMessageQueueSize, totalLifeTime;
 			long newTime, oldTime = System.currentTimeMillis();
-			int mxaTester = -1;
+			int numOfFullInputBuffs;
+			byte[] maxTester = "n/a".getBytes();
 
 			@Override
 			public void run() {
 				totalMessageIncome = 0;
 				totalInputMessageQueue = 0;
-				totalOutputMessageQueue = 0;
 				maxInputMessageQueueSize = 0;
-				maxOutputMessageQueueSize = 0;
 				totalLifeTime = 0;
 				totalResolves = 0;
 				totalResolvesViaPredecessors = 0;
-				mxaTester = -1;
+				numOfFullInputBuffs = 0;
 				long[] testData;
 				Set<Integer> keySet = testServers.keySet();
 				for (int tid : keySet) {
 					testData = testServers.get(tid).getTestData();
 					totalMessageIncome += testData[0];
 					totalInputMessageQueue += testData[1];
-					totalOutputMessageQueue += testData[2];
-					if (maxInputMessageQueueSize < testData[3]) {
-						maxInputMessageQueueSize = testData[3];
+					if (maxInputMessageQueueSize < testData[2]) {
+						maxInputMessageQueueSize = testData[2];
+						maxTester = testServers.get(tid).getServerId();
 					}
-					if (maxOutputMessageQueueSize < testData[4]) {
-						maxOutputMessageQueueSize = testData[4];
-						mxaTester = tid;
-					}
-					totalResolves += testData[5];
-					totalResolvesViaPredecessors += testData[6];
-					totalLifeTime += testData[7];
-
+					totalResolves += testData[3];
+					totalResolvesViaPredecessors += testData[4];
+					totalLifeTime += testData[5];
+					numOfFullInputBuffs += testData[6];
 				}
 				newTime = System.currentTimeMillis();
 				if (completedCount != 0) {
 					cui.setStat("IC: " + (totalMessageIncome / completedCount)
-							+ "   IB: " + (totalInputMessageQueue / completedCount)
 							+ "   MI: " + maxInputMessageQueueSize
-							+ "   OB: " + (totalOutputMessageQueue / completedCount)
-							+ "   MO: " + maxOutputMessageQueueSize
 							+ "   TR: " + totalResolves
 							+ "   RP: " + (totalResolves != 0 ? totalResolvesViaPredecessors * 100 / totalResolves : "NA")
 							+ "   TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S"
-							+ "   AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA"));
+							+ "   AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA")
+							+ "   FI: " + numOfFullInputBuffs);
 				}
 				oldTime = newTime;
-				if (mxaTester != -1) {
-//										System.out.println(mxaTester + ": " + testServers.get(mxaTester).temp);
-				}
+//				if (!Arrays.equals(maxTester, maxTesterOld)) {
+//					System.out.println("Max: " + ByteArrays.toReadableString(maxTester).toUpperCase());
+//					maxTesterOld = maxTester;
+//				}
 			}
 		}, 1000, 1000);
 	}
@@ -145,6 +139,7 @@ public class TesterController {
 		int randomId;
 		long randomAmount = 0;
 		count = 0;
+		count2 = 0;
 		while (numOfTestMessages > 0) {
 			randomId = (int) (Math.random() * numOfTestServers);
 			if (numOfTestMessages > 10) {
@@ -168,10 +163,6 @@ public class TesterController {
 			break;
 		}
 
-	}
-
-	public static synchronized long incCount() {
-		return ++count;
 	}
 
 	/**

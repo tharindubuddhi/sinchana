@@ -4,12 +4,13 @@
  */
 package sinchana.util.logging;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Node;
+import sinchana.util.tools.ByteArrays;
 
 /**
  * 
@@ -17,7 +18,6 @@ import sinchana.thrift.Node;
  */
 public final class Logger {
 
-	private static List<Log> logDB = new LinkedList<Log>();
 	/**
 	 * 
 	 */
@@ -56,22 +56,19 @@ public final class Logger {
 	public static final int CLASS_CONNECTION_POOL = 4;
 	public static final int CLASS_CLIENT_HANDLER = 5;
 	public static final int CLASS_SINCHANA_SERVER = 6;
+	public static final int CLASS_IO_HANDLER = 7;
 	/**
 	 * 
 	 */
 	public static final int CURRENT_LOG_LEVEL = 2;
+	private static final int SIZE = 6000;
+	private static final Log[] logDB = new Log[SIZE];
+	private static int pointer = 0;
 
 	private Logger() {
 	}
+	private static final Map<String, String> stats = new HashMap<String, String>();
 
-	/**
-	 * 
-	 * @param nodeId
-	 * @param type
-	 * @param classId
-	 * @param locId
-	 * @param logData
-	 */
 	public static void log(Node node, int type, int classId, int locId, String logData) {
 		if (CONFIGURATIONS.DO_LOG) {
 			Log nl = new Log();
@@ -80,7 +77,12 @@ public final class Logger {
 			nl.classId = classId;
 			nl.locId = (byte) locId;
 			nl.logData = logData;
-			logDB.add(nl);
+			logDB[pointer] = nl;
+			pointer = (pointer + 1) % SIZE;
+			if (classId == CLASS_IO_HANDLER && locId == 0) {
+				stats.put(ByteArrays.toReadableString(node.serverId).toUpperCase(), logData);
+			}
+
 		}
 		if (CURRENT_LOG_LEVEL > type) {
 			return;
@@ -127,12 +129,16 @@ public final class Logger {
 			case CLASS_CLIENT_HANDLER:
 				className = "CLIENT_HANDLER";
 				break;
+			case CLASS_IO_HANDLER:
+				className = "IO_HANDLER";
+				break;
 			default:
 				className = "LOGGER";
 				break;
 		}
 		java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
-				className, "Server " + node, logData);
+				className, "Server " + ByteArrays.toReadableString(node.serverId).toUpperCase()
+				+ " @ " + node.address, logData);
 
 
 	}
@@ -141,11 +147,9 @@ public final class Logger {
 	 * 
 	 */
 	public static void print() {
-		Iterator<Log> listIterator = logDB.iterator();
-		Log log;
-		while (listIterator.hasNext()) {
-			log = listIterator.next();
-			System.out.println(log.toString());
+		Set<String> keySet = stats.keySet();
+		for (String key : keySet) {
+			System.out.println(key + ": " + stats.get(key));
 		}
 	}
 
@@ -158,9 +162,8 @@ public final class Logger {
 	 */
 	public static synchronized void print(String[] nodeIds, int[] levels,
 			int[] classIds, int[] locations, String containTextString) {
-		System.out.println("processing quaries...");
-		Iterator<Log> listIterator = logDB.iterator();
-		Log log;
+		System.out.println("processing quaries... " + SIZE);
+		int x = pointer, s = logDB.length;
 		boolean filterByNodeId = nodeIds != null && nodeIds.length != 0;
 		boolean filterBylevel = levels != null && levels.length != 0;
 		boolean filterByClass = classIds != null && classIds.length != 0;
@@ -168,8 +171,14 @@ public final class Logger {
 		boolean filterByText = containTextString.length() > 0;
 		boolean validToPrint;
 		int recordCount = 0;
-		while (listIterator.hasNext()) {
-			log = listIterator.next();
+		Log log;
+		for (x = pointer; x < SIZE; x++) {
+			if (logDB[x] == null) {
+				continue;
+			}
+			log = logDB[x];
+			x++;
+
 			validToPrint = !filterByText || log.logData.indexOf(containTextString) != -1;
 			if (!validToPrint) {
 				continue;
@@ -177,7 +186,7 @@ public final class Logger {
 			if (filterByNodeId) {
 				validToPrint = false;
 				for (String id : nodeIds) {
-					if (id.equals(new String(log.node.getServerId()))) {
+					if (id.equals(ByteArrays.toReadableString(log.node.getServerId()).toUpperCase())) {
 						validToPrint = true;
 						break;
 					}
@@ -223,8 +232,75 @@ public final class Logger {
 				continue;
 			}
 			recordCount++;
-			System.out.println(log.toString());
+//			System.out.println(log.toString());
 		}
-		System.out.println(logDB.size() + " records processed. " + recordCount + " matching records found.");
+		for (x = 0; x < pointer; x++) {
+			if (logDB[x] == null) {
+				continue;
+			}
+			log = logDB[x];
+			x++;
+
+			validToPrint = !filterByText || log.logData.indexOf(containTextString) != -1;
+			if (!validToPrint) {
+				continue;
+			}
+			if (filterByNodeId) {
+				validToPrint = false;
+				for (String id : nodeIds) {
+					if (id.equals(ByteArrays.toReadableString(log.node.getServerId()).toUpperCase())) {
+						validToPrint = true;
+						break;
+					}
+				}
+			}
+			if (!validToPrint) {
+				continue;
+			}
+			if (filterBylevel) {
+				validToPrint = false;
+				for (int i : levels) {
+					if (log.level == i) {
+						validToPrint = true;
+						break;
+					}
+				}
+			}
+			if (!validToPrint) {
+				continue;
+			}
+			if (filterByClass) {
+				validToPrint = false;
+				for (int i : classIds) {
+					if (log.classId == i) {
+						validToPrint = true;
+						break;
+					}
+				}
+			}
+			if (!validToPrint) {
+				continue;
+			}
+			if (filterByLocation) {
+				validToPrint = false;
+				for (int i : locations) {
+					if (log.locId == i) {
+						validToPrint = true;
+						break;
+					}
+				}
+			}
+			if (!validToPrint) {
+				continue;
+			}
+			recordCount++;
+//			System.out.println(log.toString());
+		}
+
+		System.out.println(SIZE + " records processed. " + recordCount + " matching records found.");
+		Set<String> keySet = stats.keySet();
+		for (String key : keySet) {
+			System.out.println(key + ": " + stats.get(key));
+		}
 	}
 }

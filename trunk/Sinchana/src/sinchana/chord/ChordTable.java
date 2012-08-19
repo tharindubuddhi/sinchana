@@ -102,12 +102,16 @@ public class ChordTable implements RoutingHandler {
 		}
 	}
 
+	@Override
+	public void triggerOptimize() {
+		timeOutCount = CONFIGURATIONS.ROUTING_OPTIMIZATION_TIME_OUT;
+	}	
+	
 	/**
 	 * Optimizes the finger table. Sends messages to the each successors in 
 	 * the finger table entries to find the optimal successors for those entries.
 	 */
-	@Override
-	public void optimize() {
+	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
 		msg.setNeighbourSet(getNeighbourSet());

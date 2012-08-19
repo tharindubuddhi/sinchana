@@ -24,7 +24,7 @@ import sinchana.util.logging.Logger;
  */
 public class MessageHandler {
 
-	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * 95 / 100;
+	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * 80 / 100;
 	private final SinchanaServer server;
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private boolean running = false;
@@ -38,9 +38,13 @@ public class MessageHandler {
 		@Override
 		public void run() {
 			while (true) {
+				if (server.getSinchanaTestInterface() != null) {
+					server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
+				}
 				try {
 					processMessage(incomingMessageQueue.take());
 				} catch (InterruptedException ex) {
+					throw new RuntimeException(ex);
 				}
 			}
 		}
@@ -59,7 +63,7 @@ public class MessageHandler {
 	 * @param message
 	 * @return
 	 */
-	public boolean queueMessage(Message message) {
+	public boolean queueMessage(Message message, boolean highPriority) {
 		/**
 		 * A node's join is considered completed if and only if 
 		 * it's predecessor and successor are set. Typically, 
@@ -92,6 +96,9 @@ public class MessageHandler {
 			if (this.server.getSinchanaTestInterface() != null) {
 				this.server.getSinchanaTestInterface().incIncomingMessageCount();
 				this.server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
+			}
+			if (!highPriority && incomingMessageQueue.size() >= BUFFER_LIMIT) {
+				return false;
 			}
 			synchronized (incomingMessageQueue) {
 				return incomingMessageQueue.offer(message);
@@ -160,13 +167,10 @@ public class MessageHandler {
 			for (Node node : nodes) {
 				if (server.getConnectionPool().hasReportFailed(node)) {
 					Connection failedConnection = server.getConnectionPool().getConnection(node);
-					if ((failedConnection.getLastKnownFailedTime() + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT) < time) {
+					if ((failedConnection.getLastHeardFailedTime() + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT) < time) {
 						failedConnection.reset();
-						System.out.println("Adding back " + node);
+						System.out.println(this.server.getServerIdAsString() + ": Adding back " + node);
 					} else {
-						System.out.println("Not accepted till "
-								+ (failedConnection.getLastKnownFailedTime() + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT
-								- System.currentTimeMillis()) + "ms -- " + node);
 						continue;
 					}
 				}
@@ -174,7 +178,7 @@ public class MessageHandler {
 			}
 		}
 		if (updated) {
-			this.server.getRoutingHandler().optimize();
+			this.server.getRoutingHandler().triggerOptimize();
 		}
 	}
 
@@ -312,7 +316,7 @@ public class MessageHandler {
 		if (responseExpected) {
 			returnMessage = new Message();
 			returnMessage.setSource(server.getNode());
-			returnMessage.setLifetime(CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+			returnMessage.setLifetime(1);
 			returnMessage.setDestination(message.source);
 			returnMessage.setDestinationId(message.source.serverId);
 			returnMessage.setId(message.getId());
