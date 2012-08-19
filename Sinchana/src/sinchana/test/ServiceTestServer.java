@@ -78,6 +78,11 @@ public class ServiceTestServer {
 			public void serviceResponse(byte[] key, boolean success, byte[] data) {
 				System.out.println("resp: " + new String(data));
 			}
+
+			@Override
+			public void error(byte[] error) {
+				throw new UnsupportedOperationException("Not supported yet.");
+			}
 		};
 		sinchanaServer3.discoverService("HelloService".getBytes(), ssh);
 		System.out.println("done :)");

@@ -9,5 +9,6 @@ package sinchana;
  * @author Hiru
  */
 public interface SinchanaCallBackHandler {
-	
+
+	public abstract void error(byte[] error);
 }

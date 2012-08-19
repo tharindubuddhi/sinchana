@@ -5,6 +5,7 @@
 package sinchana;
 
 import java.util.Arrays;
+import java.util.logging.Level;
 import sinchana.dataStore.SinchanaDataHandler;
 import sinchana.service.SinchanaServiceHandler;
 import sinchana.service.SinchanaServiceInterface;
@@ -12,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
-import sinchana.util.logging.Logger;
 import sinchana.util.tools.Hash;
 
 /**
@@ -21,7 +21,7 @@ import sinchana.util.tools.Hash;
  */
 public class ClientHandler {
 
-	private SinchanaServer server;
+	private final SinchanaServer server;
 	private final ConcurrentHashMap<Long, ClientData> clientsMap = new ConcurrentHashMap<Long, ClientData>();
 
 	public ClientHandler(SinchanaServer svr) {
@@ -104,9 +104,11 @@ public class ClientHandler {
 				case ERROR:
 					if (clientData.waiting) {
 						clientData.data = message.getData();
+						clientData.success = false;
+						clientData.error = message.getError().getBytes();
 						clientData.lock.release();
 					} else {
-						((SinchanaResponseHandler) clientData.sinchanaCallBackHandler).error(message.getData());
+						((SinchanaCallBackHandler) clientData.sinchanaCallBackHandler).error(message.getError().getBytes());
 					}
 					break;
 			}
@@ -118,7 +120,7 @@ public class ClientHandler {
 	public ClientData addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBackHandler scbh, boolean waiting) {
 		ClientData clientData = null;
 		long requestId = -1;
-		Message message = new Message(type, this.server.getNode(), CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		Message message = new Message(type, this.server.getNode(), CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
 			case REQUEST:
 				message.setDestinationId(key);
@@ -152,19 +154,16 @@ public class ClientHandler {
 		} else {
 			message.setResponseExpected(false);
 		}
-		if (server.getMessageHandler().queueMessage(message)) {
-			if (waiting) {
-				try {
-					clientData.lock.acquire();
-				} catch (InterruptedException ex) {
-				} finally {
-					clientsMap.remove(requestId);
-				}
+		while (!server.getMessageHandler().queueMessage(message, false)) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException ex) {
+				java.util.logging.Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
 			}
-		} else {
+		}
+		if (waiting) {
+			clientData.lock.acquireUninterruptibly();
 			clientsMap.remove(requestId);
-			Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_CLIENT_HANDLER, 0,
-					"Message is unacceptable 'cos buffer is full! " + message);
 		}
 		return clientData;
 	}
@@ -174,6 +173,7 @@ public class ClientHandler {
 		final Semaphore lock = new Semaphore(0);
 		byte[] dataKey;
 		byte[] data;
+		byte[] error;
 		boolean success, waiting = false;
 		long time;
 		SinchanaCallBackHandler sinchanaCallBackHandler;

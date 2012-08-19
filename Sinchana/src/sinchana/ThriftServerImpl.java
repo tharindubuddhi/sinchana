@@ -39,9 +39,10 @@ public class ThriftServerImpl implements DHTServer.Iface {
 				throw new RuntimeException(ex);
 			}
 		}
-		if (server.getMessageHandler().queueMessage(message)) {
+		if (server.getMessageHandler().queueMessage(message, true)) {
 			return IOHandler.SUCCESS;
 		}
+		System.out.println(":(");
 		return IOHandler.ACCEPT_ERROR;
 	}
 

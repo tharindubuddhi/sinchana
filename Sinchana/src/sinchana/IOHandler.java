@@ -5,8 +5,7 @@
 package sinchana;
 
 import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import sinchana.connection.*;
 
 import sinchana.thrift.Message;
@@ -19,6 +18,7 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
+import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -31,54 +31,19 @@ public class IOHandler {
 	public static final int REMOTE_SERVER_ERROR = 2;
 	public static final int REMOTE_SERVER_ERROR_FAILURE = 3;
 	public static final int SUCCESS = 4;
-	private final int BUFFER_LIMIT = CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE * 95 / 100;
 	private final SinchanaServer server;
+	private final SynchronousQueue<Message> outputMessageQueue = new SynchronousQueue<Message>();
 	private TServer tServer;
 	private boolean running = false;
-	private final ArrayBlockingQueue<Message> outGoingMessageQueue = new ArrayBlockingQueue<Message>(CONFIGURATIONS.OUTPUT_MESSAGE_BUFFER_SIZE);
-	private final Runnable outGoingMessageQueueProcessor = new Runnable() {
+	private final Runnable outputMessageQueueProcessor = new Runnable() {
 
 		@Override
 		public void run() {
 			while (running) {
 				try {
-					if (server.getSinchanaTestInterface() != null) {
-						server.getSinchanaTestInterface().setOutMessageQueueSize(outGoingMessageQueue.size());
-					}
-					Message message = outGoingMessageQueue.take();
-					if (server.getConnectionPool().hasReportFailed(message.destination)) {
-						addBackToQueue(message);
-						return;
-					}
-					Node prevStation = message.getStation();
-					message.setStation(server.getNode());
-					int result = send(message);
-					message.setStation(prevStation);
-					switch (result) {
-						case ACCEPT_ERROR:
-						case LOCAL_SERVER_ERROR:
-							message.retryCount++;
-							if (CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES != -1 && message.retryCount > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
-								Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-										"Messaage is terminated as maximum number of retries is exceeded! :: " + message);
-							} else {
-								queueMessage(message);
-							}
-							break;
-						case REMOTE_SERVER_ERROR:
-							queueMessage(message);
-							break;
-						case REMOTE_SERVER_ERROR_FAILURE:
-							Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-									"Node " + message.destination + " is removed from the routing table!");
-							boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
-							if (updated) {
-								server.getRoutingHandler().optimize();
-							}
-							addBackToQueue(message);
-							break;
-					}
+					processMessage(outputMessageQueue.take());
 				} catch (InterruptedException ex) {
+					throw new RuntimeException(ex);
 				}
 			}
 		}
@@ -92,12 +57,108 @@ public class IOHandler {
 		this.server = svr;
 	}
 
+	public void send(Message message, Node destination) {
+		message.lifetime--;
+		if (message.lifetime < 0) {
+//			Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
+//					"Messaage is terminated as lifetime expired! :: " + message);
+			message.setError("Messaage is terminated as lifetime expired!");
+			message.setDestination(message.source);
+			message.setDestinationId(message.source.getServerId());
+			message.setType(MessageType.ERROR);
+			message.setSuccess(false);
+			message.setSource(this.server.getNode());
+		} else {
+			message.setDestination(destination.deepCopy());
+		}
+		try {
+			outputMessageQueue.put(message);
+		} catch (InterruptedException ex) {
+			throw new RuntimeException(ex);
+		}
+
+	}
+
+	private boolean isRoutable(Message message) {
+		switch (message.type) {
+			case JOIN:
+				if (Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
+					return false;
+				}
+			case TEST_RING:
+			case REQUEST:
+			case STORE_DATA:
+			case DELETE_DATA:
+			case GET_DATA:
+			case GET_SERVICE:
+				return true;
+			case DISCOVER_NEIGHBORS:
+				return false;
+			case ERROR:
+			case RESPONSE:
+			case RESPONSE_DATA:
+			case RESPONSE_SERVICE:
+			case ACKNOWLEDGE_DATA_STORE:
+			case ACKNOWLEDGE_DATA_REMOVE:
+			default:
+				System.out.println("Discarded: " + message);
+				return false;
+		}
+	}
+
+	private void processMessage(Message message) {
+		int tries = 0;
+		while (tries < CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES + 1) {
+			tries++;
+			if (tries > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
+				if (!isRoutable(message)) {
+					return;
+				}
+				message.setError("Messaage is terminated as maximum number of retries is exceeded!");
+				message.setDestination(message.source);
+				message.setDestinationId(message.source.getServerId());
+				message.setType(MessageType.ERROR);
+				message.setSuccess(false);
+				message.setSource(this.server.getNode());
+				tries = 0;
+			}
+			Node prevStation = message.getStation();
+			message.setStation(server.getNode());
+			int result = send(message);
+			message.setStation(prevStation);
+			switch (result) {
+				case SUCCESS:
+					return;
+				case ACCEPT_ERROR:
+				case LOCAL_SERVER_ERROR:
+				case REMOTE_SERVER_ERROR:
+					break;
+				case REMOTE_SERVER_ERROR_FAILURE:
+					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
+					if (updated) {
+						Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
+								"Node " + ByteArrays.toReadableString(message.destination.serverId).toUpperCase()
+								+ " @ "
+								+ message.destination.address + " is removed from the routing table!");
+						server.getRoutingHandler().triggerOptimize();
+					}
+					if (isRoutable(message)) {
+						if (!this.server.getMessageHandler().queueMessage(message, true)) {
+							throw new RuntimeException();
+						}
+					}
+					return;
+			}
+		}
+		throw new RuntimeException("This is unacceptable :P");
+	}
+
 	private int send(Message message) {
 		Connection connection = this.server.getConnectionPool().getConnection(message.destination);
 		connection.open();
 		if (!connection.isOpened()) {
 			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-				connection.failed();
+				connection.failedPermenently();
 				return REMOTE_SERVER_ERROR_FAILURE;
 			}
 			return REMOTE_SERVER_ERROR;
@@ -107,37 +168,12 @@ public class IOHandler {
 				return connection.getClient().transfer(message);
 			}
 		} catch (Exception ex) {
-			connection.close();
+			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
+				connection.failedPermenently();
+				return REMOTE_SERVER_ERROR_FAILURE;
+			}
+			connection.failed();
 			return REMOTE_SERVER_ERROR;
-		}
-	}
-
-	private void addBackToQueue(Message message) {
-		switch (message.type) {
-			case JOIN:
-				if (Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
-					Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-							"Join failed 'cos " + message.destination + " is unreacheble!");
-					break;
-				}
-			case TEST_RING:
-			case REQUEST:
-			case STORE_DATA:
-			case DELETE_DATA:
-			case GET_DATA:
-			case GET_SERVICE:
-				message.lifetime++;
-				server.getMessageHandler().queueMessage(message);
-				break;
-			case DISCOVER_NEIGHBORS:
-				break;
-			case ERROR:
-			case RESPONSE:
-			case RESPONSE_DATA:
-			case RESPONSE_SERVICE:
-			case ACKNOWLEDGE_DATA_STORE:
-			case ACKNOWLEDGE_DATA_REMOVE:
-				break;
 		}
 	}
 
@@ -153,7 +189,7 @@ public class IOHandler {
 						TServerTransport serverTransport = new TServerSocket(localPortId);
 						tServer = new TThreadPoolServer(
 								new TThreadPoolServer.Args(serverTransport).processor(processor));
-						Logger.log(server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 0,
+						Logger.log(server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 								"Starting the server on port " + localPortId);
 						tServer.serve();
 						Logger.log(server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
@@ -168,13 +204,12 @@ public class IOHandler {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException ex) {
-					throw new RuntimeException(ex);
 				}
 			}
 		}
 		running = true;
 		for (int i = 0; i < CONFIGURATIONS.NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS; i++) {
-			new Thread(outGoingMessageQueueProcessor).start();
+			new Thread(outputMessageQueueProcessor).start();
 		}
 		if (this.server.getSinchanaTestInterface() != null) {
 			this.server.getSinchanaTestInterface().setServerIsRunning(true);
@@ -183,7 +218,6 @@ public class IOHandler {
 
 	public void stopServer() {
 		running = false;
-		outGoingMessageQueue.clear();
 		if (tServer != null && tServer.isServing()) {
 			tServer.stop();
 		}
@@ -191,32 +225,5 @@ public class IOHandler {
 		if (this.server.getSinchanaTestInterface() != null) {
 			this.server.getSinchanaTestInterface().setServerIsRunning(false);
 		}
-	}
-
-	public void send(Message message, Node destination) {
-		message.lifetime--;
-		if (message.lifetime < 0) {
-			Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 3,
-					"Messaage is terminated as lifetime expired! :: " + message);
-			return;
-		}
-		message.setDestination(destination.deepCopy());
-		message.setRetryCount(0);
-		queueMessage(message);
-	}
-
-	private void queueMessage(Message message) {
-		try {
-			this.outGoingMessageQueue.put(message);
-			if (this.server.getSinchanaTestInterface() != null) {
-				this.server.getSinchanaTestInterface().setOutMessageQueueSize(outGoingMessageQueue.size());
-			}
-		} catch (InterruptedException ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-
-	public boolean hasReachedLimit() {
-		return outGoingMessageQueue.size() > BUFFER_LIMIT;
 	}
 }

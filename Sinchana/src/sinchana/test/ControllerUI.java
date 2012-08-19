@@ -345,8 +345,13 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         loggerControlPanel.add(jLabel3);
 
         logClass.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        logClass.setText("0");
+        logClass.setText("7");
         logClass.setPreferredSize(new java.awt.Dimension(32, 20));
+        logClass.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                logClassActionPerformed(evt);
+            }
+        });
         loggerControlPanel.add(logClass);
 
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -355,7 +360,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         loggerControlPanel.add(jLabel4);
 
         logLocation.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        logLocation.setText("4");
+        logLocation.setText("0");
         logLocation.setPreferredSize(new java.awt.Dimension(32, 20));
         loggerControlPanel.add(logLocation);
 
@@ -438,6 +443,10 @@ testerController.retrieveData();
 private void dataRemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataRemoveButtonActionPerformed
 testerController.removeData(Integer.parseInt(removeAmountTextField.getText()));
 }//GEN-LAST:event_dataRemoveButtonActionPerformed
+
+private void logClassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logClassActionPerformed
+// TODO add your handling code here:
+}//GEN-LAST:event_logClassActionPerformed
 	/**
 	 * @param args the command line arguments
 	 */

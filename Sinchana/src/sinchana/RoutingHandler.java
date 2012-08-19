@@ -47,7 +47,7 @@ public interface RoutingHandler {
 	/**
 	 * Triggers the routing table optimization functions.
 	 */
-	public abstract void optimize();
+	public abstract void triggerOptimize();
 
 	/**
 	 * Returns the most optimal node from the neighbor set which is successor 
@@ -56,14 +56,12 @@ public interface RoutingHandler {
 	 * @return Node which immediately follows start point.
 	 */
 //	public abstract void getOptimalSuccessor(Message message);
-
 	/**
 	 * Removes the node from the predecessor, successor and routing table entries. 
 	 * Blanked locations will be temporary filled with the matching nodes from 
 	 * the neighbor set.
 	 * @param node Node to remove from the routing table.
 	 */
-
 	/**
 	 * Updates the table, successor and predecessor with the new node.
 	 * @param node Node to be added to the routing table.

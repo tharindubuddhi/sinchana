@@ -62,8 +62,8 @@ public class SinchanaServer {
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final IOHandler iOHandler = new IOHandler(this);
 //	private final RoutingHandler routingHandler = new ChordTable(this);
-//    private final RoutingHandler routingHandler = new TapestryTable(this);
-	private final RoutingHandler routingHandler = new PastryTable(this);
+	private final RoutingHandler routingHandler = new TapestryTable(this);
+//	private final RoutingHandler routingHandler = new PastryTable(this);
 	private final MessageHandler messageHandler = new MessageHandler(this);
 	private final ConnectionPool connectionPool = new ConnectionPool(this);
 	private final ClientHandler clientHandler = new ClientHandler(this);
@@ -90,14 +90,14 @@ public class SinchanaServer {
 		String localAddress = inetAddress.getHostAddress() + ":" + localPortId;
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
-		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE).toUpperCase();
 		this.remoteNodeAddress = null;
 	}
 
 	public SinchanaServer(String localAddress) {
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
-		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE).toUpperCase();
 		this.remoteNodeAddress = null;
 	}
 
@@ -106,14 +106,14 @@ public class SinchanaServer {
 		String localAddress = inetAddress.getHostAddress() + ":" + localPortId;
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
-		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE).toUpperCase();
 		this.remoteNodeAddress = remoteNodeAddress;
 	}
 
 	public SinchanaServer(String localAddress, String remoteNodeAddress) {
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
-		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE);
+		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE).toUpperCase();
 		this.remoteNodeAddress = remoteNodeAddress;
 	}
 
@@ -126,8 +126,8 @@ public class SinchanaServer {
 	}
 
 	public boolean join() {
+		Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.JOIN_MESSAGE_LIFETIME);
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.node.address)) {
-			Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			Node remoteNode = new Node(ByteBuffer.wrap(Hash.generateId(remoteNodeAddress)), remoteNodeAddress);
 			int count = CONFIGURATIONS.JOIN_RETRY_TIME_OUT * 100;
 			int joinAttempt = 0;
@@ -149,9 +149,8 @@ public class SinchanaServer {
 				}
 			}
 		} else {
-			Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
 			msg.setStation(this.node);
-			messageHandler.queueMessage(msg);
+			messageHandler.queueMessage(msg, true);
 		}
 		return true;
 	}
@@ -258,9 +257,9 @@ public class SinchanaServer {
 	 * @param message		Message to pass to the network.
 	 */
 	public void testRing() {
-		Message message = new Message(MessageType.TEST_RING, this.node, CONFIGURATIONS.DEFAUILT_MESSAGE_LIFETIME);
+		Message message = new Message(MessageType.TEST_RING, this.node, 1024);
 		message.setStation(this.node);
-		this.getMessageHandler().queueMessage(message);
+		this.getMessageHandler().queueMessage(message, true);
 	}
 
 	public byte[] request(byte[] destination, byte[] message) {

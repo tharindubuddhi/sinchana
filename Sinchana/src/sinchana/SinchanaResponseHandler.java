@@ -12,6 +12,4 @@ package sinchana;
 public interface SinchanaResponseHandler extends SinchanaCallBackHandler{
 
 	public abstract void response(byte[] message);
-
-	public abstract void error(byte[] message);
 }

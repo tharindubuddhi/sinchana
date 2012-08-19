@@ -24,5 +24,10 @@ public class HelloService implements sinchana.service.SinchanaServiceInterface {
 	public void isRemoved(byte[] serviceKey, Boolean success) {
 		System.out.println(new String(serviceKey) + " is removed");
 	}
+
+	@Override
+	public void error(byte[] error) {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 	
 }

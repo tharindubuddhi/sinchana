@@ -6,22 +6,20 @@ package sinchana.connection;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import sinchana.CONFIGURATIONS;
 import sinchana.SinchanaServer;
 import sinchana.thrift.Node;
-import sinchana.util.logging.Logger;
 
 /**
  * This class implements 
  * @author Hiru
  */
 public class ConnectionPool {
-	
-	private final Map<String, Connection> pool = new HashMap<String, Connection>();
+
+	private final ConcurrentHashMap<String, Connection> pool = new ConcurrentHashMap<String, Connection>();
 	private SinchanaServer server;
 
 	/**
@@ -42,40 +40,36 @@ public class ConnectionPool {
 	 * @param portId		Port id of the destination.
 	 * @return				TTransport connection opened to the destination.
 	 */
-	public Connection getConnection(Node node) {
+	public synchronized Connection getConnection(Node node) {
 		String id = new String(node.getServerId());
-		synchronized (pool) {
-			if (pool.containsKey(id)) {
-				return pool.get(id);
-			} else {
-				Connection connection = new Connection(node);
-				int numberOfOpenedConnections = getNumberOfOpenedConnections();
-				if (CONFIGURATIONS.NODE_POOL_SIZE <= pool.size()) {
-					Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
-							"Maximum number of nodes available exceeded! ("
-							+ numberOfOpenedConnections + "/" + pool.size() + ")");
-					getSpaceForNodes();
-				}
-				numberOfOpenedConnections = getNumberOfOpenedConnections();
-				while (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION <= numberOfOpenedConnections) {
+		if (pool.containsKey(id)) {
+			return pool.get(id);
+		}
+		Connection connection = new Connection(node);
+		if (CONFIGURATIONS.NODE_POOL_SIZE <= pool.size()) {
+//			Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
+//					"Maximum number of nodes available exceeded! ("
+//					+ numberOfOpenedConnections + "/" + pool.size() + ")");
+			getSpaceForNodes();
+		}
+		int numberOfOpenedConnections = getNumberOfOpenedConnections();
+		while (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION <= numberOfOpenedConnections) {
 //					Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
 //							"Maximum number of connections opened exceeded! ("
 //							+ numberOfOpenedConnections + "/" + pool.size() + " are opened).");
-					getSpaceForConnections();
-					numberOfOpenedConnections = getNumberOfOpenedConnections();
-				}
-				pool.put(id, connection);
-				connection.getClient();
-				return connection;
-			}
+			getSpaceForConnections();
+			numberOfOpenedConnections = getNumberOfOpenedConnections();
 		}
+		pool.put(id, connection);
+		connection.getClient();
+		return connection;
 	}
-	
+
 	public boolean isAlive(byte[] nodeId) {
 		Connection connection = pool.get(new String(nodeId));
 		return connection.isAlive();
 	}
-	
+
 	private int getNumberOfOpenedConnections() {
 		int count = 0;
 		Collection<Connection> values = pool.values();
@@ -86,16 +80,14 @@ public class ConnectionPool {
 		}
 		return count;
 	}
-	
+
 	public boolean hasReportFailed(Node node) {
-		boolean result = false;
 		String id = new String(node.getServerId());
 		synchronized (pool) {
-			result = pool.containsKey(id) && pool.get(id).isFailed();
+			return pool.containsKey(id) && pool.get(id).isFailed();
 		}
-		return result;
 	}
-	
+
 	private void getSpaceForNodes() {
 		Set<Node> neighbourSet = this.server.getRoutingHandler().getNeighbourSet();
 		Set<String> keySet = pool.keySet();
@@ -121,7 +113,7 @@ public class ConnectionPool {
 			pool.remove(idToTerminate);
 		}
 	}
-	
+
 	private void getSpaceForConnections() {
 		Connection connectionToTerminate = null;
 		long oldestTime = Long.MAX_VALUE;
@@ -147,27 +139,25 @@ public class ConnectionPool {
 			pool.clear();
 		}
 	}
-	
+
 	public void updateFailedNodeInfo(Set<Node> failedNodeSet) {
 		for (Node node : failedNodeSet) {
 			Connection connection = getConnection(node);
 			connection.failedByInfo();
 		}
 	}
-	
+
 	public void updateFailedNodeInfo(Node node) {
 		Connection connection = getConnection(node);
 		connection.failedByInfo();
 	}
-	
+
 	public Set<Node> getFailedNodes() {
 		Set<Node> nodes = new HashSet<Node>();
-		synchronized (pool) {
-			Collection<Connection> values = pool.values();
-			for (Connection connection : values) {
-				if (connection.isFailed()) {
-					nodes.add(connection.getNode());
-				}
+		Collection<Connection> values = pool.values();
+		for (Connection connection : values) {
+			if (connection.isFailed()) {
+				nodes.add(connection.getNode());
 			}
 		}
 		return nodes;

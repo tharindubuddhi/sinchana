@@ -105,6 +105,14 @@ public class Connection {
 
 	public void failed() {
 		lastKnownFailedTime = System.currentTimeMillis();
+		lastHeardFailedTime = lastKnownFailedTime;
+		numOfOpenTries++;
+		close();
+	}
+
+	public void failedPermenently() {
+		lastKnownFailedTime = System.currentTimeMillis();
+		lastHeardFailedTime = lastKnownFailedTime;
 		numOfOpenTries++;
 		failed = true;
 		close();

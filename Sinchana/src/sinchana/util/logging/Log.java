@@ -6,7 +6,6 @@ package sinchana.util.logging;
 
 import sinchana.thrift.Node;
 
-
 /**
  *
  * @author Hiru
@@ -53,6 +52,15 @@ public class Log {
 				break;
 			case Logger.CLASS_CONNECTION_POOL:
 				sb.append("\tCONNECTION_POOL");
+				break;
+			case Logger.CLASS_IO_HANDLER:
+				sb.append("\tIO_HANDLER");
+				break;
+			case Logger.CLASS_CLIENT_HANDLER:
+				sb.append("\tCLIENT_HANDLER");
+				break;
+			default:
+				sb.append("\tLOGGER");
 				break;
 		}
 		sb.append("\t").append(locId);
