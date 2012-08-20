@@ -11,7 +11,6 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
-import sinchana.dataStore.SinchanaDataHandler;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.util.tools.ByteArrays;
@@ -23,14 +22,13 @@ import sinchana.util.tools.ByteArrays;
 public class TesterController {
 
 	public static int NUM_OF_TESTING_NODES = 0;
-	public static int NUM_OF_AUTO_TESTING_NODES = 1;
 	public static int max_buffer_size = 0;
 	private final Map<Integer, Tester> testServers = new HashMap<Integer, Tester>();
 	private final ControllerUI cui = new ControllerUI(this);
 	private int completedCount = 0;
 	private final Timer timer = new Timer();
-	public volatile static long errorCount = 0;
-	public volatile static long totalCount = 0;
+	public static int errorCount = 0;
+	public static int totalCount = 0;
 
 	/**
 	 * 
@@ -141,6 +139,8 @@ public class TesterController {
 		long randomAmount = 0;
 		totalCount = 0;
 		errorCount = 0;
+		c = 0;
+		System.out.println("Testing " + numOfTestMessages + " request...");
 		while (numOfTestMessages > 0) {
 			randomId = (int) (Math.random() * numOfTestServers);
 			if (numOfTestMessages > 10) {
@@ -268,5 +268,12 @@ public class TesterController {
 			}
 		}
 		sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations, containTextString);
+	}
+	private static int c = 0;
+
+	public static synchronized void inc() {
+		if (++c % 1000 == 0) {
+			System.out.println("count: " + c);
+		}
 	}
 }

@@ -11,6 +11,7 @@ import sinchana.service.SinchanaServiceHandler;
 import sinchana.service.SinchanaServiceInterface;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import sinchana.test.TesterController;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.util.tools.Hash;
@@ -111,9 +112,12 @@ public class ClientHandler {
 						((SinchanaCallBackHandler) clientData.sinchanaCallBackHandler).error(message.getError().getBytes());
 					}
 					break;
+				default:
+					System.out.println("Where should this go? " + message);
+					break;
 			}
 		} else {
-			System.out.println("ID is not in the client map: " + message.id);
+			System.out.println("ID is not in the client map: " + message);
 		}
 	}
 

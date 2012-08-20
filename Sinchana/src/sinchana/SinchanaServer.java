@@ -47,6 +47,7 @@ import sinchana.chord.ChordTable;
 import sinchana.connection.ConnectionPool;
 import sinchana.pastry.PastryTable;
 import sinchana.tapastry.TapestryTable;
+import sinchana.test.TesterController;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
