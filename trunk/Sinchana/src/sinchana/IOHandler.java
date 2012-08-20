@@ -58,10 +58,11 @@ public class IOHandler {
 	}
 
 	public void send(Message message, Node destination) {
-		message.lifetime--;
-		if (message.lifetime < 0) {
-//			Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
-//					"Messaage is terminated as lifetime expired! :: " + message);
+		if (Arrays.equals(this.server.getNode().getServerId(), destination.getServerId())) {
+			System.out.println(this.server.getServerIdAsString() + ": just to let you know "
+					+ "that forwading within same node still happens :P \n" + message);
+		}
+		if (message.lifetime <= 0) {
 			message.setError("Messaage is terminated as lifetime expired!");
 			message.setDestination(message.source);
 			message.setDestinationId(message.source.getServerId());
@@ -131,7 +132,9 @@ public class IOHandler {
 					return;
 				case ACCEPT_ERROR:
 				case LOCAL_SERVER_ERROR:
+					break;
 				case REMOTE_SERVER_ERROR:
+					tries--;
 					break;
 				case REMOTE_SERVER_ERROR_FAILURE:
 					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);

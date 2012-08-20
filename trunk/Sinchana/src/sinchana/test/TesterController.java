@@ -31,8 +31,9 @@ public class TesterController {
 	private final Timer timer = new Timer();
 	public volatile static long count = 0;
 	public volatile static long count2 = 0;
-    public volatile static long successCount = 0;
-    public volatile static long failureCount = 0;
+	public volatile static long successCount = 0;
+	public volatile static long failureCount = 0;
+
 	/**
 	 * 
 	 * @param args
@@ -196,41 +197,40 @@ public class TesterController {
 	String[] dataArray = null;
 	String[] datakeyArray = null;
 	int dataID = 1;
-    int storeNodeID = 5, retrieveNodeID = 7;
-    SinchanaDataHandlerImpl dataHandlerobject = new SinchanaDataHandlerImpl();
-    
-	public void storeData(int noOfData) {
-      
-        dataArray = new String[noOfData];
-        datakeyArray = new String[noOfData];
-        
-        for (int i = 0; i < noOfData; i++) {
-            dataArray[i] = "data "+dataID;
-            datakeyArray[i] =  "key "+dataID;  
-            dataID++;
-        }
-        dataHandlerobject.startStoreTime = System.currentTimeMillis();
-        dataHandlerobject.storeSuccessCount = 0;
-        dataHandlerobject.storeFailureCount = 0;
-        for (int i = 0; i < dataArray.length; i++) {
-            testServers.get(storeNodeID).getServer().storeData( dataArray[i].getBytes(), datakeyArray[i].getBytes(),dataHandlerobject);          
-        }
-	}
+	int storeNodeID = 5, retrieveNodeID = 7;
+	SinchanaDataHandlerImpl dataHandlerobject = new SinchanaDataHandlerImpl();
 
-    long startRetrieveTime = 0;
+	public void storeData(int noOfData) {
+
+		dataArray = new String[noOfData];
+		datakeyArray = new String[noOfData];
+
+		for (int i = 0; i < noOfData; i++) {
+			dataArray[i] = "data " + dataID;
+			datakeyArray[i] = "key " + dataID;
+			dataID++;
+		}
+		dataHandlerobject.startStoreTime = System.currentTimeMillis();
+		dataHandlerobject.storeSuccessCount = 0;
+		dataHandlerobject.storeFailureCount = 0;
+		for (int i = 0; i < dataArray.length; i++) {
+			testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(), dataHandlerobject);
+		}
+	}
+	long startRetrieveTime = 0;
+
 	public void retrieveData() {
-        dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
-        dataHandlerobject.retrieveSuccessCount = 0;
-        dataHandlerobject.retrieveFailureCount = 0;
-        for (int i = 0; i < datakeyArray.length; i++) {
+		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
+		dataHandlerobject.retrieveSuccessCount = 0;
+		dataHandlerobject.retrieveFailureCount = 0;
+		for (int i = 0; i < datakeyArray.length; i++) {
 //            byte[] a = 
-                    testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(),dataHandlerobject);
+			testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(), dataHandlerobject);
 //            System.out.println(a);
-        }
+		}
 	}
 
 	public void removeData(int randomAmount) {
-        
 	}
 
 	/**

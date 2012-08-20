@@ -1,36 +1,7 @@
-/************************************************************************************
-                                                                                                                         
- * Copyright (C) 2012 Sinchana DHT - Department of Computer Science &               
- * Engineering, University of Moratuwa, Sri Lanka. Permission is hereby 
- * granted, free of charge, to any person obtaining a copy of this 
- * software and associated documentation files of Sinchana DHT, to deal 
- * in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
- * Software is furnished to do so, subject to the following conditions:
-
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
-
- * Redistributions in binary form must reproduce the above copyright notice, 
- * this list of conditions and the following disclaimer in the documentation 
- * and/or other materials provided with the distribution.
-
- * Neither the name of University of Moratuwa, Department of Computer Science 
- * & Engineering nor the names of its contributors may be used to endorse or 
- * promote products derived from this software without specific prior written 
- * permission.
-
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
- * SOFTWARE.                                                                    
- *************************************************************************************/
-
-
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package sinchana.pastry;
 
 import java.math.BigInteger;
@@ -48,23 +19,22 @@ import sinchana.CONFIGURATIONS;
 
 /**
  *
- * @author DELL
+ * @author Hiru
  */
 public class PastryTable implements RoutingHandler {
 
-	public static final int IDSPACE = 160;
-	public static final int BASE = CONFIGURATIONS.NUMBER_BASE;
-	public static final int TABLE_SIZE = (int) (Math.log(Math.pow(2, IDSPACE)) / Math.log(BASE));
+	public static final int PASTRY_TABLE_NUMBER_BASE = 16;
+	public static final int TABLE_SIZE = 40;
 	private static final int SUCCESSOR_LEVEL = 3;
+	private static final int NUMBER_OF_ENTRIES = 3;
+	private static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
+	private static final BigInteger FACTOR = new BigInteger(Integer.toString(PASTRY_TABLE_NUMBER_BASE));
 	private final SinchanaServer server;
-//    private final Node[] leafSet = new Node[BASE];
-	private final Set<Node> leafSet = new HashSet<Node>(BASE);
-	private byte[] serverId;
-	private BigInteger serverIdAsBigInt;
-	private final Node[][] fingerTable = new Node[TABLE_SIZE][BASE];
-	public static final BigInteger ZERO = new BigInteger("0", BASE);
 	private final Node[] successors = new Node[SUCCESSOR_LEVEL];
 	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
+	private byte[] serverId;
+	private BigInteger serverIdAsBigInt;
+	private final Node[][][] fingerTable = new Node[TABLE_SIZE][PASTRY_TABLE_NUMBER_BASE][NUMBER_OF_ENTRIES];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
@@ -72,8 +42,8 @@ public class PastryTable implements RoutingHandler {
 	 * Class constructor with the server instance where the routing table is initialize.
 	 * @param server		SinchanaServer instance. The routing table will be initialize based on this.
 	 */
-	public PastryTable(SinchanaServer svr) {
-		this.server = svr;
+	public PastryTable(SinchanaServer server) {
+		this.server = server;
 		this.timer.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
@@ -94,64 +64,67 @@ public class PastryTable implements RoutingHandler {
 	public void init() {
 		this.serverId = this.server.getNode().getServerId();
 		this.serverIdAsBigInt = new BigInteger(1, this.serverId);
-		synchronized (this) {
-			this.initFingerTable();
-		}
+		this.initFingerTable();
 	}
 
 	/**
 	 * Initialize routing table. The server it self will be set as the 
-	 * predecessors, successors and as all the successors entries in the finger table.
+	 * predecessor, successor and as all the successor entries in the finger table.
 	 */
 	private void initFingerTable() {
-
-
-		for (int i = 0; i < TABLE_SIZE; i++) {
-			for (int j = 0; j < BASE; j++) {
-				fingerTable[i][j] = null;
+		synchronized (fingerTable) {
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				for (int j = 0; j < PASTRY_TABLE_NUMBER_BASE; j++) {
+					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+						fingerTable[i][j][k] = null;
+					}
+				}
 			}
 		}
-
 		/**
-		 * initializes by setting this server it self as the predecessors and successors.
+		 * initializes by setting this server it self as the predecessor and successor.
 		 */
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				predecessors[i] = this.server.getNode();
+				predecessors[i] = null;
 			}
 		}
 		synchronized (successors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				successors[i] = this.server.getNode();
+				successors[i] = null;
 			}
 		}
 	}
-	
+
 	@Override
 	public void triggerOptimize() {
 		timeOutCount = CONFIGURATIONS.ROUTING_OPTIMIZATION_TIME_OUT;
 	}
 
 	/**
-	 * Optimizes the finger table. Sends messages to the each successors in 
-	 * the finger table entries to find the optimal successors for those entries.
+	 * Optimizes the finger table. Sends messages to the each successor in 
+	 * the finger table entries to find the optimal successor for those entries.
 	 */
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
-		msg.setNeighbourSet(getNeighbourSet());
-		synchronized (predecessors) {
-			for (Node node : predecessors) {
-				if (node != null) {
-					this.server.getIOHandler().send(msg.deepCopy(), node);
-				}
+//		msg.setNeighbourSet(getNeighbourSet());
+		for (Node node : predecessors) {
+			if (node == null) {
+				break;
+			}
+			synchronized (node) {
+				this.server.getIOHandler().send(msg.deepCopy(), node);
+				break;
 			}
 		}
-		synchronized (successors) {
-			for (Node node : successors) {
-				if (node != null) {
-					this.server.getIOHandler().send(msg.deepCopy(), node);
-				}
+		for (Node node : successors) {
+			if (node == null) {
+				break;
+			}
+			synchronized (node) {
+				this.server.getIOHandler().send(msg.deepCopy(), node);
+				break;
 			}
 		}
 		timeOutCount = 0;
@@ -169,102 +142,95 @@ public class PastryTable implements RoutingHandler {
 
 	@Override
 	public Node getNextNode(byte[] destination) {
-
+		Node nodeFromLeafSet = checkInLeafSet(destination);
+		if (nodeFromLeafSet != null) {
+			return nodeFromLeafSet;
+		}
 		int raw = getRaw(this.serverId, destination);
 		if (raw == -1) {
-//						System.out.println(this.serverId + ": next node for " + destination + " is this server.");
 			return this.server.getNode();
 		}
 		int column = getColumn(destination, raw);
-		if (fingerTable[raw][column] != null) {
-			return fingerTable[raw][column];
-		}
+		synchronized (fingerTable) {
+			for (Node node : fingerTable[raw][column]) {
+				if (node != null) {
+					return node;
+				}
+			}
 
-		int tColumn, iRaw, iColumn;
+			int tColumn, iRaw, iColumn;
 
-		iRaw = raw;
-		iColumn = column;
-		tColumn = getColumn(this.serverId, raw);
-		boolean traverseDown = column < tColumn;
-		if (raw == 0) {
-			traverseDown = false;
-		}
-		if (raw == TABLE_SIZE - 1) {
-			traverseDown = true;
-		}
+			iRaw = raw;
+			iColumn = column;
+			tColumn = getColumn(this.serverId, raw);
+			boolean traverseDown = column < tColumn;
+			if (raw == 0) {
+				traverseDown = false;
+			}
+			if (raw == TABLE_SIZE - 1) {
+				traverseDown = true;
+			}
 
-		while (true) {
-			try {
-				if (fingerTable[raw][column] != null) {
-//								System.out.println(this.serverId + ": found "
-//										+ fingerTable[raw][column].serverId + " @ ["
-//										+ raw + "," + column + "]");
+			while (true) {
+				for (Node node : fingerTable[raw][column]) {
+					if (node != null) {
+						return node;
+					}
+				}
+
+				tColumn = getColumn(this.serverId, raw);
+
+				if (traverseDown && tColumn == column) {
+					raw--;
+					traverseDown = raw != 0;
+					column = -1;
+				} else if (!traverseDown && column == PASTRY_TABLE_NUMBER_BASE - 1) {
+					raw++;
+					traverseDown = raw >= PastryTable.TABLE_SIZE - 1;
+					column = getColumn(this.serverId, raw);
+				}
+
+				column = (column + 1) % PASTRY_TABLE_NUMBER_BASE;
+				if (iRaw == raw && iColumn == column) {
+					System.out.println(this.server.getServerIdAsString() + ": No result found!");
 					break;
 				}
-			} catch (Exception e) {
-				System.out.println(this.serverId + ":\tr:" + raw
-						+ "\tc:" + column + "\ttc" + getColumn(this.serverId, raw)
-						+ "\tt:" + traverseDown
-						+ "---------------------------------------------------------------------------------");
 			}
-			tColumn = getColumn(this.serverId, raw);
-//						System.out.println(this.serverId + ": analize:::\td:" + destination
-//								+ "\tr:" + raw + "\tc:" + column + "\ttc:" + tColumn);
-
-			if (traverseDown && tColumn == column) {
-//								System.out.println(this.serverId + ": go down");
-				raw--;
-				traverseDown = raw != 0;
-				column = -1;
-			} else if (!traverseDown && column == BASE - 1) {
-//								System.out.println(this.serverId + ": go up");
-				raw++;
-				traverseDown = raw >= TABLE_SIZE - 1;
-				column = getColumn(this.serverId, raw);
-			}
-
-			column = (column + 1) % BASE;
-			if (iRaw == raw && iColumn == column) {
-				System.out.println(this.serverId + ": No result found!");
-				break;
-			}
+			return null;
 		}
-		return fingerTable[raw][column];
 	}
 
 	@Override
 	public Set<Node> getNeighbourSet() {
-
 		//initializes an empty node set.
 		Set<Node> neighbourSet = new HashSet<Node>();
-		for (Node[] nodes : fingerTable) {
-			for (Node node : nodes) {
-				/**
-				 * add each successor in the finger table to the set if it is
-				 * not this server it self. This is because the requester knows 
-				 * about this server, so sending it again is a waste.
-				 */
-				if (node != null && !node.serverId.equals(this.serverId)) {
-					neighbourSet.add(node);
+		synchronized (fingerTable) {
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				for (int j = 0; j < PASTRY_TABLE_NUMBER_BASE; j++) {
+					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+						if (fingerTable[i][j][k] != null) {
+							neighbourSet.add(fingerTable[i][j][k]);
+						}
+					}
 				}
 			}
 		}
-
 		//adds the predecessors & the successors.
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				if (!this.predecessors[i].serverId.equals(this.serverId)) {
+				if (predecessors[i] != null) {
 					neighbourSet.add(this.predecessors[i]);
 				}
 			}
 		}
 		synchronized (successors) {
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
-				if (!this.successors[i].serverId.equals(this.serverId)) {
+				if (successors[i] != null) {
 					neighbourSet.add(this.successors[i]);
 				}
 			}
 		}
+		//returns the node set.
 		return neighbourSet;
 	}
 
@@ -286,11 +252,8 @@ public class PastryTable implements RoutingHandler {
 	}
 
 	private boolean addNode(Node node) {
-
-		boolean updated = false;
-		//calculates offsets for the ids.
-		BigInteger newNodeOffset = getOffset(node.getServerId());
-
+		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
+		Node tempNodeToUpdate = node;
 		synchronized (successors) {
 			BigInteger successorWRT = ZERO;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
@@ -302,21 +265,22 @@ public class PastryTable implements RoutingHandler {
 				 * the new node will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger successorOffset = getOffset(this.successors[i].getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
 				if (successorWRT.compareTo(newNodeOffset) == -1
-						&& (newNodeOffset.compareTo(successorOffset) == -1
-						|| successorOffset.equals(ZERO))) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 8,
-//							"Node " + node + " is set as successor overriding " + this.successors[i]);
-					this.successors[i] = node.deepCopy();
-					updated = true;
+						&& (successors[i] == null
+						|| newNodeOffset.compareTo(getOffset(successors[i].getServerId())) == -1)) {
+					Node temp = this.successors[i];
+					this.successors[i] = tempNodeToUpdate.deepCopy();
+					tempNodeToUpdate = temp;
+					updatedSuccessors = true;
 				}
-				if (!Arrays.equals(successors[i].getServerId(), this.serverId)) {
-					successorWRT = getOffset(successors[i].getServerId());
+				if (tempNodeToUpdate == null || successors[i] == null) {
+					break;
 				}
+				successorWRT = getOffset(successors[i].getServerId());
 			}
 		}
-
+		tempNodeToUpdate = node;
 		synchronized (predecessors) {
 			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
@@ -328,43 +292,41 @@ public class PastryTable implements RoutingHandler {
 				 * the new node will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger predecessorOffset = getOffset(this.predecessors[i].getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
 				if (newNodeOffset.compareTo(predecessorWRT) == -1
-						&& (predecessorOffset.compareTo(newNodeOffset) == -1
-						|| predecessorOffset.equals(ZERO))) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 9,
-//							"Node " + node + " is set as predecessor overriding " + this.predecessors[i]);
-					this.predecessors[i] = node.deepCopy();
-					updated = true;
+						&& (predecessors[i] == null || getOffset(predecessors[i].getServerId()).compareTo(newNodeOffset) == -1)) {
+					Node temp = this.predecessors[i];
+					this.predecessors[i] = tempNodeToUpdate.deepCopy();
+					tempNodeToUpdate = temp;
+					updatedPredecessors = true;
 				}
-				if (!Arrays.equals(predecessors[i].getServerId(), this.serverId)) {
-					predecessorWRT = getOffset(predecessors[i].getServerId());
+				if (tempNodeToUpdate == null || predecessors[i] == null) {
+					break;
+				}
+				predecessorWRT = getOffset(predecessors[i].getServerId());
+			}
+		}
+		int raw = getRaw(this.serverId, node.getServerId());
+		int column = getColumn(node.getServerId(), raw);
+		synchronized (fingerTable) {
+			for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+				if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].getServerId(), node.getServerId())) {
+					break;
+				} else if (fingerTable[raw][column][i] == null) {
+					fingerTable[raw][column][i] = node.deepCopy();
+					updatedTable = true;
+					break;
 				}
 			}
 		}
-
-
-		int raw = getRaw(this.serverId, node.getServerId());
-		int column = getColumn(node.getServerId(), raw);
-//            System.out.println(raw+" "+column);
-		updated = fingerTable[raw][column] == null;
-		fingerTable[raw][column] = node.deepCopy();
-
-		return updated;
+		return updatedPredecessors || updatedSuccessors || updatedTable;
 	}
 
-	/**
-	 * Remove the node from the routing table, temporary update the table and 
-	 * send messages to the nodes in the routing table to get the optimal neighbors.
-	 * 
-	 * @param nodeToRemove Node to remove from the finger table. 
-	 */
 	private boolean removeNode(Node nodeToRemove) {
 		Set<Node> neighbourSet = getNeighbourSet();
 		if (neighbourSet.contains(nodeToRemove)) {
 			neighbourSet.remove(nodeToRemove);
 			//reset the predecessors, successors and finger table entries.
-
 			initFingerTable();
 			for (Node node : neighbourSet) {
 				addNode(node);
@@ -382,28 +344,54 @@ public class PastryTable implements RoutingHandler {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(byte[] id) {
-		return SinchanaServer.GRID_SIZE.add(new BigInteger(id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
-	}
-
-	private BigInteger getOffset(BigInteger id) {
-		return SinchanaServer.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
+		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
 
 	private int getRaw(byte[] id, byte[] newId) {
-		BigInteger factor, t1, t2;
-		for (int i = TABLE_SIZE - 1; i >= 0; i--) {
-			factor = new BigInteger(String.valueOf(BASE)).pow(i);
-			t1 = new BigInteger(1, id).divide(factor);
-			t2 = new BigInteger(1, newId).divide(factor);
-			if (!t1.equals(t2)) {
-				return i;
-			}
+		BigInteger t1 = new BigInteger(1, id);
+		BigInteger t2 = new BigInteger(1, newId);
+		int i = -1;
+		while (!t1.equals(t2)) {
+			i++;
+			t1 = t1.divide(FACTOR);
+			t2 = t2.divide(FACTOR);
 		}
-		return -1;
+		return i;
 	}
 
 	private int getColumn(byte[] id, int raw) {
-//        System.out.println(raw);
-		return (new BigInteger(id).mod(new BigInteger(String.valueOf(BASE)).pow(raw + 1)).divide(new BigInteger(String.valueOf(BASE)).pow(raw))).intValue();
+		BigInteger val = new BigInteger(1, id);
+		val = val.divide(FACTOR.pow(raw));
+		val = val.mod(FACTOR);
+		return val.intValue();
+	}
+
+	private Node checkInLeafSet(byte[] destinationId) {
+		BigInteger nodeOffset, destinationOffset = getOffset(destinationId);
+		synchronized (successors) {
+			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+				if (successors[i] == null) {
+					break;
+				}
+				nodeOffset = getOffset(successors[i].getServerId());
+				if (destinationOffset.compareTo(nodeOffset) != 1) {
+					return successors[i];
+				}
+			}
+		}
+		Node node = this.server.getNode();
+		synchronized (predecessors) {
+			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+				if (predecessors[i] == null) {
+					break;
+				}
+				nodeOffset = getOffset(predecessors[i].getServerId());
+				if (nodeOffset.compareTo(destinationOffset) == -1) {
+					return node;
+				}
+				node = predecessors[i];
+			}
+		}
+		return null;
 	}
 }

@@ -105,8 +105,8 @@ public class ChordTable implements RoutingHandler {
 	@Override
 	public void triggerOptimize() {
 		timeOutCount = CONFIGURATIONS.ROUTING_OPTIMIZATION_TIME_OUT;
-	}	
-	
+	}
+
 	/**
 	 * Optimizes the finger table. Sends messages to the each successors in 
 	 * the finger table entries to find the optimal successors for those entries.
@@ -114,19 +114,23 @@ public class ChordTable implements RoutingHandler {
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
-		msg.setNeighbourSet(getNeighbourSet());
-		synchronized (predecessors) {
-			for (Node node : predecessors) {
-				if (node != null) {
-					this.server.getIOHandler().send(msg.deepCopy(), node);
-				}
+//		msg.setNeighbourSet(getNeighbourSet());
+		for (Node node : predecessors) {
+			if (node == null) {
+				break;
+			}
+			synchronized (node) {
+				this.server.getIOHandler().send(msg.deepCopy(), node);
+				break;
 			}
 		}
-		synchronized (successors) {
-			for (Node node : successors) {
-				if (node != null) {
-					this.server.getIOHandler().send(msg.deepCopy(), node);
-				}
+		for (Node node : successors) {
+			if (node == null) {
+				break;
+			}
+			synchronized (node) {
+				this.server.getIOHandler().send(msg.deepCopy(), node);
+				break;
 			}
 		}
 		timeOutCount = 0;
@@ -149,21 +153,23 @@ public class ChordTable implements RoutingHandler {
 		//calculates the offset to the destination.
 		destinationOffset = getOffset(destination);
 		//takes finger table entries one by one.
-		for (FingerTableEntry fingerTableEntry : fingerTable) {
-			startOffset = getOffset(fingerTableEntry.getStart());
-			endOffset = getOffset(fingerTableEntry.getEnd());
-			/**
-			 * checks whether the destination lies within the start and end of the table entry.
-			 * If so, returns the successors of that entry.
-			 * 0-----finger.table.entry.start------destination.id-------finger.table.entry.end----------End.of.Grid
-			 */
-			if (startOffset.compareTo(destinationOffset) != 1
-					&& destinationOffset.compareTo(endOffset) != 1) {
+		synchronized (fingerTable) {
+			for (FingerTableEntry fingerTableEntry : fingerTable) {
+				startOffset = getOffset(fingerTableEntry.getStart());
+				endOffset = getOffset(fingerTableEntry.getEnd());
+				/**
+				 * checks whether the destination lies within the start and end of the table entry.
+				 * If so, returns the successors of that entry.
+				 * 0-----finger.table.entry.start------destination.id-------finger.table.entry.end----------End.of.Grid
+				 */
+				if (startOffset.compareTo(destinationOffset) != 1
+						&& destinationOffset.compareTo(endOffset) != 1) {
 //				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 4,
 //						"Next hop for the destination " + destination
 //						+ " in " + fingerTableEntry.getStart() + "-" + fingerTableEntry.getEnd()
 //						+ " is " + fingerTableEntry.getSuccessor().serverId);
-				return fingerTableEntry.getSuccessor();
+					return fingerTableEntry.getSuccessor();
+				}
 			}
 		}
 		/**
@@ -228,7 +234,6 @@ public class ChordTable implements RoutingHandler {
 	}
 
 	private boolean addNode(Node node) {
-
 		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
 		Node tempNodeToUpdate = node;
 		synchronized (successors) {
@@ -301,28 +306,10 @@ public class ChordTable implements RoutingHandler {
 				if (startOffset.compareTo(newNodeOffset) != 1
 						&& (newNodeOffset.compareTo(successorOffset) == -1
 						|| successorOffset.equals(ZERO))) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 0,
-//							"Setting " + node.serverId + " as successor of "
-//							+ fingerTable[i].getStart() + "-" + fingerTable[i].getEnd()
-//							+ " overriding " + fingerTable[i].getSuccessor().serverId);
 					fingerTable[i].setSuccessor(node.deepCopy());
 					updatedTable = true;
 				}
 			}
-		}
-		if (updatedPredecessors && predecessors[SUCCESSOR_LEVEL - 1] != null) {
-			System.out.println(this.server.getServerIdAsString() + " p: ");
-			for (Node n : predecessors) {
-				System.out.print(" " + (n == null ? "n/a" : ByteArrays.toReadableString(n.serverId)));
-			}
-			System.out.println("");
-		}
-		if (updatedSuccessors && successors[SUCCESSOR_LEVEL - 1] != null) {
-			System.out.println(this.server.getServerIdAsString() + " s: ");
-			for (Node n : successors) {
-				System.out.print(" " + (n == null ? "n/a" : ByteArrays.toReadableString(n.serverId)));
-			}
-			System.out.println("");
 		}
 		return updatedPredecessors || updatedSuccessors || updatedTable;
 	}
