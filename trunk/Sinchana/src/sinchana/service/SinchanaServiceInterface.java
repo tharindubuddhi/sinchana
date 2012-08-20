@@ -18,6 +18,7 @@ public interface SinchanaServiceInterface extends SinchanaCallBackHandler {
 	 * 
 	 * @param success boolean value whether the dataObject published successfully
 	 */
+    
 	public abstract void isPublished(byte[] serviceKey, Boolean success);
 
 	/**
@@ -25,4 +26,5 @@ public interface SinchanaServiceInterface extends SinchanaCallBackHandler {
 	 * @param success boolean value whether the dataObject removed successfully
 	 */
 	public abstract void isRemoved(byte[] serviceKey, Boolean success);
+    
 }

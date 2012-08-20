@@ -44,7 +44,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			this.testerController = tc;
 			String address, remoteNodeAddress;
 			address = InetAddress.getLocalHost().getHostAddress();
-			address = "127.0.0.1";
+//			address = "127.0.0.1";
 			remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
 			remoteNodeAddress = address + ":8000";
 			server = new SinchanaServer(address + ":" + portId, remoteNodeAddress);
@@ -104,18 +104,18 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 		@Override
 		public void response(byte[] message) {
-			TesterController.count2++;
-			if (++TesterController.count % 1000 == 0) {
+			TesterController.successCount++;
+			if ((TesterController.successCount+ TesterController.failureCount )% 100 == 0) {
 				endTime = System.currentTimeMillis();
 				System.out.println("Num of Messages " 
-						+ TesterController.count2 + "/" + TesterController.count 
+						+ TesterController.successCount + "/" + TesterController.failureCount 
 						+ " @ " + (endTime - startTime) + "ms");
 			}
 		}
 
 		@Override
 		public void error(byte[] message) {
-			TesterController.count++;
+			TesterController.failureCount++;
 			System.out.println("error : " + new String(message));
 		}
 	};
