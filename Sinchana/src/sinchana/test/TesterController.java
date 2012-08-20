@@ -29,10 +29,8 @@ public class TesterController {
 	private final ControllerUI cui = new ControllerUI(this);
 	private int completedCount = 0;
 	private final Timer timer = new Timer();
-	public volatile static long count = 0;
-	public volatile static long count2 = 0;
-	public volatile static long successCount = 0;
-	public volatile static long failureCount = 0;
+	public volatile static long errorCount = 0;
+	public volatile static long totalCount = 0;
 
 	/**
 	 * 
@@ -141,8 +139,8 @@ public class TesterController {
 		int numOfTestServers = testServers.size();
 		int randomId;
 		long randomAmount = 0;
-		successCount = 0;
-		failureCount = 0;
+		totalCount = 0;
+		errorCount = 0;
 		while (numOfTestMessages > 0) {
 			randomId = (int) (Math.random() * numOfTestServers);
 			if (numOfTestMessages > 10) {
