@@ -5,6 +5,7 @@
 package sinchana.dataStore;
 
 import java.util.concurrent.ConcurrentHashMap;
+import sinchana.SinchanaServer;
 
 /**
  *The class use to 
@@ -13,6 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 
 	private final ConcurrentHashMap<String, byte[]> dataMap = new ConcurrentHashMap<String, byte[]>();
+	private final SinchanaServer server;
+
+	public SinchanaDataStoreImpl(SinchanaServer ss) {
+		this.server = ss;
+	}
 
 	@Override
 	public boolean store(byte[] key, byte[] data) {

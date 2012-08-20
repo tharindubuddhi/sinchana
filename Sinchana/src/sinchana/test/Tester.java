@@ -15,7 +15,6 @@ import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
 import sinchana.CONFIGURATIONS;
-import sinchana.dataStore.SinchanaDataStoreImpl;
 import sinchana.SinchanaResponseHandler;
 
 /**
@@ -48,8 +47,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
 			remoteNodeAddress = address + ":8000";
 			server = new SinchanaServer(address + ":" + portId, remoteNodeAddress);
-			SinchanaDataStoreImpl sdsi = new SinchanaDataStoreImpl();
-			server.registerSinchanaStoreInterface(sdsi);
 			server.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
 
 				@Override

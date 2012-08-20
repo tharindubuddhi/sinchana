@@ -32,6 +32,7 @@ public class ThriftServerImpl implements DHTServer.Iface {
 	 */
 	@Override
 	public int transfer(Message message) throws TException {
+		message.lifetime--;
 		if (CONFIGURATIONS.ROUND_TRIP_TIME != 0) {
 			try {
 				Thread.sleep(CONFIGURATIONS.ROUND_TRIP_TIME);
@@ -42,7 +43,6 @@ public class ThriftServerImpl implements DHTServer.Iface {
 		if (server.getMessageHandler().queueMessage(message, true)) {
 			return IOHandler.SUCCESS;
 		}
-		System.out.println(":(");
 		return IOHandler.ACCEPT_ERROR;
 	}
 

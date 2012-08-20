@@ -75,7 +75,7 @@ public class SinchanaServer {
 	private boolean joined = false;
 	private SinchanaRequestHandler SinchanaRequestHandler = null;
 	private SinchanaTestInterface sinchanaTestInterface = null;
-	private SinchanaDataStoreInterface sinchanaDataStoreInterface = new SinchanaDataStoreImpl();
+	private SinchanaDataStoreInterface sinchanaDataStoreInterface = new SinchanaDataStoreImpl(this);
 
 	/**
 	 * Start a new node with the given server ID and next hop.

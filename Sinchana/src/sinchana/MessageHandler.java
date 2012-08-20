@@ -17,14 +17,15 @@ import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
+import sinchana.util.tools.ByteArrays;
 
 /**
  *
  * @author Hiru
  */
 public class MessageHandler {
-
-	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * 80 / 100;
+	
+	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * 20 / 100;
 	private final SinchanaServer server;
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private boolean running = false;
@@ -34,7 +35,7 @@ public class MessageHandler {
 	 */
 	private final ArrayBlockingQueue<Message> incomingMessageQueue = new ArrayBlockingQueue<Message>(CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE);
 	private final Thread incomingMessageQueueThread = new Thread(new Runnable() {
-
+		
 		@Override
 		public void run() {
 			while (true) {
@@ -111,9 +112,9 @@ public class MessageHandler {
 	 * @param message
 	 */
 	private synchronized void processMessage(Message message) {
-
+		
 		this.updateTableWithMessage(message);
-
+		
 		switch (message.type) {
 			case REQUEST:
 			case STORE_DATA:
@@ -139,10 +140,10 @@ public class MessageHandler {
 			case ACKNOWLEDGE_DATA_REMOVE:
 				this.server.getClientHandler().setResponse(message);
 				break;
-
+			
 		}
 	}
-
+	
 	private void updateTableWithMessage(Message message) {
 		boolean updated = false;
 		if (message.isSetFailedNodeSet()) {
@@ -181,16 +182,13 @@ public class MessageHandler {
 			this.server.getRoutingHandler().triggerOptimize();
 		}
 	}
-
+	
 	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
-		if (predecessor == null) {
-			predecessor = this.server.getNode();
-		}
 		BigInteger targetKeyOffset = getOffset(message.getDestinationId());
-		BigInteger predecessorOffset = getOffset(predecessor.getServerId());
+		BigInteger predecessorOffset = (predecessor == null ? ZERO : getOffset(predecessor.getServerId()));
 		BigInteger prevStationOffset = getOffset(message.station.getServerId());
-
+		
 		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(ZERO)) {
 			deliverMessage(message);
 		} else {
@@ -201,14 +199,14 @@ public class MessageHandler {
 				 */
 				message.setRoutedViaPredecessors(true);
 				this.server.getIOHandler().send(message, predecessor);
-
+				
 			} else {
 				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
 				this.server.getIOHandler().send(message, nextHop);
 			}
 		}
 	}
-
+	
 	private void processJoin(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			if (this.server.getConnectionPool().hasReportFailed(message.source)) {
@@ -217,7 +215,7 @@ public class MessageHandler {
 				return;
 			}
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
-
+			
 			BigInteger newServerIdOffset = getOffset(message.source.getServerId());
 			BigInteger prevStationIdOffset = getOffset(message.station.getServerId());
 			BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
@@ -228,7 +226,7 @@ public class MessageHandler {
 				tempNodeOffset = getOffset(node.getServerId());
 				nextPredecessorOffset = getOffset(nextPredecessor.getServerId());
 				nextSuccessorOffset = getOffset(nextSuccessor.getServerId());
-
+				
 				if (newServerIdOffset.compareTo(prevStationIdOffset) != 1
 						&& (nextSuccessorOffset.compareTo(tempNodeOffset) == -1
 						|| nextSuccessorOffset.equals(ZERO))
@@ -254,14 +252,14 @@ public class MessageHandler {
 			}
 		}
 	}
-
+	
 	private void processDiscoverNeighbours(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 			this.server.getIOHandler().send(message, message.source);
 		}
 	}
-
+	
 	private void processTestRing(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
@@ -397,7 +395,11 @@ public class MessageHandler {
 				break;
 		}
 		if (responseExpected) {
-			this.server.getIOHandler().send(returnMessage, returnMessage.destination);
+			if (Arrays.equals(this.server.getNode().getServerId(), returnMessage.destination.getServerId())) {
+				this.server.getClientHandler().setResponse(message);
+			} else {
+				this.server.getIOHandler().send(returnMessage, returnMessage.destination);
+			}
 		}
 	}
 }
