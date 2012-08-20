@@ -62,8 +62,8 @@ public class SinchanaServer {
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final IOHandler iOHandler = new IOHandler(this);
 //	private final RoutingHandler routingHandler = new ChordTable(this);
-	private final RoutingHandler routingHandler = new TapestryTable(this);
-//	private final RoutingHandler routingHandler = new PastryTable(this);
+//	private final RoutingHandler routingHandler = new TapestryTable(this);
+	private final RoutingHandler routingHandler = new PastryTable(this);
 	private final MessageHandler messageHandler = new MessageHandler(this);
 	private final ConnectionPool connectionPool = new ConnectionPool(this);
 	private final ClientHandler clientHandler = new ClientHandler(this);
