@@ -101,18 +101,17 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 		@Override
 		public void response(byte[] message) {
-			TesterController.successCount++;
-			if ((TesterController.successCount+ TesterController.failureCount )% 100 == 0) {
+			if (++TesterController.totalCount % 1000 == 0) {
 				endTime = System.currentTimeMillis();
-				System.out.println("Num of Messages " 
-						+ TesterController.successCount + "/" + TesterController.failureCount 
+				System.out.println("Num of Messages "
+						+ (TesterController.totalCount - TesterController.errorCount) + "/" + TesterController.totalCount
 						+ " @ " + (endTime - startTime) + "ms");
 			}
 		}
 
 		@Override
 		public void error(byte[] message) {
-			TesterController.failureCount++;
+			TesterController.errorCount++;
 			System.out.println("error : " + new String(message));
 		}
 	};
@@ -131,7 +130,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 					threadLock.acquire();
 					while (numOfTestingMessages > 0) {
 						BigInteger bi = new BigInteger(160, random);
-						server.request(bi.toByteArray(), "Hiru".getBytes(), srh);
+						server.request(bi.toByteArray(), "Sinchana".getBytes(), srh);
 						numOfTestingMessages--;
 					}
 				}
