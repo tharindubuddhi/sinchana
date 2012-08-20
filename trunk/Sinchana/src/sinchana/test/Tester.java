@@ -103,16 +103,18 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		public void response(byte[] message) {
 			if (++TesterController.totalCount % 1000 == 0) {
 				endTime = System.currentTimeMillis();
-				System.out.println("Num of Messages "
+				System.out.println("Num of Messages: "
 						+ (TesterController.totalCount - TesterController.errorCount) + "/" + TesterController.totalCount
 						+ " @ " + (endTime - startTime) + "ms");
 			}
+			TesterController.inc();
 		}
 
 		@Override
 		public void error(byte[] message) {
-			TesterController.errorCount++;
-			System.out.println("error : " + new String(message));
+			System.out.println("Error : " + new String(message));
+			System.out.println("Num of Messages: "
+					+ (++TesterController.totalCount - ++TesterController.errorCount) + "/" + TesterController.totalCount);
 		}
 	};
 	Random random = new Random();

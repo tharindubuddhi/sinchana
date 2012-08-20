@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import sinchana.connection.Connection;
+import sinchana.test.TesterController;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -396,7 +397,7 @@ public class MessageHandler {
 		}
 		if (responseExpected) {
 			if (Arrays.equals(this.server.getNode().getServerId(), returnMessage.destination.getServerId())) {
-				this.server.getClientHandler().setResponse(message);
+				this.server.getClientHandler().setResponse(returnMessage);
 			} else {
 				this.server.getIOHandler().send(returnMessage, returnMessage.destination);
 			}

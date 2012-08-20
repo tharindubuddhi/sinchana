@@ -34,8 +34,6 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 		this.testerController = tc;
 		initComponents();
 		setLocationRelativeTo(null);
-		this.numOfTesters.setText("" + TesterController.NUM_OF_TESTING_NODES);
-		this.numOfAutoTesters.setText("" + TesterController.NUM_OF_AUTO_TESTING_NODES);
 
 	}
 
@@ -150,7 +148,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         autoTestButtonPanel.add(portRange);
 
         numOfTesters.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        numOfTesters.setText("12");
+        numOfTesters.setText("10");
         numOfTesters.setToolTipText("No of Testing Nodes");
         numOfTesters.setPreferredSize(new java.awt.Dimension(32, 24));
         autoTestButtonPanel.add(numOfTesters);
@@ -166,7 +164,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         autoTestButtonPanel.add(ringTestButton);
 
         numOfAutoTesters.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        numOfAutoTesters.setText("12");
+        numOfAutoTesters.setText("1000");
         numOfAutoTesters.setToolTipText("No of Auto Testing Nodes");
         numOfAutoTesters.setPreferredSize(new java.awt.Dimension(32, 24));
         autoTestButtonPanel.add(numOfAutoTesters);
