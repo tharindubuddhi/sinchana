@@ -7,8 +7,6 @@ package sinchana.util.tools;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -16,20 +14,24 @@ import java.util.logging.Logger;
  */
 public class Hash {
 
+	private static final String ALRORYTHM = "SHA-1";
+	private static final String ENCODING = "utf8";
+	private static final String ERROR = "Error calculating hash value";
+
 	public static byte[] generateId(String address) {
 		try {
-			MessageDigest cript = MessageDigest.getInstance("SHA-1");
+			MessageDigest cript = MessageDigest.getInstance(ALRORYTHM);
 			cript.reset();
-			cript.update(address.getBytes("utf8"));
+			cript.update(address.getBytes(ENCODING));
 			byte[] digest = cript.digest();
 			if (digest.length != 20) {
 				throw new RuntimeException();
 			}
 			return digest;
 		} catch (UnsupportedEncodingException ex) {
-			throw new RuntimeException("Error calculating hash value", ex);
+			throw new RuntimeException(ERROR, ex);
 		} catch (NoSuchAlgorithmException ex) {
-			throw new RuntimeException("Error calculating hash value", ex);
+			throw new RuntimeException(ERROR, ex);
 		}
 	}
 }

@@ -70,6 +70,9 @@ public final class Logger {
 	private static final Map<String, String> stats = new HashMap<String, String>();
 
 	public static void log(Node node, int type, int classId, int locId, String logData) {
+		if (CURRENT_LOG_LEVEL > type) {
+			return;
+		}
 		if (CONFIGURATIONS.DO_LOG) {
 			Log nl = new Log();
 			nl.node = node;
@@ -80,13 +83,11 @@ public final class Logger {
 			logDB[pointer] = nl;
 			pointer = (pointer + 1) % SIZE;
 			if (classId == CLASS_IO_HANDLER && locId == 0) {
-				stats.put(ByteArrays.toReadableString(node.serverId).toUpperCase(), logData);
+				stats.put(ByteArrays.idToReadableString(node), logData);
 			}
 
 		}
-		if (CURRENT_LOG_LEVEL > type) {
-			return;
-		}
+
 //				System.out.println(nl.toString());
 		Level logLevel;
 		switch (type) {
@@ -137,7 +138,7 @@ public final class Logger {
 				break;
 		}
 		java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
-				className, "Server " + ByteArrays.toReadableString(node.serverId).toUpperCase()
+				className, "Server " + ByteArrays.idToReadableString(node)
 				+ " @ " + node.address, logData);
 
 
@@ -186,7 +187,7 @@ public final class Logger {
 			if (filterByNodeId) {
 				validToPrint = false;
 				for (String id : nodeIds) {
-					if (id.equals(ByteArrays.toReadableString(log.node.getServerId()).toUpperCase())) {
+					if (id.equals(ByteArrays.idToReadableString(log.node))) {
 						validToPrint = true;
 						break;
 					}
@@ -248,7 +249,7 @@ public final class Logger {
 			if (filterByNodeId) {
 				validToPrint = false;
 				for (String id : nodeIds) {
-					if (id.equals(ByteArrays.toReadableString(log.node.getServerId()).toUpperCase())) {
+					if (id.equals(ByteArrays.idToReadableString(log.node))) {
 						validToPrint = true;
 						break;
 					}

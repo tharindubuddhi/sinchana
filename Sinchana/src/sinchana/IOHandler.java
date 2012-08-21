@@ -6,6 +6,7 @@ package sinchana;
 
 import java.util.Arrays;
 import java.util.concurrent.SynchronousQueue;
+import org.apache.thrift.TException;
 import sinchana.connection.*;
 
 import sinchana.thrift.Message;
@@ -26,16 +27,15 @@ import sinchana.util.tools.ByteArrays;
  */
 public class IOHandler {
 
-	public static final int ACCEPT_ERROR = 0;
-	public static final int LOCAL_SERVER_ERROR = 1;
-	public static final int REMOTE_SERVER_ERROR = 2;
-	public static final int REMOTE_SERVER_ERROR_FAILURE = 3;
-	public static final int SUCCESS = 4;
+	public static final int ACCEPT_ERROR = 1;
+	public static final int SUCCESS = 2;
 	private final SinchanaServer server;
 	private final SynchronousQueue<Message> outputMessageQueue = new SynchronousQueue<Message>();
 	private TServer tServer;
 	private TTransportException tTransportException = null;
 	private boolean running = false;
+	private static final String ERROR_MSG_LIFE_TIME_EXPIRED = "Messaage is terminated as lifetime expired!";
+	private static final String ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED = "Messaage is terminated as maximum number of retries is exceeded!";
 	private final Runnable outputMessageQueueProcessor = new Runnable() {
 
 		@Override
@@ -64,7 +64,7 @@ public class IOHandler {
 					+ "that forwading within same node still happens :P \n" + message);
 		}
 		if (message.lifetime <= 0) {
-			message.setError("Messaage is terminated as lifetime expired!");
+			message.setError(ERROR_MSG_LIFE_TIME_EXPIRED);
 			message.setDestination(message.source);
 			message.setDestinationId(message.source.getServerId());
 			message.setType(MessageType.ERROR);
@@ -84,9 +84,6 @@ public class IOHandler {
 	private boolean isRoutable(Message message) {
 		switch (message.type) {
 			case JOIN:
-				if (Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
-					return false;
-				}
 			case TEST_RING:
 			case REQUEST:
 			case STORE_DATA:
@@ -110,13 +107,14 @@ public class IOHandler {
 
 	private void processMessage(Message message) {
 		int tries = 0;
+		Node prevStation = message.getStation();
 		while (tries < CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES + 1) {
 			tries++;
 			if (tries > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
 				if (!isRoutable(message)) {
 					return;
 				}
-				message.setError("Messaage is terminated as maximum number of retries is exceeded!");
+				message.setError(ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED);
 				message.setDestination(message.source);
 				message.setDestinationId(message.source.getServerId());
 				message.setType(MessageType.ERROR);
@@ -124,60 +122,49 @@ public class IOHandler {
 				message.setSource(this.server.getNode());
 				tries = 0;
 			}
-			Node prevStation = message.getStation();
 			message.setStation(server.getNode());
-			int result = send(message);
-			message.setStation(prevStation);
-			switch (result) {
-				case SUCCESS:
+			Connection connection = this.server.getConnectionPool().getConnection(message.destination);
+			int result = -1;
+			try {
+				synchronized (connection) {
+					connection.open();
+					result = connection.getClient().transfer(message);
+				}
+				if (result == SUCCESS) {
 					return;
-				case ACCEPT_ERROR:
-				case LOCAL_SERVER_ERROR:
-					break;
-				case REMOTE_SERVER_ERROR:
-					tries--;
-					break;
-				case REMOTE_SERVER_ERROR_FAILURE:
+				}
+			} catch (TException ex) {
+				if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
+					connection.failedPermenently();
 					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
 					if (updated) {
 						Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
-								"Node " + ByteArrays.toReadableString(message.destination.serverId).toUpperCase()
+								"Node " + ByteArrays.idToReadableString(message.destination)
 								+ " @ "
 								+ message.destination.address + " is removed from the routing table!");
 						server.getRoutingHandler().triggerOptimize();
 					}
 					if (isRoutable(message)) {
+						message.setStation(prevStation);
 						if (!this.server.getMessageHandler().queueMessage(message)) {
 							throw new RuntimeException();
 						}
 					}
 					return;
+				}
+				connection.failed();
+				tries--;
 			}
 		}
 		throw new RuntimeException("This is unacceptable :P");
 	}
 
-	private int send(Message message) {
+	public int directSend(Message message) throws TException {
+		message.setStation(this.server.getNode());
 		Connection connection = this.server.getConnectionPool().getConnection(message.destination);
-		connection.open();
-		if (!connection.isOpened()) {
-			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-				connection.failedPermenently();
-				return REMOTE_SERVER_ERROR_FAILURE;
-			}
-			return REMOTE_SERVER_ERROR;
-		}
-		try {
-			synchronized (connection) {
-				return connection.getClient().transfer(message);
-			}
-		} catch (Exception ex) {
-			if (connection.getNumOfOpenTries() >= CONFIGURATIONS.NUM_OF_MAX_CONNECT_RETRIES) {
-				connection.failedPermenently();
-				return REMOTE_SERVER_ERROR_FAILURE;
-			}
-			connection.failed();
-			return REMOTE_SERVER_ERROR;
+		synchronized (connection) {
+			connection.open();
+			return connection.getClient().transfer(message);
 		}
 	}
 

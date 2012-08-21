@@ -7,6 +7,8 @@ package sinchana.test;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.Random;
+import java.util.logging.Level;
+import org.apache.thrift.TException;
 import sinchana.SinchanaServer;
 import sinchana.SinchanaRequestHandler;
 import sinchana.SinchanaTestInterface;
@@ -30,6 +32,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	private Semaphore threadLock = new Semaphore(0);
 	private boolean running = false;
 	private long numOfTestingMessages = 0;
+	private static final byte[] MESSAGE = "Hi, Sinchana!".getBytes();
+	private static final byte[] RETURN_MESSAGE = "Greetings :)".getBytes();
 
 	/**
 	 * 
@@ -51,7 +55,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 				@Override
 				public byte[] request(byte[] message) {
-					return ("Hi " + new String(message) + ", Greetings from " + server.getServerIdAsString()).getBytes();
+					return RETURN_MESSAGE;
 				}
 			});
 			server.registerSinchanaTestInterface(this);
@@ -104,11 +108,12 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 		@Override
 		public void error(byte[] message) {
-			System.out.println("Error : " + new String(message));
+			System.out.println(TAG_ERROR + new String(message));
 			System.out.println("Num of Messages: "
 					+ (++TesterController.totalCount - ++TesterController.errorCount) + "/" + TesterController.totalCount);
 		}
 	};
+	private static final String TAG_ERROR = "ERROR: ";
 	Random random = new Random();
 
 	@Override
@@ -118,17 +123,18 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				this.gui.setServerId(new String(server.getNode().getServerId()));
 				this.gui.setVisible(true);
 			}
-			if (server.join()) {
-				System.out.println(server.getServerIdAsString() + ": joined the ring");
-				while (true) {
-					threadLock.acquire();
-					while (numOfTestingMessages > 0) {
-						BigInteger bi = new BigInteger(160, random);
-						server.request(bi.toByteArray(), "Sinchana".getBytes(), srh);
-						numOfTestingMessages--;
-					}
+			server.join();
+			System.out.println(server.getServerIdAsString() + ": joined the ring");
+			while (true) {
+				threadLock.acquire();
+				while (numOfTestingMessages > 0) {
+					BigInteger bi = new BigInteger(160, random);
+					server.request(bi.toByteArray(), MESSAGE, srh);
+					numOfTestingMessages--;
 				}
 			}
+		} catch (TException ex) {
+			java.util.logging.Logger.getLogger(Tester.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (InterruptedException ex) {
 			ex.printStackTrace();
 		}

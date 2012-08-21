@@ -6,6 +6,7 @@ package sinchana.test;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.SinchanaServer;
 import sinchana.exceptions.SinchanaInterruptedException;
@@ -19,7 +20,7 @@ import sinchana.util.tools.ByteArrays;
  */
 public class ServiceTestServer {
 
-	public static void main(String[] args) throws InterruptedException, TTransportException {
+	public static void main(String[] args) throws InterruptedException, TTransportException, TException {
 		SinchanaServer sinchanaServer1 = new SinchanaServer("127.0.0.1:9227");
 		sinchanaServer1.startServer();
 		sinchanaServer1.join();

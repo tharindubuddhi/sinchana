@@ -4,17 +4,14 @@
  */
 package sinchana.connection;
 
-import java.net.UnknownHostException;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
-import sinchana.CONFIGURATIONS;
 import sinchana.thrift.DHTServer;
 import sinchana.thrift.DHTServer.Client;
-import sinchana.thrift.Message;
 import sinchana.thrift.Node;
 
 /**
@@ -42,7 +39,7 @@ public class Connection {
 		this.node = node;
 	}
 
-	public void open() {
+	public void open() throws TTransportException {
 		if (opened) {
 			return;
 		}
@@ -58,34 +55,31 @@ public class Connection {
 			opened = true;
 			failed = false;
 		} catch (TTransportException ex) {
-//			System.out.println("errrrrrrr.. " + ex.getCause().getClass().getCanonicalName());
-//			ex.printStackTrace();
-//			lastKnownFailedTime = lastOpenTime;
+			lastKnownFailedTime = lastOpenTime;
 			numOfOpenTries++;
-		} catch (NullPointerException ex) {
-			System.out.println("errrrrrrrr........................ " + transport.toString());
-			ex.printStackTrace();
+			throw ex;
 		}
 	}
 
 	public boolean isAlive() {
 		boolean prevOpened = opened;
-		open();
-		if (!opened) {
-			return false;
-		}
-		long st = System.currentTimeMillis();
 		try {
+			open();
+			if (!opened) {
+				return false;
+			}
+			long st = System.currentTimeMillis();
 			client.ping();
+			roundTripTime = System.currentTimeMillis() - st;
+			lastKnownSuccessConnectTime = st;
 			failed = false;
 		} catch (TException ex) {
-			lastKnownFailedTime = st;
+			lastKnownFailedTime = System.currentTimeMillis();
+			lastHeardFailedTime = lastKnownFailedTime;
 			numOfOpenTries++;
 			close();
 			return false;
 		}
-		long et = System.currentTimeMillis();
-		roundTripTime = et - st;
 		if (!prevOpened) {
 			transport.close();
 			opened = false;
@@ -121,10 +115,18 @@ public class Connection {
 		close();
 	}
 
-	void failedByInfo() {
-		lastHeardFailedTime = System.currentTimeMillis();
-		failed = true;
-		close();
+	void failedByInfo(boolean reportFailure) {
+		if (reportFailure) {
+			if (failed || isAlive()) {
+				return;
+			}
+			lastHeardFailedTime = System.currentTimeMillis();
+			failed = true;
+		} else {
+			if (!failed || !isAlive()) {
+				return;
+			}
+		}
 	}
 
 	public long getLastUsedTime() {

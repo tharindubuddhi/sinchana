@@ -16,6 +16,7 @@ import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
+import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -27,6 +28,11 @@ public class MessageHandler {
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private final Semaphore messageQueueLock = new Semaphore(0);
 	private boolean waitOnMessageQueueLock = false;
+	private static final String ERROR_MSG_JOIN_REACCEPTANCE = "You have to wait at least (ms) ";
+	private static final String ERROR_MSG_RESPONSE_HANDLER_NOT_FOUND = "Response handler not found";
+	private static final String ERROR_MSG_SERVICE_HANDLER_NOT_FOUND = "Service handler not found";
+	private static final String ERROR_MSG_DATA_STORE_HANDLER_NOT_FOUND = "Data handler not found";
+	private static final String TEST_RING_SEPARATOR = " > ";
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
 	 * determined by MESSAGE_BUFFER_SIZE.
@@ -64,10 +70,10 @@ public class MessageHandler {
 						switch (message.type) {
 							case JOIN:
 								if (Arrays.equals(message.source.getServerId(), server.getNode().getServerId())) {
-									joined = true;
-									server.setJoined(true);
+									joined = message.isSuccess();
+									server.setJoined(joined, message.getError());
 									if (server.getSinchanaTestInterface() != null) {
-										server.getSinchanaTestInterface().setStable(true);
+										server.getSinchanaTestInterface().setStable(joined);
 									}
 								}
 							case DISCOVER_NEIGHBORS:
@@ -179,7 +185,7 @@ public class MessageHandler {
 		boolean updated = false;
 		if (message.isSetFailedNodeSet()) {
 			Set<Node> failedNodeSet = message.getFailedNodeSet();
-			this.server.getConnectionPool().updateFailedNodeInfo(failedNodeSet);
+			this.server.getConnectionPool().updateFailedNodeInfo(failedNodeSet, true);
 			for (Node node : failedNodeSet) {
 				updated = updated || this.server.getRoutingHandler().updateTable(node, false);
 			}
@@ -200,11 +206,11 @@ public class MessageHandler {
 					Connection failedConnection = server.getConnectionPool().getConnection(node);
 					if ((failedConnection.getLastHeardFailedTime() + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT) < time) {
 						failedConnection.reset();
-						System.out.println(this.server.getServerIdAsString() + ": Adding back " + node);
 					} else {
 						continue;
 					}
 				}
+				this.server.getConnectionPool().updateFailedNodeInfo(node, false);
 				updated = updated || this.server.getRoutingHandler().updateTable(node, true);
 			}
 		}
@@ -241,11 +247,18 @@ public class MessageHandler {
 	private void processJoin(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			if (this.server.getConnectionPool().hasReportFailed(message.source)) {
-				Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 4,
-						"Node " + message.source + "has to wait.");
+				Connection connection = this.server.getConnectionPool().getConnection(message.source);
+				long remainingTime = Math.max(connection.getLastHeardFailedTime(), connection.getLastKnownFailedTime())
+						+ CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT - System.currentTimeMillis();
+				if (remainingTime > 0) {
+					message.setSuccess(false);
+					message.setError(ERROR_MSG_JOIN_REACCEPTANCE + remainingTime);
+					server.getIOHandler().send(message, message.source);
+				}
 				return;
 			}
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
+			message.setSuccess(true);
 
 			BigInteger newServerIdOffset = getOffset(message.source.getServerId());
 			BigInteger prevStationIdOffset = getOffset(message.station.getServerId());
@@ -303,7 +316,7 @@ public class MessageHandler {
 		if (Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			if (message.isSetData()) {
 				System.out.println("Ring test completed - length: "
-						+ (new String(message.getData()).split(" > ").length)
+						+ (new String(message.getData()).split(TEST_RING_SEPARATOR).length)
 						+ " :: " + new String(message.getData()));
 			} else {
 				message.setData(this.server.getServerIdAsString().getBytes());
@@ -312,14 +325,14 @@ public class MessageHandler {
 			}
 		} else {
 			if (Arrays.equals(message.station.getServerId(), predecessor.getServerId())) {
-				message.setData((new String(message.getData()) + " > " + this.server.getServerIdAsString()).getBytes());
+				message.setData((new String(message.getData()) + TEST_RING_SEPARATOR + this.server.getServerIdAsString()).getBytes());
 				this.server.getIOHandler().send(message, successor);
 			} else if (Arrays.equals(message.station.getServerId(), successor.getServerId())) {
-				message.setData((new String(message.getData()) + " > " + this.server.getServerIdAsString()).getBytes());
+				message.setData((new String(message.getData()) + TEST_RING_SEPARATOR + this.server.getServerIdAsString()).getBytes());
 				this.server.getIOHandler().send(message, predecessor);
 			} else {
 				Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
-						"Message Terminated! Received from " + message.station.serverId
+						"Message Terminated! Received from " + ByteArrays.idToReadableString(message.station)
 						+ " which is neither predecessor or successor.");
 			}
 		}
@@ -362,7 +375,7 @@ public class MessageHandler {
 					if (handlerAvailable) {
 						returnMessage.setData(this.server.getSinchanaRequestHandler().request(message.getData()));
 					} else {
-						returnMessage.setError("Request handler is not found!");
+						returnMessage.setError(ERROR_MSG_RESPONSE_HANDLER_NOT_FOUND);
 					}
 				} else if (handlerAvailable) {
 					this.server.getSinchanaRequestHandler().request(message.getData());
@@ -375,7 +388,7 @@ public class MessageHandler {
 					returnMessage.setSuccess(handlerAvailable
 							&& this.server.getSinchanaDataStoreInterface().store(message.getKey(), message.getData()));
 					if (!handlerAvailable) {
-						returnMessage.setError("Data store is not found!");
+						returnMessage.setError(ERROR_MSG_DATA_STORE_HANDLER_NOT_FOUND);
 					}
 				} else if (handlerAvailable) {
 					this.server.getSinchanaDataStoreInterface().store(message.getKey(), message.getData());
@@ -388,7 +401,7 @@ public class MessageHandler {
 					returnMessage.setSuccess(handlerAvailable
 							&& this.server.getSinchanaDataStoreInterface().remove(message.getKey()));
 					if (!handlerAvailable) {
-						returnMessage.setError("Data store is not found!");
+						returnMessage.setError(ERROR_MSG_DATA_STORE_HANDLER_NOT_FOUND);
 					}
 				} else if (handlerAvailable) {
 					this.server.getSinchanaDataStoreInterface().remove(message.getKey());
@@ -402,7 +415,7 @@ public class MessageHandler {
 					if (handlerAvailable) {
 						returnMessage.setData(this.server.getSinchanaDataStoreInterface().get(message.getKey()));
 					} else {
-						returnMessage.setError("Data store is not found!");
+						returnMessage.setError(ERROR_MSG_DATA_STORE_HANDLER_NOT_FOUND);
 					}
 				} else if (handlerAvailable) {
 					this.server.getSinchanaDataStoreInterface().get(message.getKey());
@@ -417,7 +430,7 @@ public class MessageHandler {
 					if (handlerAvailable) {
 						returnMessage.setData(ssi.process(message.getKey(), message.getData()));
 					} else {
-						returnMessage.setError("Service is not found!");
+						returnMessage.setError(ERROR_MSG_SERVICE_HANDLER_NOT_FOUND);
 					}
 				} else if (handlerAvailable) {
 					ssi.process(message.getKey(), message.getData());

@@ -29,12 +29,12 @@ public class ClientHandler {
 	private final SinchanaServer server;
 	private final ConcurrentHashMap<Long, ClientData> clientsMap = new ConcurrentHashMap<Long, ClientData>();
 	private final Timer timer = new Timer();
+	private static final String ERROR_MSG_TIMED_OUT = "Timed out!";
+	private static final String ERROR_MSG_INTERRUPTED = "Interrupted!";
 
 	public ClientHandler(SinchanaServer svr) {
 		this.server = svr;
 		timer.scheduleAtFixedRate(new TimerTask() {
-
-			int c = 0;
 
 			@Override
 			public void run() {
@@ -49,7 +49,7 @@ public class ClientHandler {
 								clientData.success = false;
 								clientData.lock.release();
 							} else {
-								clientData.sinchanaCallBackHandler.error("Time out".getBytes());
+								clientData.sinchanaCallBackHandler.error(ERROR_MSG_TIMED_OUT.getBytes());
 							}
 						}
 					}
@@ -192,12 +192,12 @@ public class ClientHandler {
 				clientData.lock.acquire();
 			}
 		} catch (InterruptedException ex) {
-			throw new SinchanaInterruptedException("Interrupted!", ex);
+			throw new SinchanaInterruptedException(ERROR_MSG_INTERRUPTED + ex);
 		} finally {
 			clientsMap.remove(requestId);
 		}
 		if (!clientData.resolved) {
-			throw new SinchanaTimeOutException("Timed Out!");
+			throw new SinchanaTimeOutException(ERROR_MSG_TIMED_OUT);
 		}
 		return clientData;
 	}

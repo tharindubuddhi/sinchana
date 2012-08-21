@@ -24,6 +24,8 @@ import sinchana.CONFIGURATIONS;
 public class ChordTable implements RoutingHandler {
 
 	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
+	public static final BigInteger ONE = new BigInteger("1", CONFIGURATIONS.NUMBER_BASE);
+	public static final BigInteger TWO = new BigInteger("2", CONFIGURATIONS.NUMBER_BASE);
 	public static final int TABLE_SIZE = 160;
 	public static final int SUCCESSOR_LEVEL = 3;
 	private final FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
@@ -69,8 +71,8 @@ public class ChordTable implements RoutingHandler {
 				 * all the table entries.
 				 */
 				fingerTable[i] = new FingerTableEntry();
-				fingerTable[i].setStart(new BigInteger("2", 16).pow(i).add(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE));
-				fingerTable[i].setEnd(new BigInteger("2", 16).pow(i + 1).add(serverIdAsBigInt).subtract(new BigInteger("1", 16)).mod(SinchanaServer.GRID_SIZE));
+				fingerTable[i].setStart(TWO.pow(i).add(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE));
+				fingerTable[i].setEnd(TWO.pow(i + 1).add(serverIdAsBigInt).subtract(ONE).mod(SinchanaServer.GRID_SIZE));
 			}
 		}
 		this.initFingerTable();

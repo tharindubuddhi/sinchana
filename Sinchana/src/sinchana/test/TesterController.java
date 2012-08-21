@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
-import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -57,7 +56,7 @@ public class TesterController {
 					maxInputMessageQueueSize, totalLifeTime, numOfTestMsgs;
 			long newTime, oldTime = System.currentTimeMillis();
 			int numOfFullInputBuffs;
-			byte[] maxTester = "n/a".getBytes();
+			byte[] maxTester = TAG_NOT_AVAILABLE.getBytes();
 
 			@Override
 			public void run() {
@@ -87,14 +86,14 @@ public class TesterController {
 				}
 				newTime = System.currentTimeMillis();
 				if (completedCount != 0) {
-					cui.setStat("IC: " + (totalMessageIncome / completedCount)
-							+ "   MI: " + maxInputMessageQueueSize
-							+ "   TR: " + totalResolves
-							+ "   RP: " + (totalResolves != 0 ? totalResolvesViaPredecessors * 100 / totalResolves : "NA")
-							+ "   TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S"
-							+ "   AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA")
-							+ "   FI: " + numOfFullInputBuffs
-							+ "   MS: " + numOfTestMsgs);
+					cui.setStat(TAG_INCOMING_MSGS + (totalMessageIncome / completedCount)
+							+ TAG_MAX_INCOMING_BUFFER_SIZE + maxInputMessageQueueSize
+							+ TAG_TOTAL_RESOLVES + totalResolves
+							+ TAG_ROUTED_VIA_PREDECESSORS + (totalResolves != 0 ? totalResolvesViaPredecessors * 100 / totalResolves : TAG_NOT_AVAILABLE)
+							+ TAG_THROUGHPUT + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : TAG_NOT_AVAILABLE) + "/S"
+							+ TAG_AVARAGE_LIFE_TIME + (totalResolves != 0 ? (totalLifeTime / totalResolves) : TAG_NOT_AVAILABLE)
+							+ TAG_NUM_OF_FULL_BUFFERS + numOfFullInputBuffs
+							+ TAG_REMAINING_MSGS + numOfTestMsgs);
 				}
 				oldTime = newTime;
 //				if (!Arrays.equals(maxTester, maxTesterOld)) {
@@ -113,6 +112,15 @@ public class TesterController {
 			}
 		}, 1000, 10);
 	}
+	private static final String TAG_INCOMING_MSGS = "   IC: ";
+	private static final String TAG_MAX_INCOMING_BUFFER_SIZE = "   MI: ";
+	private static final String TAG_TOTAL_RESOLVES = "   TR: ";
+	private static final String TAG_ROUTED_VIA_PREDECESSORS = "   RP: ";
+	private static final String TAG_THROUGHPUT = "   TP: ";
+	private static final String TAG_AVARAGE_LIFE_TIME = "   AL: ";
+	private static final String TAG_NUM_OF_FULL_BUFFERS = "   FB: ";
+	private static final String TAG_REMAINING_MSGS = "   RM: ";
+	private static final String TAG_NOT_AVAILABLE = "n/a";
 
 	/**
 	 * 
@@ -131,10 +139,6 @@ public class TesterController {
 			testServerIds[i] = testServers.get(i).getServerId();
 		}
 
-		for (byte[] id : testServerIds) {
-			System.out.print(ByteArrays.toReadableString(id) + " ");
-		}
-		System.out.println("");
 		Set<Integer> keySet = testServers.keySet();
 		for (int key : keySet) {
 			tester = testServers.get(key);
@@ -156,10 +160,6 @@ public class TesterController {
 		int numOfTestServers = testServers.size();
 		int randomId;
 		long randomAmount = 0;
-//		totalCount = 0;
-//		errorCount = 0;
-//		c = 0;
-//		System.out.println("Testing " + numOfTestMessages + " request...");
 		while (numOfTestMessages > 0) {
 			randomId = (int) (Math.random() * numOfTestServers);
 			if (numOfTestMessages > 10) {
@@ -223,8 +223,8 @@ public class TesterController {
 		datakeyArray = new String[noOfData];
 
 		for (int i = 0; i < noOfData; i++) {
-			dataArray[i] = "data " + dataID;
-			datakeyArray[i] = "key " + dataID;
+			dataArray[i] = DATA_TAG + dataID;
+			datakeyArray[i] = KEY_TAG + dataID;
 			dataID++;
 		}
 		dataHandlerobject.startStoreTime = System.currentTimeMillis();
@@ -239,6 +239,8 @@ public class TesterController {
 		}
 	}
 	long startRetrieveTime = 0;
+	private static final String DATA_TAG = "data ";
+	private static final String KEY_TAG = "key ";
 
 	public void retrieveData() {
 		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
@@ -269,24 +271,24 @@ public class TesterController {
 		String[] nodeIds = null;
 		int[] levels = null, classIds = null, locations = null;
 		if (nodeIdsString.length() > 0) {
-			nodeIds = nodeIdsString.split(" ");
+			nodeIds = nodeIdsString.split(FILTER_SPLITTER);
 		}
 		if (typesString.length() > 0) {
-			temp = typesString.split(" ");
+			temp = typesString.split(FILTER_SPLITTER);
 			levels = new int[temp.length];
 			for (int i = 0; i < temp.length; i++) {
 				levels[i] = Integer.parseInt(temp[i]);
 			}
 		}
 		if (classIdsString.length() > 0) {
-			temp = classIdsString.split(" ");
+			temp = classIdsString.split(FILTER_SPLITTER);
 			classIds = new int[temp.length];
 			for (int i = 0; i < temp.length; i++) {
 				classIds[i] = Integer.parseInt(temp[i]);
 			}
 		}
 		if (locationsString.length() > 0) {
-			temp = locationsString.split(" ");
+			temp = locationsString.split(FILTER_SPLITTER);
 			locations = new int[temp.length];
 			for (int i = 0; i < temp.length; i++) {
 				locations[i] = Integer.parseInt(temp[i]);
@@ -294,6 +296,7 @@ public class TesterController {
 		}
 		sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations, containTextString);
 	}
+	private static final String FILTER_SPLITTER = " ";
 
 	public static synchronized void inc() {
 		if (++c >= 10000) {
