@@ -36,6 +36,8 @@ package sinchana;
 import sinchana.dataStore.SinchanaDataStoreInterface;
 import sinchana.dataStore.SinchanaDataHandler;
 import sinchana.dataStore.SinchanaDataStoreImpl;
+import sinchana.exceptions.SinchanaInterruptedException;
+import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.service.SinchanaServiceStore;
 import sinchana.service.SinchanaServiceHandler;
 import sinchana.service.SinchanaServiceInterface;
@@ -43,6 +45,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 import sinchana.chord.ChordTable;
 import sinchana.connection.ConnectionPool;
 import sinchana.pastry.PastryTable;
@@ -263,54 +266,79 @@ public class SinchanaServer {
 		this.getMessageHandler().queueMessage(message, true);
 	}
 
-	public byte[] request(byte[] destination, byte[] message) {
-		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, null, true).data;
+	public byte[] request(byte[] destination, byte[] message) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, -1, null).data;
+	}
+
+	public byte[] request(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, timeOut, timeUnit).data;
 	}
 
 	public void request(byte[] destination, byte[] message, SinchanaResponseHandler callBack) {
-		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack, false);
+		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack);
 	}
 
-	public boolean storeData(byte[] key, byte[] data) {
-		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, null, true).success;
+	public boolean storeData(byte[] key, byte[] data) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, -1, null).success;
+	}
+
+	public boolean storeData(byte[] key, byte[] data, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, timeOut, timeUnit).success;
 	}
 
 	public void storeData(byte[] key, byte[] data, SinchanaDataHandler callBack) {
-		this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, callBack, false);
+		this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, callBack);
 	}
 
-	public byte[] getData(byte[] key) {
-		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, null, true).data;
+	public byte[] getData(byte[] key) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, -1, null).data;
+	}
+
+	public byte[] getData(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, timeOut, timeUnit).data;
 	}
 
 	public void getData(byte[] key, SinchanaDataHandler callBack) {
-		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack, false);
+		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack);
 	}
 
-	public boolean deleteData(byte[] key) {
-		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, null, true).success;
+	public boolean deleteData(byte[] key) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, -1, null).success;
+	}
+
+	public boolean deleteData(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, timeOut, timeUnit).success;
 	}
 
 	public void deleteData(byte[] key, SinchanaDataHandler callBack) {
-		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack, false);
+		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack);
 	}
 
-	public byte[] getService(byte[] reference, byte[] data) {
-		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, null, true).data;
+	public byte[] getService(byte[] reference, byte[] data) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, -1, null).data;
+	}
+
+	public byte[] getService(byte[] reference, byte[] data, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, timeOut, timeUnit).data;
 	}
 
 	public void getService(byte[] reference, byte[] data, SinchanaServiceHandler callBack) {
-		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack, false);
+		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack);
 	}
 
-	public byte[] discoverService(byte[] key) {
+	public byte[] discoverService(byte[] key) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
-		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, null, true).data;
+		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, -1, null).data;
+	}
+
+	public byte[] discoverService(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
+		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, timeOut, timeUnit).data;
 	}
 
 	public void discoverService(byte[] key, SinchanaServiceHandler callBack) {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
-		this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, callBack, false);
+		this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, callBack);
 	}
 
 	public void publishService(byte[] key, SinchanaServiceInterface ssi) {
@@ -318,7 +346,7 @@ public class SinchanaServer {
 		byte[] formattedReference = ByteArrays.arrayConcat(this.node.getServerId(), formattedKey);
 		boolean success = this.sinchanaServiceStore.publishService(formattedKey, ssi);
 		if (success) {
-			this.clientHandler.addRequest(formattedKey, formattedReference, MessageType.STORE_DATA, ssi, false);
+			this.clientHandler.addRequest(formattedKey, formattedReference, MessageType.STORE_DATA, ssi);
 		} else {
 			ssi.isPublished(key, false);
 		}
@@ -326,6 +354,6 @@ public class SinchanaServer {
 
 	public void removeService(byte[] key, SinchanaServiceInterface ssi) {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
-		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi, false);
+		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi);
 	}
 }

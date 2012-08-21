@@ -29,6 +29,7 @@ public class TesterController {
 	private final Timer timer = new Timer();
 	public static int errorCount = 0;
 	public static int totalCount = 0;
+	private int numOfTestMsg = 0;
 
 	/**
 	 * 
@@ -97,6 +98,15 @@ public class TesterController {
 //				}
 			}
 		}, 1000, 1000);
+		timer.scheduleAtFixedRate(new TimerTask() {
+
+			@Override
+			public void run() {
+				if (numOfTestMsg > 0) {
+					test(numOfTestMsg / 100);
+				}
+			}
+		}, 1000, 10);
 	}
 
 	/**
@@ -134,13 +144,17 @@ public class TesterController {
 	 * @param numOfAutoTesters
 	 */
 	public void startAutoTest(long numOfTestMessages) {
+		numOfTestMsg = (int) numOfTestMessages;
+	}
+
+	public void test(long numOfTestMessages) {
 		int numOfTestServers = testServers.size();
 		int randomId;
 		long randomAmount = 0;
-		totalCount = 0;
-		errorCount = 0;
-		c = 0;
-		System.out.println("Testing " + numOfTestMessages + " request...");
+//		totalCount = 0;
+//		errorCount = 0;
+//		c = 0;
+//		System.out.println("Testing " + numOfTestMessages + " request...");
 		while (numOfTestMessages > 0) {
 			randomId = (int) (Math.random() * numOfTestServers);
 			if (numOfTestMessages > 10) {
@@ -269,11 +283,12 @@ public class TesterController {
 		}
 		sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations, containTextString);
 	}
-	private static int c = 0;
 
 	public static synchronized void inc() {
-		if (++c % 1000 == 0) {
+		if (++c >= 10000) {
 			System.out.println("count: " + c);
+			c = 0;
 		}
 	}
+	private static int c = 0;
 }
