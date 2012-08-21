@@ -33,6 +33,7 @@
  ************************************************************************************/
 package sinchana;
 
+import org.apache.thrift.transport.TTransportException;
 import sinchana.dataStore.SinchanaDataStoreInterface;
 import sinchana.dataStore.SinchanaDataHandler;
 import sinchana.dataStore.SinchanaDataStoreImpl;
@@ -124,7 +125,7 @@ public class SinchanaServer {
 	/**
 	 * Start the server.
 	 */
-	public void startServer() {
+	public void startServer() throws TTransportException, InterruptedException {
 		this.routingHandler.init();
 		this.iOHandler.startServer();
 	}
@@ -154,7 +155,7 @@ public class SinchanaServer {
 			}
 		} else {
 			msg.setStation(this.node);
-			messageHandler.queueMessage(msg, true);
+			messageHandler.queueMessage(msg);
 		}
 		return true;
 	}
@@ -263,7 +264,7 @@ public class SinchanaServer {
 	public void testRing() {
 		Message message = new Message(MessageType.TEST_RING, this.node, 1024);
 		message.setStation(this.node);
-		this.getMessageHandler().queueMessage(message, true);
+		this.getMessageHandler().queueMessage(message);
 	}
 
 	public byte[] request(byte[] destination, byte[] message) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
@@ -274,7 +275,7 @@ public class SinchanaServer {
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, timeOut, timeUnit).data;
 	}
 
-	public void request(byte[] destination, byte[] message, SinchanaResponseHandler callBack) {
+	public void request(byte[] destination, byte[] message, SinchanaResponseHandler callBack) throws InterruptedException {
 		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack);
 	}
 
@@ -286,7 +287,7 @@ public class SinchanaServer {
 		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, timeOut, timeUnit).success;
 	}
 
-	public void storeData(byte[] key, byte[] data, SinchanaDataHandler callBack) {
+	public void storeData(byte[] key, byte[] data, SinchanaDataHandler callBack) throws InterruptedException {
 		this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, callBack);
 	}
 
@@ -298,7 +299,7 @@ public class SinchanaServer {
 		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, timeOut, timeUnit).data;
 	}
 
-	public void getData(byte[] key, SinchanaDataHandler callBack) {
+	public void getData(byte[] key, SinchanaDataHandler callBack) throws InterruptedException {
 		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack);
 	}
 
@@ -310,7 +311,7 @@ public class SinchanaServer {
 		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, timeOut, timeUnit).success;
 	}
 
-	public void deleteData(byte[] key, SinchanaDataHandler callBack) {
+	public void deleteData(byte[] key, SinchanaDataHandler callBack) throws InterruptedException {
 		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack);
 	}
 
@@ -322,7 +323,7 @@ public class SinchanaServer {
 		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, timeOut, timeUnit).data;
 	}
 
-	public void getService(byte[] reference, byte[] data, SinchanaServiceHandler callBack) {
+	public void getService(byte[] reference, byte[] data, SinchanaServiceHandler callBack) throws InterruptedException {
 		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack);
 	}
 
@@ -336,12 +337,12 @@ public class SinchanaServer {
 		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, timeOut, timeUnit).data;
 	}
 
-	public void discoverService(byte[] key, SinchanaServiceHandler callBack) {
+	public void discoverService(byte[] key, SinchanaServiceHandler callBack) throws InterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, callBack);
 	}
 
-	public void publishService(byte[] key, SinchanaServiceInterface ssi) {
+	public void publishService(byte[] key, SinchanaServiceInterface ssi) throws InterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		byte[] formattedReference = ByteArrays.arrayConcat(this.node.getServerId(), formattedKey);
 		boolean success = this.sinchanaServiceStore.publishService(formattedKey, ssi);
@@ -352,7 +353,7 @@ public class SinchanaServer {
 		}
 	}
 
-	public void removeService(byte[] key, SinchanaServiceInterface ssi) {
+	public void removeService(byte[] key, SinchanaServiceInterface ssi) throws InterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi);
 	}

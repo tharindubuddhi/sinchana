@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
-import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -342,12 +341,5 @@ public class ChordTable implements RoutingHandler {
 
 	private BigInteger getOffset(BigInteger id) {
 		return SinchanaServer.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
-	}
-
-	private BigInteger getOffset(Node node) {
-		if (node == null) {
-			return ZERO;
-		}
-		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, node.getServerId())).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
 }

@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import sinchana.dataStore.SinchanaDataHandler;
 import sinchana.service.SinchanaServiceHandler;
 import sinchana.service.SinchanaServiceInterface;
@@ -127,6 +125,9 @@ public class ClientHandler {
 					}
 					break;
 				case RESPONSE:
+					if (server.getSinchanaTestInterface() != null) {
+						server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
+					}
 					if (clientData.waiting) {
 						clientData.data = message.getData();
 						clientData.lock.release();
@@ -144,12 +145,7 @@ public class ClientHandler {
 						((SinchanaCallBackHandler) clientData.sinchanaCallBackHandler).error(message.getError().getBytes());
 					}
 					break;
-				default:
-					System.out.println("Where should this go? " + message);
-					break;
 			}
-		} else {
-			System.out.println("ID is not in the client map: " + message);
 		}
 	}
 
@@ -188,15 +184,8 @@ public class ClientHandler {
 		clientData.key = requestId;
 		message.setResponseExpected(true);
 		message.setId(requestId);
-		while (!server.getMessageHandler().queueMessage(message, false)) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException ex) {
-				Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-			}
-		}
-
 		try {
+			server.getMessageHandler().addRequest(message);
 			if (timeOut != -1) {
 				clientData.lock.tryAcquire(timeOut, timeUnit);
 			} else {
@@ -213,7 +202,7 @@ public class ClientHandler {
 		return clientData;
 	}
 
-	public void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBackHandler scbh) {
+	public void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBackHandler scbh) throws InterruptedException {
 		long requestId = -1;
 		Message message = new Message(type, this.server.getNode(), CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
@@ -250,13 +239,7 @@ public class ClientHandler {
 		} else {
 			message.setResponseExpected(false);
 		}
-		while (!server.getMessageHandler().queueMessage(message, false)) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException ex) {
-				java.util.logging.Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-			}
-		}
+		server.getMessageHandler().addRequest(message);
 	}
 
 	public class ClientData {

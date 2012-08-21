@@ -17,7 +17,7 @@ public class CONFIGURATIONS {
 	public static final int JOIN_MESSAGE_LIFETIME = 1024;
 	public static final int NUMBER_BASE = 16;
 	public static final int INPUT_MESSAGE_BUFFER_SIZE = 4096;
-	public static final int MESSAGE_BUFFER_LIMIT_RATIO = 10; //%
+	public static final int MESSAGE_BUFFER_LIMIT_RATIO = 0; //%
 	public static final int NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS = 3;
 	public static final int ROUTING_OPTIMIZATION_TIME_OUT = 10;	//Seconds
 	public static final int NUM_OF_MAX_SEND_RETRIES = 3;

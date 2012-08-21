@@ -100,16 +100,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 		@Override
 		public void response(byte[] message) {
-			if (++TesterController.totalCount >= 10000) {
-				endTime = System.currentTimeMillis();
-				System.out.println("Num of Messages: "
-						+ (TesterController.totalCount - TesterController.errorCount) + "/" + TesterController.totalCount
-						+ " @ " + (endTime - startTime) + "ms");
-				TesterController.totalCount = 0;
-				TesterController.errorCount = 0;
-				startTime = endTime;
-			}
-			TesterController.inc();
 		}
 
 		@Override
@@ -277,7 +267,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	}
 
 	public long[] getTestData() {
-		long[] data = new long[10];
+		long[] data = new long[8];
 		data[0] = inputMessageCount;
 		data[1] = inputMessageQueueTimesCount == 0 ? 0 : (avarageInputMessageQueueSize / inputMessageQueueTimesCount);
 		data[2] = maxInputMessageQueueSize;
@@ -285,6 +275,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		data[4] = requestViaPredecessorsCount;
 		data[5] = requestLifetime;
 		data[6] = (inputMessageQueueFull ? 1 : 0);
+		data[7] = numOfTestingMessages;
 		inputMessageCount = 0;
 		avarageInputMessageQueueSize = 0;
 		inputMessageQueueTimesCount = 0;

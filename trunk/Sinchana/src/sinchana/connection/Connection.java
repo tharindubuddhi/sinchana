@@ -4,6 +4,7 @@
  */
 package sinchana.connection;
 
+import java.net.UnknownHostException;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -57,7 +58,9 @@ public class Connection {
 			opened = true;
 			failed = false;
 		} catch (TTransportException ex) {
-			lastKnownFailedTime = lastOpenTime;
+//			System.out.println("errrrrrrr.. " + ex.getCause().getClass().getCanonicalName());
+//			ex.printStackTrace();
+//			lastKnownFailedTime = lastOpenTime;
 			numOfOpenTries++;
 		} catch (NullPointerException ex) {
 			System.out.println("errrrrrrrr........................ " + transport.toString());

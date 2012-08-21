@@ -4,6 +4,9 @@
  */
 package sinchana.test;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.thrift.transport.TTransportException;
 import sinchana.SinchanaServer;
 import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaTimeOutException;
@@ -16,7 +19,7 @@ import sinchana.util.tools.ByteArrays;
  */
 public class ServiceTestServer {
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws InterruptedException, TTransportException {
 		SinchanaServer sinchanaServer1 = new SinchanaServer("127.0.0.1:9227");
 		sinchanaServer1.startServer();
 		sinchanaServer1.join();
@@ -82,7 +85,11 @@ public class ServiceTestServer {
 			public void serviceFound(byte[] key, boolean success, byte[] data) {
 				if (success) {
 					System.out.println(new String(key) + " is found at " + new String(data));
-					sinchanaServer3.getService(data, "Hiru".getBytes(), this);
+					try {
+						sinchanaServer3.getService(data, "Hiru".getBytes(), this);
+					} catch (InterruptedException ex) {
+						Logger.getLogger(ServiceTestServer.class.getName()).log(Level.SEVERE, null, ex);
+					}
 				} else {
 					System.out.println(new String(key) + " is not found");
 				}
