@@ -1,6 +1,7 @@
 package sinchana.test;
 
 import java.net.UnknownHostException;
+import org.apache.thrift.transport.TTransportException;
 import sinchana.SinchanaServer;
 import sinchana.SinchanaRequestHandler;
 import sinchana.SinchanaResponseHandler;
@@ -9,7 +10,7 @@ import sinchana.exceptions.SinchanaTimeOutException;
 
 public class TestClass {
 
-	public static void main(String[] args) throws InterruptedException, UnknownHostException, SinchanaTimeOutException, SinchanaInterruptedException {
+	public static void main(String[] args) throws InterruptedException, UnknownHostException, SinchanaTimeOutException, SinchanaInterruptedException, TTransportException {
 
 		String localAddress = "127.0.0.1";
 		
@@ -29,7 +30,7 @@ public class TestClass {
 		sinchanaServer.join();
 
 
-		final SinchanaServer sinchanaServer2 = new SinchanaServer(localAddress + ":" + 2001, localAddress + ":" + 2000);
+		final SinchanaServer sinchanaServer2 = new SinchanaServer(localAddress + ":" + 2001, "www.abc.ck/" + ":" + 2000);
 
 		sinchanaServer2.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
 

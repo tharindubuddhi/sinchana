@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
@@ -52,7 +54,7 @@ public class TesterController {
 
 			long totalMessageIncome, totalInputMessageQueue,
 					totalResolves, totalResolvesViaPredecessors,
-					maxInputMessageQueueSize, totalLifeTime;
+					maxInputMessageQueueSize, totalLifeTime, numOfTestMsgs;
 			long newTime, oldTime = System.currentTimeMillis();
 			int numOfFullInputBuffs;
 			byte[] maxTester = "n/a".getBytes();
@@ -66,6 +68,7 @@ public class TesterController {
 				totalResolves = 0;
 				totalResolvesViaPredecessors = 0;
 				numOfFullInputBuffs = 0;
+				numOfTestMsgs = 0;
 				long[] testData;
 				Set<Integer> keySet = testServers.keySet();
 				for (int tid : keySet) {
@@ -80,6 +83,7 @@ public class TesterController {
 					totalResolvesViaPredecessors += testData[4];
 					totalLifeTime += testData[5];
 					numOfFullInputBuffs += testData[6];
+					numOfTestMsgs += testData[7];
 				}
 				newTime = System.currentTimeMillis();
 				if (completedCount != 0) {
@@ -89,7 +93,8 @@ public class TesterController {
 							+ "   RP: " + (totalResolves != 0 ? totalResolvesViaPredecessors * 100 / totalResolves : "NA")
 							+ "   TP: " + (newTime > oldTime ? (totalResolves * 1000 / (newTime - oldTime)) : "INF") + "/S"
 							+ "   AL: " + (totalResolves != 0 ? (totalLifeTime / totalResolves) : "NA")
-							+ "   FI: " + numOfFullInputBuffs);
+							+ "   FI: " + numOfFullInputBuffs
+							+ "   MS: " + numOfTestMsgs);
 				}
 				oldTime = newTime;
 //				if (!Arrays.equals(maxTester, maxTesterOld)) {
@@ -226,7 +231,11 @@ public class TesterController {
 		dataHandlerobject.storeSuccessCount = 0;
 		dataHandlerobject.storeFailureCount = 0;
 		for (int i = 0; i < dataArray.length; i++) {
-			testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(), dataHandlerobject);
+			try {
+				testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(), dataHandlerobject);
+			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			}
 		}
 	}
 	long startRetrieveTime = 0;
@@ -236,9 +245,11 @@ public class TesterController {
 		dataHandlerobject.retrieveSuccessCount = 0;
 		dataHandlerobject.retrieveFailureCount = 0;
 		for (int i = 0; i < datakeyArray.length; i++) {
-//            byte[] a = 
-			testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(), dataHandlerobject);
-//            System.out.println(a);
+			try {
+				testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(), dataHandlerobject);
+			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			}
 		}
 	}
 

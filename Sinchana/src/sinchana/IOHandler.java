@@ -34,6 +34,7 @@ public class IOHandler {
 	private final SinchanaServer server;
 	private final SynchronousQueue<Message> outputMessageQueue = new SynchronousQueue<Message>();
 	private TServer tServer;
+	private TTransportException tTransportException = null;
 	private boolean running = false;
 	private final Runnable outputMessageQueueProcessor = new Runnable() {
 
@@ -146,7 +147,7 @@ public class IOHandler {
 						server.getRoutingHandler().triggerOptimize();
 					}
 					if (isRoutable(message)) {
-						if (!this.server.getMessageHandler().queueMessage(message, true)) {
+						if (!this.server.getMessageHandler().queueMessage(message)) {
 							throw new RuntimeException();
 						}
 					}
@@ -180,7 +181,7 @@ public class IOHandler {
 		}
 	}
 
-	public synchronized void startServer() {
+	public synchronized void startServer() throws TTransportException, InterruptedException {
 		if (tServer == null || !tServer.isServing()) {
 			Thread thread = new Thread(new Runnable() {
 
@@ -198,16 +199,16 @@ public class IOHandler {
 						Logger.log(server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 								"Server is shutting down...");
 					} catch (TTransportException ex) {
-						throw new RuntimeException(ex);
+						tTransportException = ex;
 					}
 				}
 			});
 			thread.start();
-			while (tServer == null || !tServer.isServing()) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException ex) {
-				}
+			while (tTransportException == null && (tServer == null || !tServer.isServing())) {
+				Thread.sleep(100);
+			}
+			if (tTransportException != null) {
+				throw tTransportException;
 			}
 		}
 		running = true;

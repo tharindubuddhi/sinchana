@@ -4,11 +4,11 @@
  */
 package sinchana.util.tools;
 
-import java.math.BigInteger;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -26,7 +26,9 @@ public class Hash {
 				throw new RuntimeException();
 			}
 			return digest;
-		} catch (Exception ex) {
+		} catch (UnsupportedEncodingException ex) {
+			throw new RuntimeException("Error calculating hash value", ex);
+		} catch (NoSuchAlgorithmException ex) {
 			throw new RuntimeException("Error calculating hash value", ex);
 		}
 	}

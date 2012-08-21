@@ -6,12 +6,11 @@ package sinchana;
 
 import sinchana.service.SinchanaServiceInterface;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Semaphore;
 import sinchana.connection.Connection;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
@@ -23,27 +22,76 @@ import sinchana.util.logging.Logger;
  * @author Hiru
  */
 public class MessageHandler {
-	
-	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * CONFIGURATIONS.MESSAGE_BUFFER_LIMIT_RATIO / 100;
+
 	private final SinchanaServer server;
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
-	private boolean running = false;
+	private final Semaphore messageQueueLock = new Semaphore(0);
+	private boolean waitOnMessageQueueLock = false;
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
 	 * determined by MESSAGE_BUFFER_SIZE.
 	 */
 	private final ArrayBlockingQueue<Message> incomingMessageQueue = new ArrayBlockingQueue<Message>(CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE);
 	private final Thread incomingMessageQueueThread = new Thread(new Runnable() {
-		
+
+		private boolean joined = false;
+
+		/**
+		 * A node's join is considered completed if and only if 
+		 * it's predecessor and successor are set. Typically, 
+		 * receiving at least 1 of 2 MessageType.JOIN messages it 
+		 * sends at the beginning is enough to identify and to set 
+		 * predecessor and successor. Until the node receives 1 of 
+		 * those 2 messages, all the other messages except DISCOVER_NEIGHBORS
+		 * and JOIN are added back to the queue to process later.
+		 * Once the node receives it's JOIN message, the joining is 
+		 * completed and all the messages are processed with no restriction.
+		 */
 		@Override
 		public void run() {
-			boolean fm = true;
 			while (true) {
 				if (server.getSinchanaTestInterface() != null) {
 					server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
 				}
 				try {
-					processMessage(incomingMessageQueue.take());
+					Message message = incomingMessageQueue.take();
+					if (joined) {
+						processMessage(message);
+						if (waitOnMessageQueueLock) {
+							messageQueueLock.release();
+						}
+					} else {
+						switch (message.type) {
+							case JOIN:
+								if (Arrays.equals(message.source.getServerId(), server.getNode().getServerId())) {
+									joined = true;
+									server.setJoined(true);
+									if (server.getSinchanaTestInterface() != null) {
+										server.getSinchanaTestInterface().setStable(true);
+									}
+								}
+							case DISCOVER_NEIGHBORS:
+								processMessage(message);
+								if (waitOnMessageQueueLock) {
+									messageQueueLock.release();
+								}
+								break;
+							case TEST_RING:
+							case REQUEST:
+							case STORE_DATA:
+							case DELETE_DATA:
+							case GET_DATA:
+							case GET_SERVICE:
+							case ERROR:
+							case RESPONSE:
+							case RESPONSE_DATA:
+							case RESPONSE_SERVICE:
+							case ACKNOWLEDGE_DATA_STORE:
+							case ACKNOWLEDGE_DATA_REMOVE:
+							default:
+								incomingMessageQueue.put(message);
+						}
+					}
 				} catch (InterruptedException ex) {
 					throw new RuntimeException(ex);
 				}
@@ -57,6 +105,7 @@ public class MessageHandler {
 	 */
 	MessageHandler(SinchanaServer server) {
 		this.server = server;
+		incomingMessageQueueThread.start();
 	}
 
 	/**
@@ -64,45 +113,26 @@ public class MessageHandler {
 	 * @param message
 	 * @return
 	 */
-	public boolean queueMessage(Message message, boolean highPriority) {
-		/**
-		 * A node's join is considered completed if and only if 
-		 * it's predecessor and successor are set. Typically, 
-		 * receiving at least 1 of 2 MessageType.JOIN messages it 
-		 * sends at the beginning is enough to identify and to set 
-		 * predecessor and successor. Until the node receives 1 of 
-		 * those 2 messages, all the other messages are added back 
-		 * to the queue to process later.
-		 * Once the node receives it's JOIN message, the joining is 
-		 * completed and all the messages are processed with no restriction.
-		 */
-		if (!running && message.type == MessageType.JOIN
-				&& Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
-			Collection<Message> ms = new ArrayList<Message>();
+	public boolean queueMessage(Message message) {
+		if (this.server.getSinchanaTestInterface() != null) {
+			this.server.getSinchanaTestInterface().incIncomingMessageCount();
+			this.server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
+		}
+		synchronized (incomingMessageQueue) {
+			return incomingMessageQueue.offer(message);
+		}
+	}
+
+	public void addRequest(Message message) throws InterruptedException {
+		boolean success = false;
+		synchronized (incomingMessageQueue) {
+			success = incomingMessageQueue.size() == 0 && incomingMessageQueue.offer(message);
+		}
+		while (!success) {
+			waitOnMessageQueueLock = true;
+			messageQueueLock.acquire();
 			synchronized (incomingMessageQueue) {
-				if (!running) {
-					incomingMessageQueue.drainTo(ms);
-					incomingMessageQueueThread.start();
-					incomingMessageQueue.offer(message);
-					incomingMessageQueue.addAll(ms);
-					running = true;
-				}
-				this.server.setJoined(true);
-			}
-			if (this.server.getSinchanaTestInterface() != null) {
-				this.server.getSinchanaTestInterface().setStable(true);
-			}
-			return true;
-		} else {
-			if (this.server.getSinchanaTestInterface() != null) {
-				this.server.getSinchanaTestInterface().incIncomingMessageCount();
-				this.server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
-			}
-			if (!highPriority && incomingMessageQueue.size() >= BUFFER_LIMIT) {
-				return false;
-			}
-			synchronized (incomingMessageQueue) {
-				return incomingMessageQueue.offer(message);
+				success = incomingMessageQueue.size() == 0 && incomingMessageQueue.offer(message);
 			}
 		}
 	}
@@ -112,9 +142,9 @@ public class MessageHandler {
 	 * @param message
 	 */
 	private synchronized void processMessage(Message message) {
-		
+
 		this.updateTableWithMessage(message);
-		
+
 		switch (message.type) {
 			case REQUEST:
 			case STORE_DATA:
@@ -140,11 +170,12 @@ public class MessageHandler {
 			case ACKNOWLEDGE_DATA_REMOVE:
 				this.server.getClientHandler().setResponse(message);
 				break;
-			
+
 		}
 	}
-	
+
 	private void updateTableWithMessage(Message message) {
+		nodes.clear();
 		boolean updated = false;
 		if (message.isSetFailedNodeSet()) {
 			Set<Node> failedNodeSet = message.getFailedNodeSet();
@@ -153,7 +184,6 @@ public class MessageHandler {
 				updated = updated || this.server.getRoutingHandler().updateTable(node, false);
 			}
 		}
-		Set<Node> nodes = new HashSet<Node>();
 		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			nodes.add(message.source);
 		}
@@ -182,13 +212,14 @@ public class MessageHandler {
 			this.server.getRoutingHandler().triggerOptimize();
 		}
 	}
-	
+	private final Set<Node> nodes = new HashSet<Node>();
+
 	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		BigInteger targetKeyOffset = getOffset(message.getDestinationId());
 		BigInteger predecessorOffset = (predecessor == null ? ZERO : getOffset(predecessor.getServerId()));
 		BigInteger prevStationOffset = getOffset(message.station.getServerId());
-		
+
 		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(ZERO)) {
 			deliverMessage(message);
 		} else {
@@ -199,14 +230,14 @@ public class MessageHandler {
 				 */
 				message.setRoutedViaPredecessors(true);
 				this.server.getIOHandler().send(message, predecessor);
-				
+
 			} else {
 				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
 				this.server.getIOHandler().send(message, nextHop);
 			}
 		}
 	}
-	
+
 	private void processJoin(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			if (this.server.getConnectionPool().hasReportFailed(message.source)) {
@@ -215,7 +246,7 @@ public class MessageHandler {
 				return;
 			}
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
-			
+
 			BigInteger newServerIdOffset = getOffset(message.source.getServerId());
 			BigInteger prevStationIdOffset = getOffset(message.station.getServerId());
 			BigInteger tempNodeOffset, nextPredecessorOffset, nextSuccessorOffset;
@@ -226,7 +257,7 @@ public class MessageHandler {
 				tempNodeOffset = getOffset(node.getServerId());
 				nextPredecessorOffset = getOffset(nextPredecessor.getServerId());
 				nextSuccessorOffset = getOffset(nextSuccessor.getServerId());
-				
+
 				if (newServerIdOffset.compareTo(prevStationIdOffset) != 1
 						&& (nextSuccessorOffset.compareTo(tempNodeOffset) == -1
 						|| nextSuccessorOffset.equals(ZERO))
@@ -252,14 +283,14 @@ public class MessageHandler {
 			}
 		}
 	}
-	
+
 	private void processDiscoverNeighbours(Message message) {
 		if (!Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
 			this.server.getIOHandler().send(message, message.source);
 		}
 	}
-	
+
 	private void processTestRing(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
@@ -322,13 +353,12 @@ public class MessageHandler {
 		}
 		switch (message.type) {
 			case REQUEST:
-				if (this.server.getSinchanaTestInterface() != null) {
-					this.server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.isRoutedViaPredecessors());
-				}
 				handlerAvailable = this.server.getSinchanaRequestHandler() != null;
 				if (responseExpected) {
 					returnMessage.setType(MessageType.RESPONSE);
 					returnMessage.setSuccess(handlerAvailable);
+					returnMessage.setLifetime(1 + message.lifetime);
+					returnMessage.setRoutedViaPredecessors(message.routedViaPredecessors);
 					if (handlerAvailable) {
 						returnMessage.setData(this.server.getSinchanaRequestHandler().request(message.getData()));
 					} else {
