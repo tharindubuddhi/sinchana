@@ -50,34 +50,34 @@ public class ThriftServerImpl implements DHTServer.Iface {
 	public ByteBuffer discoverService(ByteBuffer serviceKey) throws TException {
 		byte[] formattedKey = ByteArrays.arrayConcat(serviceKey.array(), CONFIGURATIONS.SERVICE_TAG);
 		return ByteBuffer.wrap(server.getClientHandler().addRequest(formattedKey, null,
-				MessageType.GET_DATA, null, true).data);
+				MessageType.GET_DATA, -1, null).data);
 	}
 
 	@Override
 	public ByteBuffer getService(ByteBuffer reference, ByteBuffer data) throws TException {
 		return ByteBuffer.wrap(server.getClientHandler().addRequest(reference.array(), data.array(),
-				MessageType.GET_SERVICE, null, true).data);
+				MessageType.GET_SERVICE, -1, null).data);
 	}
 
 	@Override
 	public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws TException {
-		return server.getClientHandler().addRequest(dataKey.array(), data.array(), MessageType.STORE_DATA, null, true).success;
+		return server.getClientHandler().addRequest(dataKey.array(), data.array(), MessageType.STORE_DATA, -1, null).success;
 	}
 
 	@Override
 	public boolean removeData(ByteBuffer dataKey) throws TException {
-		return server.getClientHandler().addRequest(dataKey.array(), null, MessageType.DELETE_DATA, null, true).success;
+		return server.getClientHandler().addRequest(dataKey.array(), null, MessageType.DELETE_DATA, -1, null).success;
 	}
 
 	@Override
 	public ByteBuffer getData(ByteBuffer dataKey) throws TException {
-		return ByteBuffer.wrap(server.getClientHandler().addRequest(dataKey.array(), null, MessageType.GET_DATA, null, true).data);
+		return ByteBuffer.wrap(server.getClientHandler().addRequest(dataKey.array(), null, MessageType.GET_DATA, -1, null).data);
 	}
 
 	@Override
 	public ByteBuffer request(ByteBuffer destination, ByteBuffer message) throws TException {
 		return ByteBuffer.wrap(server.getClientHandler().addRequest(destination.array(), message.array(),
-				MessageType.REQUEST, null, true).data);
+				MessageType.REQUEST, -1, null).data);
 	}
 
 	@Override

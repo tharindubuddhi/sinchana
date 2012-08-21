@@ -4,10 +4,12 @@ import java.net.UnknownHostException;
 import sinchana.SinchanaServer;
 import sinchana.SinchanaRequestHandler;
 import sinchana.SinchanaResponseHandler;
+import sinchana.exceptions.SinchanaInterruptedException;
+import sinchana.exceptions.SinchanaTimeOutException;
 
 public class TestClass {
 
-	public static void main(String[] args) throws InterruptedException, UnknownHostException {
+	public static void main(String[] args) throws InterruptedException, UnknownHostException, SinchanaTimeOutException, SinchanaInterruptedException {
 
 		String localAddress = "127.0.0.1";
 		

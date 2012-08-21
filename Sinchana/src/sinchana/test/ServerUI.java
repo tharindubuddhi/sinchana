@@ -241,7 +241,7 @@ private void destFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIR
 }//GEN-LAST:event_destFieldActionPerformed
 
 private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
-	this.tester.send(this.destField.getText(), this.messageField.getText());
+	
 }//GEN-LAST:event_sendButtonActionPerformed
 
 private void downActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downActionPerformed

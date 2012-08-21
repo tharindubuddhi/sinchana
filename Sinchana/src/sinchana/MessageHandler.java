@@ -13,12 +13,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import sinchana.connection.Connection;
-import sinchana.test.TesterController;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
-import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -26,7 +24,7 @@ import sinchana.util.tools.ByteArrays;
  */
 public class MessageHandler {
 	
-	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * 20 / 100;
+	private final int BUFFER_LIMIT = CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE * CONFIGURATIONS.MESSAGE_BUFFER_LIMIT_RATIO / 100;
 	private final SinchanaServer server;
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private boolean running = false;
@@ -39,6 +37,7 @@ public class MessageHandler {
 		
 		@Override
 		public void run() {
+			boolean fm = true;
 			while (true) {
 				if (server.getSinchanaTestInterface() != null) {
 					server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
@@ -81,15 +80,15 @@ public class MessageHandler {
 				&& Arrays.equals(message.source.getServerId(), this.server.getNode().getServerId())) {
 			Collection<Message> ms = new ArrayList<Message>();
 			synchronized (incomingMessageQueue) {
-				if (!incomingMessageQueueThread.isAlive()) {
+				if (!running) {
 					incomingMessageQueue.drainTo(ms);
 					incomingMessageQueueThread.start();
 					incomingMessageQueue.offer(message);
 					incomingMessageQueue.addAll(ms);
+					running = true;
 				}
-				running = true;
+				this.server.setJoined(true);
 			}
-			this.server.setJoined(true);
 			if (this.server.getSinchanaTestInterface() != null) {
 				this.server.getSinchanaTestInterface().setStable(true);
 			}

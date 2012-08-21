@@ -5,6 +5,8 @@
 package sinchana.test;
 
 import sinchana.SinchanaServer;
+import sinchana.exceptions.SinchanaInterruptedException;
+import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.service.SinchanaServiceHandler;
 import sinchana.util.tools.ByteArrays;
 
@@ -38,29 +40,41 @@ public class ServiceTestServer {
 		Thread.sleep(2000);
 		System.out.println("proceed...");
 		byte[] reference, resp;
-		reference = sinchanaServer3.discoverService("HelloService".getBytes());
-		if (reference != null) {
-			System.out.println("Found at " + ByteArrays.toReadableString(reference));
-			resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
-			if (resp != null) {
-				System.out.println("resp: " + new String(resp));
+		try {
+			reference = sinchanaServer3.discoverService("HelloService".getBytes());
+			if (reference != null) {
+				System.out.println("Found at " + ByteArrays.toReadableString(reference));
+				resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
+				if (resp != null) {
+					System.out.println("resp: " + new String(resp));
+				} else {
+					System.out.println("Service invocation is failed");
+				}
 			} else {
-				System.out.println("Service invocation is failed");
+				System.out.println("Not found!");
 			}
-		} else {
-			System.out.println("Not found!");
+		} catch (SinchanaTimeOutException ste) {
+			System.out.println(ste.getMessage());
+		} catch (SinchanaInterruptedException sie) {
+			System.out.println(sie.getMessage());
 		}
-		reference = sinchanaServer3.discoverService("GreetingsService".getBytes());
-		if (reference != null) {
-			System.out.println("Found at " + ByteArrays.toReadableString(reference));
-			resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
-			if (resp != null) {
-				System.out.println("resp: " + new String(resp));
+		try {
+			reference = sinchanaServer3.discoverService("GreetingsService".getBytes());
+			if (reference != null) {
+				System.out.println("Found at " + ByteArrays.toReadableString(reference));
+				resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
+				if (resp != null) {
+					System.out.println("resp: " + new String(resp));
+				} else {
+					System.out.println("Service invocation is failed");
+				}
 			} else {
-				System.out.println("Service invocation is failed");
+				System.out.println("Not found!");
 			}
-		} else {
-			System.out.println("Not found!");
+		} catch (SinchanaTimeOutException ste) {
+			System.out.println(ste.getMessage());
+		} catch (SinchanaInterruptedException sie) {
+			System.out.println(sie.getMessage());
 		}
 		SinchanaServiceHandler ssh = new SinchanaServiceHandler() {
 
@@ -81,7 +95,7 @@ public class ServiceTestServer {
 
 			@Override
 			public void error(byte[] error) {
-				throw new UnsupportedOperationException("Not supported yet.");
+				System.out.println("Error: " + new String(error));
 			}
 		};
 		sinchanaServer3.discoverService("HelloService".getBytes(), ssh);

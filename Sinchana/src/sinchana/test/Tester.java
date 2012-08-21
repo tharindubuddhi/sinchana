@@ -83,11 +83,10 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	/**
 	 * 
 	 */
-	private long startTime = -1, endTime = -1;
+	private long startTime = System.currentTimeMillis(), endTime = -1;
 
 	public void startTest(long numOfTestingMessages) {
 		this.numOfTestingMessages += numOfTestingMessages;
-		startTime = System.currentTimeMillis();
 		threadLock.release();
 	}
 
@@ -101,11 +100,14 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 		@Override
 		public void response(byte[] message) {
-			if (++TesterController.totalCount % 1000 == 0) {
+			if (++TesterController.totalCount >= 10000) {
 				endTime = System.currentTimeMillis();
 				System.out.println("Num of Messages: "
 						+ (TesterController.totalCount - TesterController.errorCount) + "/" + TesterController.totalCount
 						+ " @ " + (endTime - startTime) + "ms");
+				TesterController.totalCount = 0;
+				TesterController.errorCount = 0;
+				startTime = endTime;
 			}
 			TesterController.inc();
 		}
@@ -239,10 +241,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		if (this.gui != null) {
 			this.gui.setServerRunning(isRunning);
 		}
-	}
-
-	public void send(String dest, String msg) {
-		this.server.request(dest.getBytes(), msg.getBytes());
 	}
 
 	@Override
