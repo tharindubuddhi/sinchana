@@ -75,6 +75,5 @@ public class ThriftServerImpl implements DHTServer.Iface {
 
 	@Override
 	public void ping() throws TException {
-		System.out.println(server.getNode().serverId + ": pinged :)");
 	}
 }

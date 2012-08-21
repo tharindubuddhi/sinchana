@@ -22,7 +22,7 @@ public class CONFIGURATIONS {
 	public static final int ROUTING_OPTIMIZATION_TIME_OUT = 10;	//Seconds
 	public static final int NUM_OF_MAX_SEND_RETRIES = 3;
 	public static final int NUM_OF_MAX_CONNECT_RETRIES = 3;
-	public static final int FAILED_REACCEPT_TIME_OUT = 60 * 1000;	//milliseconds
+	public static final long FAILED_REACCEPT_TIME_OUT = 60 * 1000;	//milliseconds
 	public static final int JOIN_RETRY_TIME_OUT = 5; //Seconds
 	public static final int MAX_JOIN_RETRIES = 5;
 	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 30 * 1000; //milliseconds

@@ -33,6 +33,7 @@
  ************************************************************************************/
 package sinchana;
 
+import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.dataStore.SinchanaDataStoreInterface;
 import sinchana.dataStore.SinchanaDataHandler;
@@ -46,12 +47,13 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import sinchana.chord.ChordTable;
 import sinchana.connection.ConnectionPool;
+import sinchana.exceptions.SinchanaJoinException;
 import sinchana.pastry.PastryTable;
 import sinchana.tapastry.TapestryTable;
-import sinchana.test.TesterController;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -64,6 +66,7 @@ import sinchana.util.tools.Hash;
  */
 public class SinchanaServer {
 
+	private static final String ERROR_MSG_JOIN_FAILED = "Join failed. Maximum number of retries exceeded!";
 	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final IOHandler iOHandler = new IOHandler(this);
 //	private final RoutingHandler routingHandler = new ChordTable(this);
@@ -77,6 +80,7 @@ public class SinchanaServer {
 	private final BigInteger serverIdAsBigInt;
 	private final Node node;
 	private final String serverIdAsString;
+	private final Semaphore joinLock = new Semaphore(0);
 	private boolean joined = false;
 	private SinchanaRequestHandler SinchanaRequestHandler = null;
 	private SinchanaTestInterface sinchanaTestInterface = null;
@@ -130,38 +134,34 @@ public class SinchanaServer {
 		this.iOHandler.startServer();
 	}
 
-	public boolean join() {
+	public void join() throws TException, InterruptedException {
 		Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.JOIN_MESSAGE_LIFETIME);
 		if (this.remoteNodeAddress != null && !this.remoteNodeAddress.equals(this.node.address)) {
 			Node remoteNode = new Node(ByteBuffer.wrap(Hash.generateId(remoteNodeAddress)), remoteNodeAddress);
-			int count = CONFIGURATIONS.JOIN_RETRY_TIME_OUT * 100;
+			msg.setDestination(remoteNode);
 			int joinAttempt = 0;
 			while (!joined) {
-				try {
-					count++;
-					if (count > CONFIGURATIONS.JOIN_RETRY_TIME_OUT * 100) {
-						count = 0;
-						if (++joinAttempt > CONFIGURATIONS.MAX_JOIN_RETRIES) {
-							System.out.println(this + ": Join failed!");
-							return false;
-						}
-						System.out.println(this + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
-						this.iOHandler.send(msg, remoteNode);
-					}
-					Thread.sleep(10);
-				} catch (InterruptedException ex) {
-					throw new RuntimeException(ex);
+				if (++joinAttempt > CONFIGURATIONS.MAX_JOIN_RETRIES) {
+					throw new SinchanaJoinException(ERROR_MSG_JOIN_FAILED);
 				}
+				System.out.println(this + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
+				this.iOHandler.directSend(msg);
+				joinLock.tryAcquire(CONFIGURATIONS.JOIN_RETRY_TIME_OUT, TimeUnit.SECONDS);
 			}
 		} else {
 			msg.setStation(this.node);
+			msg.setSuccess(true);
 			messageHandler.queueMessage(msg);
 		}
-		return true;
 	}
 
-	void setJoined(boolean joined) {
-		this.joined = joined;
+	void setJoined(boolean joined, String status) {
+		if (joined) {
+			this.joined = joined;
+			joinLock.release();
+		} else {
+			System.out.println(status);
+		}
 	}
 
 	/**

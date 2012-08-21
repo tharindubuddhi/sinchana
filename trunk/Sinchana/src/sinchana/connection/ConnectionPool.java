@@ -140,16 +140,16 @@ public class ConnectionPool {
 		}
 	}
 
-	public void updateFailedNodeInfo(Set<Node> failedNodeSet) {
+	public void updateFailedNodeInfo(Set<Node> failedNodeSet, boolean reportFailure) {
 		for (Node node : failedNodeSet) {
 			Connection connection = getConnection(node);
-			connection.failedByInfo();
+			connection.failedByInfo(reportFailure);
 		}
 	}
 
-	public void updateFailedNodeInfo(Node node) {
+	public void updateFailedNodeInfo(Node node, boolean reportFailure) {
 		Connection connection = getConnection(node);
-		connection.failedByInfo();
+		connection.failedByInfo(reportFailure);
 	}
 
 	public Set<Node> getFailedNodes() {

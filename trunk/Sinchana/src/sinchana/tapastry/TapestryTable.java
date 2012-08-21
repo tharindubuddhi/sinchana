@@ -188,11 +188,10 @@ public class TapestryTable implements RoutingHandler {
 
 				column = (column + 1) % TAPESTRY_TABLE_NUMBER_BASE;
 				if (iRaw == raw && iColumn == column) {
-					System.out.println(this.server.getServerIdAsString() + ": No result found!");
-					break;
+					throw new RuntimeException("This happens :P");
+					//return;
 				}
 			}
-			return null;
 		}
 	}
 
