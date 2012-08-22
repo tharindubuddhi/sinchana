@@ -23,20 +23,21 @@ import sinchana.CONFIGURATIONS;
  */
 public class TapestryTable implements RoutingHandler {
 
-	public static final int TAPESTRY_TABLE_NUMBER_BASE = 16;
-	public static final int TABLE_SIZE = 40;
-	private static final int SUCCESSOR_LEVEL = 3;
-	private static final int NUMBER_OF_ENTRIES = 3;
-	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
+	private static final int SUCCESSOR_LEVELS = 3;
+	private static final int NUMBER_OF_TABLE_ENTRIES = 3;
+	private static final int BASE_POWER = 4;
+	private static final int TABLE_WIDTH = (int) Math.pow(2, BASE_POWER);
+	private static final int TABLE_SIZE = 40;
+	private static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private final SinchanaServer server;
-	private final Node[] successors = new Node[SUCCESSOR_LEVEL];
-	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
+	private final Node[] successors = new Node[SUCCESSOR_LEVELS];
+	private final Node[] predecessors = new Node[SUCCESSOR_LEVELS];
 	private byte[] serverId;
 	private BigInteger serverIdAsBigInt;
-	private final Node[][][] fingerTable = new Node[TABLE_SIZE][TAPESTRY_TABLE_NUMBER_BASE][NUMBER_OF_ENTRIES];
+	private final Node[][][] fingerTable = new Node[TABLE_SIZE][TABLE_WIDTH][NUMBER_OF_TABLE_ENTRIES];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
-    
+
 	/**
 	 * Class constructor with the server instance where the routing table is initialize.
 	 * @param server		SinchanaServer instance. The routing table will be initialize based on this.
@@ -73,8 +74,8 @@ public class TapestryTable implements RoutingHandler {
 	private void initFingerTable() {
 		synchronized (fingerTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
-				for (int j = 0; j < TAPESTRY_TABLE_NUMBER_BASE; j++) {
-					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+				for (int j = 0; j < TABLE_WIDTH; j++) {
+					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
 						fingerTable[i][j][k] = null;
 					}
 				}
@@ -84,12 +85,12 @@ public class TapestryTable implements RoutingHandler {
 		 * initializes by setting this server it self as the predecessor and successor.
 		 */
 		synchronized (predecessors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				predecessors[i] = null;
 			}
 		}
 		synchronized (successors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				successors[i] = null;
 			}
 		}
@@ -141,13 +142,13 @@ public class TapestryTable implements RoutingHandler {
 
 	@Override
 	public Node getNextNode(byte[] destination) {
-		synchronized (fingerTable) {
+		int raw = getRaw(this.serverId, destination);
+		if (raw == -1) {
+			return this.server.getNode();
+		}
+		int column = getColumn(destination, raw);
 
-			int raw = getRaw(this.serverId, destination);
-			if (raw == -1) {
-				return this.server.getNode();
-			}
-			int column = getColumn(destination, raw);
+		synchronized (fingerTable) {
 			for (Node node : fingerTable[raw][column]) {
 				if (node != null) {
 					return node;
@@ -180,13 +181,13 @@ public class TapestryTable implements RoutingHandler {
 					raw--;
 					traverseDown = raw != 0;
 					column = -1;
-				} else if (!traverseDown && column == TAPESTRY_TABLE_NUMBER_BASE - 1) {
+				} else if (!traverseDown && column == TABLE_WIDTH - 1) {
 					raw++;
-					traverseDown = raw >= TapestryTable.TABLE_SIZE - 1;
+					traverseDown = raw >= TABLE_SIZE - 1;
 					column = getColumn(this.serverId, raw);
 				}
 
-				column = (column + 1) % TAPESTRY_TABLE_NUMBER_BASE;
+				column = (column + 1) % TABLE_WIDTH;
 				if (iRaw == raw && iColumn == column) {
 					throw new RuntimeException("This happens :P");
 					//return;
@@ -201,8 +202,8 @@ public class TapestryTable implements RoutingHandler {
 		Set<Node> neighbourSet = new HashSet<Node>();
 		synchronized (fingerTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
-				for (int j = 0; j < TAPESTRY_TABLE_NUMBER_BASE; j++) {
-					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+				for (int j = 0; j < TABLE_WIDTH; j++) {
+					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
 						if (fingerTable[i][j][k] != null) {
 							neighbourSet.add(fingerTable[i][j][k]);
 						}
@@ -212,14 +213,14 @@ public class TapestryTable implements RoutingHandler {
 		}
 		//adds the predecessors & the successors.
 		synchronized (predecessors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (predecessors[i] != null) {
 					neighbourSet.add(this.predecessors[i]);
 				}
 			}
 		}
 		synchronized (successors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (successors[i] != null) {
 					neighbourSet.add(this.successors[i]);
 				}
@@ -251,7 +252,7 @@ public class TapestryTable implements RoutingHandler {
 		Node tempNodeToUpdate = node;
 		synchronized (successors) {
 			BigInteger successorWRT = ZERO;
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
 				 * Checks whether the new node should be set as the successors or not. 
 				 * if successors is the server itself (successorOffset == 0) or if the new node 
@@ -278,7 +279,7 @@ public class TapestryTable implements RoutingHandler {
 		tempNodeToUpdate = node;
 		synchronized (predecessors) {
 			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
 				 * Checks whether the new node should be set as the predecessors or not. 
 				 * if predecessors is the server itself (predecessorOffset == 0) or if the new node 
@@ -304,7 +305,7 @@ public class TapestryTable implements RoutingHandler {
 		int raw = getRaw(this.serverId, node.getServerId());
 		int column = getColumn(node.getServerId(), raw);
 		synchronized (fingerTable) {
-			for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+			for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
 				if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].getServerId(), node.getServerId())) {
 					break;
 				} else if (fingerTable[raw][column][i] == null) {
@@ -342,27 +343,23 @@ public class TapestryTable implements RoutingHandler {
 		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
 	}
 
-	private BigInteger getOffset(BigInteger id) {
-		return SinchanaServer.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
-	}
-
 	private int getRaw(byte[] id, byte[] newId) {
-		BigInteger factor = new BigInteger(Integer.toString(TAPESTRY_TABLE_NUMBER_BASE));
-		BigInteger t1 = new BigInteger(1, id);
-		BigInteger t2 = new BigInteger(1, newId);
-		int i = -1;
-		while (!t1.equals(t2)) {
-			i++;
-			t1 = t1.divide(factor);
-			t2 = t2.divide(factor);
+		int x1, x2;
+		for (int i = 0; i < 20; i++) {
+			x1 = id[i];
+			x2 = newId[i];
+			for (int j = 7; j >= 0; j--) {
+				if ((x1 & (1 << j)) != (x2 & (1 << j))) {
+					return ((8 / BASE_POWER) * (20 - i) - ((8 / BASE_POWER) - (int) (j / BASE_POWER)));
+				}
+			}
 		}
-		return i;
+		return -1;
 	}
 
 	private int getColumn(byte[] id, int raw) {
-		BigInteger val = new BigInteger(1, id);
-		val = val.divide(new BigInteger(Integer.toString(TAPESTRY_TABLE_NUMBER_BASE)).pow(raw));
-		val = val.mod(new BigInteger(Integer.toString(TAPESTRY_TABLE_NUMBER_BASE)));
-		return val.intValue();
+		int val = (id[20 - (raw * BASE_POWER / 8) - 1] + 256) % 256;
+		val = (int) (val / Math.pow(TABLE_WIDTH, raw % (8 / BASE_POWER)));
+		return val % TABLE_WIDTH;
 	}
 }

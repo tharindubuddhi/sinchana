@@ -48,7 +48,7 @@ public class ServiceTestServer {
 			reference = sinchanaServer3.discoverService("HelloService".getBytes());
 			if (reference != null) {
 				System.out.println("Found at " + ByteArrays.toReadableString(reference));
-				resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
+				resp = sinchanaServer3.getService(reference, "Sinchana".getBytes());
 				if (resp != null) {
 					System.out.println("resp: " + new String(resp));
 				} else {
@@ -66,7 +66,7 @@ public class ServiceTestServer {
 			reference = sinchanaServer3.discoverService("GreetingsService".getBytes());
 			if (reference != null) {
 				System.out.println("Found at " + ByteArrays.toReadableString(reference));
-				resp = sinchanaServer3.getService(reference, "Hiru".getBytes());
+				resp = sinchanaServer3.getService(reference, "Sinchana".getBytes());
 				if (resp != null) {
 					System.out.println("resp: " + new String(resp));
 				} else {
@@ -87,7 +87,7 @@ public class ServiceTestServer {
 				if (success) {
 					System.out.println(new String(key) + " is found at " + new String(data));
 					try {
-						sinchanaServer3.getService(data, "Hiru".getBytes(), this);
+						sinchanaServer3.getService(data, "Sinchana".getBytes(), this);
 					} catch (InterruptedException ex) {
 						Logger.getLogger(ServiceTestServer.class.getName()).log(Level.SEVERE, null, ex);
 					}
