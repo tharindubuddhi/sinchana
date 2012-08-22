@@ -6,6 +6,7 @@ package sinchana.test;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
 import org.apache.thrift.TException;
@@ -46,8 +47,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			this.testId = testId;
 			this.testerController = tc;
 			String address, remoteNodeAddress;
-			address = InetAddress.getLocalHost().getHostAddress();
-//			address = "127.0.0.1";
+//			address = InetAddress.getLocalHost().getHostAddress();
+			address = "127.0.0.1";
 			remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
 			remoteNodeAddress = address + ":8000";
 			server = new SinchanaServer(address + ":" + portId, remoteNodeAddress);
@@ -109,8 +110,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		@Override
 		public void error(byte[] message) {
 			System.out.println(TAG_ERROR + new String(message));
-			System.out.println("Num of Messages: "
-					+ (++TesterController.totalCount - ++TesterController.errorCount) + "/" + TesterController.totalCount);
 		}
 	};
 	private static final String TAG_ERROR = "ERROR: ";
@@ -129,7 +128,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				threadLock.acquire();
 				while (numOfTestingMessages > 0) {
 					BigInteger bi = new BigInteger(160, random);
-					server.request(bi.toByteArray(), MESSAGE, srh);
+					server.request(Arrays.copyOf(bi.toByteArray(), 20), MESSAGE, srh);
 					numOfTestingMessages--;
 				}
 			}

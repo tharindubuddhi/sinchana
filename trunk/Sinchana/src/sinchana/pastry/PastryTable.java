@@ -23,18 +23,18 @@ import sinchana.CONFIGURATIONS;
  */
 public class PastryTable implements RoutingHandler {
 
-	public static final int PASTRY_TABLE_NUMBER_BASE = 16;
-	public static final int TABLE_SIZE = 40;
-	private static final int SUCCESSOR_LEVEL = 3;
-	private static final int NUMBER_OF_ENTRIES = 3;
+	private static final int SUCCESSOR_LEVELS = 8;
+	private static final int NUMBER_OF_TABLE_ENTRIES = 3;
+	private static final int BASE_POWER = 4;
+	private static final int TABLE_WIDTH = (int) Math.pow(2, BASE_POWER);
+	private static final int TABLE_SIZE = 40;
 	private static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
-	private static final BigInteger FACTOR = new BigInteger(Integer.toString(PASTRY_TABLE_NUMBER_BASE));
 	private final SinchanaServer server;
-	private final Node[] successors = new Node[SUCCESSOR_LEVEL];
-	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
+	private final Node[] successors = new Node[SUCCESSOR_LEVELS];
+	private final Node[] predecessors = new Node[SUCCESSOR_LEVELS];
 	private byte[] serverId;
 	private BigInteger serverIdAsBigInt;
-	private final Node[][][] fingerTable = new Node[TABLE_SIZE][PASTRY_TABLE_NUMBER_BASE][NUMBER_OF_ENTRIES];
+	private final Node[][][] fingerTable = new Node[TABLE_SIZE][TABLE_WIDTH][NUMBER_OF_TABLE_ENTRIES];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
@@ -74,8 +74,8 @@ public class PastryTable implements RoutingHandler {
 	private void initFingerTable() {
 		synchronized (fingerTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
-				for (int j = 0; j < PASTRY_TABLE_NUMBER_BASE; j++) {
-					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+				for (int j = 0; j < TABLE_WIDTH; j++) {
+					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
 						fingerTable[i][j][k] = null;
 					}
 				}
@@ -85,12 +85,12 @@ public class PastryTable implements RoutingHandler {
 		 * initializes by setting this server it self as the predecessor and successor.
 		 */
 		synchronized (predecessors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				predecessors[i] = null;
 			}
 		}
 		synchronized (successors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				successors[i] = null;
 			}
 		}
@@ -151,6 +151,7 @@ public class PastryTable implements RoutingHandler {
 			return this.server.getNode();
 		}
 		int column = getColumn(destination, raw);
+
 		synchronized (fingerTable) {
 			for (Node node : fingerTable[raw][column]) {
 				if (node != null) {
@@ -184,13 +185,13 @@ public class PastryTable implements RoutingHandler {
 					raw--;
 					traverseDown = raw != 0;
 					column = -1;
-				} else if (!traverseDown && column == PASTRY_TABLE_NUMBER_BASE - 1) {
+				} else if (!traverseDown && column == TABLE_WIDTH - 1) {
 					raw++;
-					traverseDown = raw >= PastryTable.TABLE_SIZE - 1;
+					traverseDown = raw >= TABLE_SIZE - 1;
 					column = getColumn(this.serverId, raw);
 				}
 
-				column = (column + 1) % PASTRY_TABLE_NUMBER_BASE;
+				column = (column + 1) % TABLE_WIDTH;
 				if (iRaw == raw && iColumn == column) {
 					throw new RuntimeException("This happens :P");
 					//return;
@@ -205,8 +206,8 @@ public class PastryTable implements RoutingHandler {
 		Set<Node> neighbourSet = new HashSet<Node>();
 		synchronized (fingerTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
-				for (int j = 0; j < PASTRY_TABLE_NUMBER_BASE; j++) {
-					for (int k = 0; k < NUMBER_OF_ENTRIES; k++) {
+				for (int j = 0; j < TABLE_WIDTH; j++) {
+					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
 						if (fingerTable[i][j][k] != null) {
 							neighbourSet.add(fingerTable[i][j][k]);
 						}
@@ -216,14 +217,14 @@ public class PastryTable implements RoutingHandler {
 		}
 		//adds the predecessors & the successors.
 		synchronized (predecessors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (predecessors[i] != null) {
 					neighbourSet.add(this.predecessors[i]);
 				}
 			}
 		}
 		synchronized (successors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (successors[i] != null) {
 					neighbourSet.add(this.successors[i]);
 				}
@@ -255,7 +256,7 @@ public class PastryTable implements RoutingHandler {
 		Node tempNodeToUpdate = node;
 		synchronized (successors) {
 			BigInteger successorWRT = ZERO;
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
 				 * Checks whether the new node should be set as the successors or not. 
 				 * if successors is the server itself (successorOffset == 0) or if the new node 
@@ -282,7 +283,7 @@ public class PastryTable implements RoutingHandler {
 		tempNodeToUpdate = node;
 		synchronized (predecessors) {
 			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
 				 * Checks whether the new node should be set as the predecessors or not. 
 				 * if predecessors is the server itself (predecessorOffset == 0) or if the new node 
@@ -308,7 +309,7 @@ public class PastryTable implements RoutingHandler {
 		int raw = getRaw(this.serverId, node.getServerId());
 		int column = getColumn(node.getServerId(), raw);
 		synchronized (fingerTable) {
-			for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+			for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
 				if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].getServerId(), node.getServerId())) {
 					break;
 				} else if (fingerTable[raw][column][i] == null) {
@@ -347,28 +348,29 @@ public class PastryTable implements RoutingHandler {
 	}
 
 	private int getRaw(byte[] id, byte[] newId) {
-		BigInteger t1 = new BigInteger(1, id);
-		BigInteger t2 = new BigInteger(1, newId);
-		int i = -1;
-		while (!t1.equals(t2)) {
-			i++;
-			t1 = t1.divide(FACTOR);
-			t2 = t2.divide(FACTOR);
+		int x1, x2;
+		for (int i = 0; i < 20; i++) {
+			x1 = id[i];
+			x2 = newId[i];
+			for (int j = 7; j >= 0; j--) {
+				if ((x1 & (1 << j)) != (x2 & (1 << j))) {
+					return ((8 / BASE_POWER) * (20 - i) - ((8 / BASE_POWER) - (int) (j / BASE_POWER)));
+				}
+			}
 		}
-		return i;
+		return -1;
 	}
 
 	private int getColumn(byte[] id, int raw) {
-		BigInteger val = new BigInteger(1, id);
-		val = val.divide(FACTOR.pow(raw));
-		val = val.mod(FACTOR);
-		return val.intValue();
+		int val = (id[20 - (raw * BASE_POWER / 8) - 1] + 256) % 256;
+		val = (int) (val / Math.pow(TABLE_WIDTH, raw % (8 / BASE_POWER)));
+		return val % TABLE_WIDTH;
 	}
 
 	private Node checkInLeafSet(byte[] destinationId) {
 		BigInteger nodeOffset, destinationOffset = getOffset(destinationId);
 		synchronized (successors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (successors[i] == null) {
 					break;
 				}
@@ -380,7 +382,7 @@ public class PastryTable implements RoutingHandler {
 		}
 		Node node = this.server.getNode();
 		synchronized (predecessors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (predecessors[i] == null) {
 					break;
 				}

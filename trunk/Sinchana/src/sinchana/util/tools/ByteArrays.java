@@ -16,7 +16,16 @@ import sinchana.thrift.Node;
 public class ByteArrays {
 
 	public static String idToReadableString(Node node) {
-		return toReadableString(node.serverId.array()).toUpperCase();
+		return toReadableString(node.serverId.array());
+	}
+	
+	public static String idToReadableString(ByteBuffer byteBuffer) {
+		return toReadableString(byteBuffer.array());
+	}
+
+	public static String idToReadableString(byte[] arrayToRead) {
+		String val = new BigInteger(1, arrayToRead).toString(16).toUpperCase();
+		return (val.length() == 40 ? val : "0" + val);
 	}
 
 	public static String toReadableString(ByteBuffer byteBuffer) {

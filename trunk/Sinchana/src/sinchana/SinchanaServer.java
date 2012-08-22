@@ -95,8 +95,7 @@ public class SinchanaServer {
 	 * @param portId		Port Id number where the the server is running.
 	 */
 	public SinchanaServer(int localPortId) throws UnknownHostException {
-		InetAddress inetAddress = InetAddress.getLocalHost();
-		String localAddress = inetAddress.getHostAddress() + ":" + localPortId;
+		String localAddress = InetAddress.getLocalHost().getHostAddress() + ":" + localPortId;
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
 		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE).toUpperCase();
@@ -111,8 +110,7 @@ public class SinchanaServer {
 	}
 
 	public SinchanaServer(int localPortId, String remoteNodeAddress) throws UnknownHostException {
-		InetAddress inetAddress = InetAddress.getLocalHost();
-		String localAddress = inetAddress.getHostAddress() + ":" + localPortId;
+		String localAddress = InetAddress.getLocalHost().getHostAddress() + ":" + localPortId;
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsBigInt = new BigInteger(1, this.node.getServerId());
 		this.serverIdAsString = serverIdAsBigInt.toString(CONFIGURATIONS.NUMBER_BASE).toUpperCase();
@@ -144,7 +142,7 @@ public class SinchanaServer {
 				if (++joinAttempt > CONFIGURATIONS.MAX_JOIN_RETRIES) {
 					throw new SinchanaJoinException(ERROR_MSG_JOIN_FAILED);
 				}
-				System.out.println(this + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
+				System.out.println(this.serverIdAsString + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
 				this.iOHandler.directSend(msg);
 				joinLock.tryAcquire(CONFIGURATIONS.JOIN_RETRY_TIME_OUT, TimeUnit.SECONDS);
 			}
