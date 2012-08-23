@@ -21,19 +21,19 @@ import sinchana.util.tools.ByteArrays;
 public class ServiceTestServer {
 
 	public static void main(String[] args) throws InterruptedException, TTransportException, TException {
-		SinchanaServer sinchanaServer1 = new SinchanaServer("127.0.0.1:9227");
+		final SinchanaServer sinchanaServer1 = new SinchanaServer("127.0.0.1:9227");
 		sinchanaServer1.startServer();
-		sinchanaServer1.join();
+		sinchanaServer1.join(null);
 		System.out.println("S1: " + sinchanaServer1.getServerIdAsString() + " joined the ring");
 
-		SinchanaServer sinchanaServer2 = new SinchanaServer("127.0.0.1:9228", "127.0.0.1:9227");
+		final SinchanaServer sinchanaServer2 = new SinchanaServer("127.0.0.1:9228");
 		sinchanaServer2.startServer();
-		sinchanaServer2.join();
+		sinchanaServer2.join("127.0.0.1:9227");
 		System.out.println("S2: " + sinchanaServer2.getServerIdAsString() + " joined the ring");
 
-		final SinchanaServer sinchanaServer3 = new SinchanaServer("127.0.0.1:9229", "127.0.0.1:9227");
+		final SinchanaServer sinchanaServer3 = new SinchanaServer("127.0.0.1:9229");
 		sinchanaServer3.startServer();
-		sinchanaServer3.join();
+		sinchanaServer3.join("127.0.0.1:9227");
 		System.out.println("S3: " + sinchanaServer3.getServerIdAsString() + " joined the ring");
 
 		sinchanaServer3.testRing();

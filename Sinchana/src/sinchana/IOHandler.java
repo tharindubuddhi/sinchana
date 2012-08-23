@@ -30,6 +30,8 @@ public class IOHandler {
 	public static final int ACCEPT_ERROR = 1;
 	public static final int SUCCESS = 2;
 	private final SinchanaServer server;
+	private final Node thisNode;
+	private final byte[] serverId;
 	private final SynchronousQueue<Message> outputMessageQueue = new SynchronousQueue<Message>();
 	private TServer tServer;
 	private TTransportException tTransportException = null;
@@ -56,20 +58,22 @@ public class IOHandler {
 	 */
 	public IOHandler(SinchanaServer svr) {
 		this.server = svr;
+		thisNode = server.getNode();
+		this.serverId = thisNode.getServerId();
 	}
 
 	public void send(Message message, Node destination) {
-		if (Arrays.equals(this.server.getNode().getServerId(), destination.getServerId())) {
+		if (Arrays.equals(serverId, destination.serverId.array())) {
 			System.out.println(this.server.getServerIdAsString() + ": just to let you know "
 					+ "that forwading within same node still happens :P \n" + message);
 		}
 		if (message.lifetime <= 0) {
 			message.setError(ERROR_MSG_LIFE_TIME_EXPIRED);
 			message.setDestination(message.source);
-			message.setDestinationId(message.source.getServerId());
+			message.setDestinationId(message.source.serverId);
 			message.setType(MessageType.ERROR);
 			message.setSuccess(false);
-			message.setSource(this.server.getNode());
+			message.setSource(thisNode);
 		} else {
 			message.setDestination(destination.deepCopy());
 		}
@@ -116,13 +120,13 @@ public class IOHandler {
 				}
 				message.setError(ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED);
 				message.setDestination(message.source);
-				message.setDestinationId(message.source.getServerId());
+				message.setDestinationId(message.source.serverId);
 				message.setType(MessageType.ERROR);
 				message.setSuccess(false);
-				message.setSource(this.server.getNode());
+				message.setSource(thisNode);
 				tries = 0;
 			}
-			message.setStation(server.getNode());
+			message.setStation(thisNode);
 			Connection connection = this.server.getConnectionPool().getConnection(message.destination);
 			int result = -1;
 			try {
@@ -138,7 +142,7 @@ public class IOHandler {
 					connection.failedPermenently();
 					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
 					if (updated) {
-						Logger.log(server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
+						Logger.log(thisNode, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
 								"Node " + ByteArrays.idToReadableString(message.destination)
 								+ " @ "
 								+ message.destination.address + " is removed from the routing table!");
@@ -160,7 +164,7 @@ public class IOHandler {
 	}
 
 	public int directSend(Message message) throws TException {
-		message.setStation(this.server.getNode());
+		message.setStation(thisNode);
 		Connection connection = this.server.getConnectionPool().getConnection(message.destination);
 		synchronized (connection) {
 			connection.open();
@@ -176,14 +180,14 @@ public class IOHandler {
 				public void run() {
 					try {
 						DHTServer.Processor processor = new DHTServer.Processor(new ThriftServerImpl(server));
-						int localPortId = Integer.parseInt(server.getNode().getAddress().split(":")[1]);
+						int localPortId = Integer.parseInt(thisNode.getAddress().split(":")[1]);
 						TServerTransport serverTransport = new TServerSocket(localPortId);
 						tServer = new TThreadPoolServer(
 								new TThreadPoolServer.Args(serverTransport).processor(processor));
-						Logger.log(server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
+						Logger.log(thisNode, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 								"Starting the server on port " + localPortId);
 						tServer.serve();
-						Logger.log(server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
+						Logger.log(thisNode, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
 								"Server is shutting down...");
 					} catch (TTransportException ex) {
 						tTransportException = ex;

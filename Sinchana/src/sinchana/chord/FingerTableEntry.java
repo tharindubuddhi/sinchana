@@ -71,7 +71,7 @@ public class FingerTableEntry {
 	 * @return
 	 */
 	public boolean isInTheInterval(Node node) {
-		BigInteger bi = new BigInteger(1, node.getServerId());
+		BigInteger bi = new BigInteger(1, node.serverId.array());
 		if (this.start.compareTo(this.end) == 1) {
 			return this.start.compareTo(bi) != 1 || bi.compareTo(this.end) != -1;
 		}
