@@ -268,15 +268,15 @@ public class SinchanaServer {
 		this.getMessageHandler().queueMessage(message);
 	}
 
-	public byte[] request(byte[] destination, byte[] message) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+	public byte[] sendRequest(byte[] destination, byte[] message) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, -1, null).data;
 	}
 
-	public byte[] request(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+	public byte[] sendRequest(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, timeOut, timeUnit).data;
 	}
 
-	public void request(byte[] destination, byte[] message, SinchanaResponseHandler callBack) throws InterruptedException {
+	public void sendRequest(byte[] destination, byte[] message, SinchanaResponseHandler callBack) throws InterruptedException {
 		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack);
 	}
 
@@ -316,15 +316,15 @@ public class SinchanaServer {
 		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack);
 	}
 
-	public byte[] getService(byte[] reference, byte[] data) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+	public byte[] invokeService(byte[] reference, byte[] data) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, -1, null).data;
 	}
 
-	public byte[] getService(byte[] reference, byte[] data, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
+	public byte[] invokeService(byte[] reference, byte[] data, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, timeOut, timeUnit).data;
 	}
 
-	public void getService(byte[] reference, byte[] data, SinchanaServiceHandler callBack) throws InterruptedException {
+	public void invokeService(byte[] reference, byte[] data, SinchanaServiceHandler callBack) throws InterruptedException {
 		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack);
 	}
 

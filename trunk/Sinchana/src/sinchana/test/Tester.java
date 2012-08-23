@@ -125,7 +125,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				threadLock.acquire();
 				while (numOfTestingMessages > 0) {
 					BigInteger bi = new BigInteger(160, random);
-					server.request(Arrays.copyOf(bi.toByteArray(), 20), MESSAGE, srh);
+					server.sendRequest(Arrays.copyOf(bi.toByteArray(), 20), MESSAGE, srh);
 					numOfTestingMessages--;
 				}
 			}
