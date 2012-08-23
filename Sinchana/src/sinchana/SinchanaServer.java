@@ -149,6 +149,13 @@ public class SinchanaServer {
 		}
 	}
 
+	public void join() {
+		Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.JOIN_MESSAGE_LIFETIME);
+		msg.setStation(this.node);
+		msg.setSuccess(true);
+		messageHandler.queueMessage(msg);
+	}
+
 	void setJoined(boolean joined, String status) {
 		if (joined) {
 			this.joined = joined;

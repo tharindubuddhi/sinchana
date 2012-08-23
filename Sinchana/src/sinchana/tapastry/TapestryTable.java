@@ -342,7 +342,14 @@ public class TapestryTable implements RoutingHandler {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(byte[] id) {
-		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
+		for (int i = 0; i < 20; i++) {
+			if ((this.serverId[i] + 256) % 256 > (id[i] + 256) % 256) {
+				return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt);
+			} else if ((this.serverId[i] + 256) % 256 < (id[i] + 256) % 256) {
+				return new BigInteger(1, id).subtract(serverIdAsBigInt);
+			}
+		}
+		return ZERO;
 	}
 
 	private int getRaw(byte[] id, byte[] newId) {
