@@ -18,6 +18,7 @@ import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
+import sinchana.thrift.Node;
 import sinchana.util.tools.Hash;
 
 /**
@@ -27,6 +28,7 @@ import sinchana.util.tools.Hash;
 public class ClientHandler {
 
 	private final SinchanaServer server;
+	private final Node thisNode;
 	private final ConcurrentHashMap<Long, ClientData> clientsMap = new ConcurrentHashMap<Long, ClientData>();
 	private final Timer timer = new Timer();
 	private static final String ERROR_MSG_TIMED_OUT = "Timed out!";
@@ -34,6 +36,7 @@ public class ClientHandler {
 
 	public ClientHandler(SinchanaServer svr) {
 		this.server = svr;
+		this.thisNode = server.getNode();
 		timer.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
@@ -152,7 +155,7 @@ public class ClientHandler {
 	public ClientData addRequest(byte[] key, byte[] data, MessageType type, long timeOut, TimeUnit timeUnit) throws SinchanaTimeOutException, SinchanaInterruptedException {
 		ClientData clientData = null;
 		long requestId = -1;
-		Message message = new Message(type, this.server.getNode(), CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
+		Message message = new Message(type, thisNode, CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
 			case REQUEST:
 				message.setDestinationId(key);
@@ -170,7 +173,7 @@ public class ClientHandler {
 				break;
 		}
 		message.setData(data);
-		message.setStation(this.server.getNode());
+		message.setStation(thisNode);
 
 		requestId = System.currentTimeMillis();
 		clientData = new ClientData();
@@ -204,7 +207,7 @@ public class ClientHandler {
 
 	public void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBackHandler scbh) throws InterruptedException {
 		long requestId = -1;
-		Message message = new Message(type, this.server.getNode(), CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
+		Message message = new Message(type, thisNode, CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
 			case REQUEST:
 				message.setDestinationId(key);
@@ -222,7 +225,7 @@ public class ClientHandler {
 				break;
 		}
 		message.setData(data);
-		message.setStation(this.server.getNode());
+		message.setStation(thisNode);
 		if (scbh != null) {
 			requestId = System.currentTimeMillis();
 			ClientData clientData = new ClientData();

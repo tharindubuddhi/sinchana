@@ -32,8 +32,9 @@ public class PastryTable implements RoutingHandler {
 	private final SinchanaServer server;
 	private final Node[] successors = new Node[SUCCESSOR_LEVELS];
 	private final Node[] predecessors = new Node[SUCCESSOR_LEVELS];
-	private byte[] serverId;
-	private BigInteger serverIdAsBigInt;
+	private final byte[] serverId;
+	private final BigInteger serverIdAsBigInt;
+	private final Node thisNode;
 	private final Node[][][] fingerTable = new Node[TABLE_SIZE][TABLE_WIDTH][NUMBER_OF_TABLE_ENTRIES];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
@@ -44,6 +45,9 @@ public class PastryTable implements RoutingHandler {
 	 */
 	public PastryTable(SinchanaServer server) {
 		this.server = server;
+		this.thisNode = server.getNode();
+		this.serverId = thisNode.serverId.array();
+		this.serverIdAsBigInt = new BigInteger(1, serverId);
 		this.timer.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
@@ -62,8 +66,6 @@ public class PastryTable implements RoutingHandler {
 	 */
 	@Override
 	public void init() {
-		this.serverId = this.server.getNode().getServerId();
-		this.serverIdAsBigInt = new BigInteger(1, this.serverId);
 		this.initFingerTable();
 	}
 
@@ -106,7 +108,7 @@ public class PastryTable implements RoutingHandler {
 	 * the finger table entries to find the optimal successor for those entries.
 	 */
 	private void optimize() {
-		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
+		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
 //		msg.setNeighbourSet(getNeighbourSet());
 		for (Node node : predecessors) {
@@ -148,7 +150,7 @@ public class PastryTable implements RoutingHandler {
 		}
 		int raw = getRaw(this.serverId, destination);
 		if (raw == -1) {
-			return this.server.getNode();
+			return thisNode;
 		}
 		int column = getColumn(destination, raw);
 
@@ -202,7 +204,7 @@ public class PastryTable implements RoutingHandler {
 
 	@Override
 	public Set<Node> getNeighbourSet() {
-		//initializes an empty node set.
+		//initializes an empty thisNode set.
 		Set<Node> neighbourSet = new HashSet<Node>();
 		synchronized (fingerTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
@@ -230,13 +232,13 @@ public class PastryTable implements RoutingHandler {
 				}
 			}
 		}
-		//returns the node set.
+		//returns the thisNode set.
 		return neighbourSet;
 	}
 
 	@Override
 	public boolean updateTable(Node node, boolean add) {
-		if (Arrays.equals(node.getServerId(), this.serverId)) {
+		if (Arrays.equals(node.serverId.array(), this.serverId)) {
 			return false;
 		}
 		boolean updated;
@@ -258,17 +260,17 @@ public class PastryTable implements RoutingHandler {
 			BigInteger successorWRT = ZERO;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
-				 * Checks whether the new node should be set as the successors or not. 
-				 * if successors is the server itself (successorOffset == 0) or if the new node 
+				 * Checks whether the new thisNode should be set as the successors or not. 
+				 * if successors is the server itself (successorOffset == 0) or if the new thisNode 
 				 * is not the server it self (newNodeOffset != 0) and it successes 
 				 * the server than the existing successors (newNodeOffset < successorOffset), 
-				 * the new node will be set as the successors.
+				 * the new thisNode will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
 				if (successorWRT.compareTo(newNodeOffset) == -1
 						&& (successors[i] == null
-						|| newNodeOffset.compareTo(getOffset(successors[i].getServerId())) == -1)) {
+						|| newNodeOffset.compareTo(getOffset(successors[i].serverId.array())) == -1)) {
 					Node temp = this.successors[i];
 					this.successors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
@@ -277,7 +279,7 @@ public class PastryTable implements RoutingHandler {
 				if (tempNodeToUpdate == null || successors[i] == null) {
 					break;
 				}
-				successorWRT = getOffset(successors[i].getServerId());
+				successorWRT = getOffset(successors[i].serverId.array());
 			}
 		}
 		tempNodeToUpdate = node;
@@ -285,16 +287,16 @@ public class PastryTable implements RoutingHandler {
 			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
-				 * Checks whether the new node should be set as the predecessors or not. 
-				 * if predecessors is the server itself (predecessorOffset == 0) or if the new node 
+				 * Checks whether the new thisNode should be set as the predecessors or not. 
+				 * if predecessors is the server itself (predecessorOffset == 0) or if the new thisNode 
 				 * is not the server it self (newNodeOffset != 0) and it predecesses 
 				 * the server than the existing predecessors (predecessorOffset < newNodeOffset), 
-				 * the new node will be set as the predecessors.
+				 * the new thisNode will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
 				if (newNodeOffset.compareTo(predecessorWRT) == -1
-						&& (predecessors[i] == null || getOffset(predecessors[i].getServerId()).compareTo(newNodeOffset) == -1)) {
+						&& (predecessors[i] == null || getOffset(predecessors[i].serverId.array()).compareTo(newNodeOffset) == -1)) {
 					Node temp = this.predecessors[i];
 					this.predecessors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
@@ -303,14 +305,14 @@ public class PastryTable implements RoutingHandler {
 				if (tempNodeToUpdate == null || predecessors[i] == null) {
 					break;
 				}
-				predecessorWRT = getOffset(predecessors[i].getServerId());
+				predecessorWRT = getOffset(predecessors[i].serverId.array());
 			}
 		}
-		int raw = getRaw(this.serverId, node.getServerId());
-		int column = getColumn(node.getServerId(), raw);
+		int raw = getRaw(this.serverId, node.serverId.array());
+		int column = getColumn(node.serverId.array(), raw);
 		synchronized (fingerTable) {
 			for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
-				if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].getServerId(), node.getServerId())) {
+				if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].serverId.array(), node.serverId.array())) {
 					break;
 				} else if (fingerTable[raw][column][i] == null) {
 					fingerTable[raw][column][i] = node.deepCopy();
@@ -344,7 +346,14 @@ public class PastryTable implements RoutingHandler {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(byte[] id) {
-		return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
+		for (int i = 0; i < 20; i++) {
+			if ((this.serverId[i] + 256) % 256 > (id[i] + 256) % 256) {
+				return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt);
+			} else if ((this.serverId[i] + 256) % 256 < (id[i] + 256) % 256) {
+				return new BigInteger(1, id).subtract(serverIdAsBigInt);
+			}
+		}
+		return ZERO;
 	}
 
 	private int getRaw(byte[] id, byte[] newId) {
@@ -374,23 +383,23 @@ public class PastryTable implements RoutingHandler {
 				if (successors[i] == null) {
 					break;
 				}
-				nodeOffset = getOffset(successors[i].getServerId());
+				nodeOffset = getOffset(successors[i].serverId.array());
 				if (destinationOffset.compareTo(nodeOffset) != 1) {
 					return successors[i];
 				}
 			}
 		}
-		Node node = this.server.getNode();
+		Node temp = thisNode;
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (predecessors[i] == null) {
 					break;
 				}
-				nodeOffset = getOffset(predecessors[i].getServerId());
+				nodeOffset = getOffset(predecessors[i].serverId.array());
 				if (nodeOffset.compareTo(destinationOffset) == -1) {
-					return node;
+					return temp;
 				}
-				node = predecessors[i];
+				temp = predecessors[i];
 			}
 		}
 		return null;

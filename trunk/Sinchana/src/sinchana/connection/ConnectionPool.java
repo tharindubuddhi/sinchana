@@ -41,7 +41,7 @@ public class ConnectionPool {
 	 * @return				TTransport connection opened to the destination.
 	 */
 	public synchronized Connection getConnection(Node node) {
-		String id = new String(node.getServerId());
+		String id = new String(node.serverId.array());
 		if (pool.containsKey(id)) {
 			return pool.get(id);
 		}
@@ -82,7 +82,7 @@ public class ConnectionPool {
 	}
 
 	public boolean hasReportFailed(Node node) {
-		String id = new String(node.getServerId());
+		String id = new String(node.serverId.array());
 		synchronized (pool) {
 			return pool.containsKey(id) && pool.get(id).isFailed();
 		}
@@ -97,7 +97,7 @@ public class ConnectionPool {
 		for (String sid : keySet) {
 			terminate = true;
 			for (Node node : neighbourSet) {
-				if (Arrays.equals(node.getServerId(), sid.getBytes())) {
+				if (Arrays.equals(node.serverId.array(), sid.getBytes())) {
 					terminate = false;
 					break;
 				}

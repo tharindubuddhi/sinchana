@@ -35,6 +35,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	private long numOfTestingMessages = 0;
 	private static final byte[] MESSAGE = "Hi, Sinchana!".getBytes();
 	private static final byte[] RETURN_MESSAGE = "Greetings :)".getBytes();
+	String address = "127.0.0.1";
+	String remoteNodeAddress = address + ":8000";
 
 	/**
 	 * 
@@ -46,12 +48,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		try {
 			this.testId = testId;
 			this.testerController = tc;
-			String address, remoteNodeAddress;
-//			address = InetAddress.getLocalHost().getHostAddress();
-			address = "127.0.0.1";
-			remoteNodeAddress = LocalCacheServer.getRemoteNode(address, portId);
-			remoteNodeAddress = address + ":8000";
-			server = new SinchanaServer(address + ":" + portId, remoteNodeAddress);
+			server = new SinchanaServer(address + ":" + portId);
 			server.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
 
 				@Override
@@ -119,10 +116,10 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	public void run() {
 		try {
 			if (this.gui != null) {
-				this.gui.setServerId(new String(server.getNode().getServerId()));
+				this.gui.setServerId(new String(server.getNode().serverId.array()));
 				this.gui.setVisible(true);
 			}
-			server.join();
+			server.join(remoteNodeAddress);
 			System.out.println(server.getServerIdAsString() + ": joined the ring");
 			while (true) {
 				threadLock.acquire();
@@ -162,7 +159,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public void setPredecessor(Node predecessor) {
 		if (this.gui != null) {
-			this.gui.setPredecessorId(predecessor != null ? new String(predecessor.getServerId()) : "n/a");
+			this.gui.setPredecessorId(predecessor != null ? new String(predecessor.serverId.array()) : "n/a");
 		}
 	}
 
@@ -173,7 +170,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public void setSuccessor(Node successor) {
 		if (this.gui != null) {
-			this.gui.setSuccessorId(successor != null ? new String(successor.getServerId()) : "n/a");
+			this.gui.setSuccessorId(successor != null ? new String(successor.serverId.array()) : "n/a");
 		}
 	}
 
@@ -204,7 +201,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 * @return
 	 */
 	public byte[] getServerId() {
-		return server.getNode().getServerId();
+		return server.getNode().serverId.array();
 	}
 
 	public int getTestId() {

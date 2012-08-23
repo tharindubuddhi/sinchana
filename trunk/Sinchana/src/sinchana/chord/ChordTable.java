@@ -32,8 +32,9 @@ public class ChordTable implements RoutingHandler {
 	private final SinchanaServer server;
 	private final Node[] successors = new Node[SUCCESSOR_LEVEL];
 	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
-	private byte[] serverId;
-	private BigInteger serverIdAsBigInt;
+	private final byte[] serverId;
+	private final Node thisNode;
+	private final BigInteger serverIdAsBigInt;
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
@@ -43,6 +44,9 @@ public class ChordTable implements RoutingHandler {
 	 */
 	public ChordTable(SinchanaServer server) {
 		this.server = server;
+		this.thisNode = server.getNode();
+		this.serverId = thisNode.serverId.array();
+		this.serverIdAsBigInt = new BigInteger(1, serverId);
 		this.timer.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
@@ -61,8 +65,6 @@ public class ChordTable implements RoutingHandler {
 	 */
 	@Override
 	public void init() {
-		this.serverId = this.server.getNode().getServerId();
-		this.serverIdAsBigInt = new BigInteger(1, serverId);
 		synchronized (fingerTable) {
 			for (int i = 0; i < fingerTable.length; i++) {
 				/**
@@ -85,7 +87,7 @@ public class ChordTable implements RoutingHandler {
 	private void initFingerTable() {
 		synchronized (fingerTable) {
 			for (int i = 0; i < fingerTable.length; i++) {
-				fingerTable[i].setSuccessor(this.server.getNode().deepCopy());
+				fingerTable[i].setSuccessor(thisNode.deepCopy());
 			}
 		}
 		/**
@@ -113,7 +115,7 @@ public class ChordTable implements RoutingHandler {
 	 * the finger table entries to find the optimal successors for those entries.
 	 */
 	private void optimize() {
-		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, this.server.getNode(), 2);
+		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
 //		msg.setNeighbourSet(getNeighbourSet());
 		for (Node node : predecessors) {
@@ -179,12 +181,12 @@ public class ChordTable implements RoutingHandler {
 		 */
 //		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 4,
 //				"Next hop for the destination " + destination + " is this server");
-		return this.server.getNode();
+		return thisNode;
 	}
 
 	@Override
 	public Set<Node> getNeighbourSet() {
-		//initializes an empty node set.
+		//initializes an empty thisNode set.
 		Set<Node> neighbourSet = new HashSet<Node>();
 		synchronized (fingerTable) {
 			for (FingerTableEntry fingerTableEntry : fingerTable) {
@@ -194,7 +196,7 @@ public class ChordTable implements RoutingHandler {
 				 * about this server, so sending it again is a waste.
 				 */
 				if (fingerTableEntry.getSuccessor() != null
-						&& !Arrays.equals(fingerTableEntry.getSuccessor().getServerId(), this.serverId)) {
+						&& !Arrays.equals(fingerTableEntry.getSuccessor().serverId.array(), this.serverId)) {
 					neighbourSet.add(fingerTableEntry.getSuccessor());
 				}
 			}
@@ -219,7 +221,7 @@ public class ChordTable implements RoutingHandler {
 
 	@Override
 	public boolean updateTable(Node node, boolean add) {
-		if (Arrays.equals(node.getServerId(), this.serverId)) {
+		if (Arrays.equals(node.serverId.array(), this.serverId)) {
 			return false;
 		}
 		boolean updated;
@@ -241,17 +243,17 @@ public class ChordTable implements RoutingHandler {
 			BigInteger successorWRT = ZERO;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
 				/**
-				 * Checks whether the new node should be set as the successors or not. 
-				 * if successors is the server itself (successorOffset == 0) or if the new node 
+				 * Checks whether the new thisNode should be set as the successors or not. 
+				 * if successors is the server itself (successorOffset == 0) or if the new thisNode 
 				 * is not the server it self (newNodeOffset != 0) and it successes 
 				 * the server than the existing successors (newNodeOffset < successorOffset), 
-				 * the new node will be set as the successors.
+				 * the new thisNode will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
 				if (successorWRT.compareTo(newNodeOffset) == -1
 						&& (successors[i] == null
-						|| newNodeOffset.compareTo(getOffset(successors[i].getServerId())) == -1)) {
+						|| newNodeOffset.compareTo(getOffset(successors[i].serverId.array())) == -1)) {
 					Node temp = this.successors[i];
 					this.successors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
@@ -260,7 +262,7 @@ public class ChordTable implements RoutingHandler {
 				if (tempNodeToUpdate == null || successors[i] == null) {
 					break;
 				}
-				successorWRT = getOffset(successors[i].getServerId());
+				successorWRT = getOffset(successors[i].serverId.array());
 			}
 		}
 		tempNodeToUpdate = node;
@@ -268,16 +270,16 @@ public class ChordTable implements RoutingHandler {
 			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
 			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
 				/**
-				 * Checks whether the new node should be set as the predecessors or not. 
-				 * if predecessors is the server itself (predecessorOffset == 0) or if the new node 
+				 * Checks whether the new thisNode should be set as the predecessors or not. 
+				 * if predecessors is the server itself (predecessorOffset == 0) or if the new thisNode 
 				 * is not the server it self (newNodeOffset != 0) and it predecesses 
 				 * the server than the existing predecessors (predecessorOffset < newNodeOffset), 
-				 * the new node will be set as the predecessors.
+				 * the new thisNode will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.getServerId());
+				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
 				if (newNodeOffset.compareTo(predecessorWRT) == -1
-						&& (predecessors[i] == null || getOffset(predecessors[i].getServerId()).compareTo(newNodeOffset) == -1)) {
+						&& (predecessors[i] == null || getOffset(predecessors[i].serverId.array()).compareTo(newNodeOffset) == -1)) {
 					Node temp = this.predecessors[i];
 					this.predecessors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
@@ -286,22 +288,22 @@ public class ChordTable implements RoutingHandler {
 				if (tempNodeToUpdate == null || predecessors[i] == null) {
 					break;
 				}
-				predecessorWRT = getOffset(predecessors[i].getServerId());
+				predecessorWRT = getOffset(predecessors[i].serverId.array());
 			}
 		}
 		synchronized (fingerTable) {
 			BigInteger startOffset, successorOffset;
-			BigInteger newNodeOffset = getOffset(node.getServerId());
+			BigInteger newNodeOffset = getOffset(node.serverId.array());
 			for (int i = 0; i < fingerTable.length; i++) {
 				startOffset = getOffset(fingerTable[i].getStart());
-				successorOffset = getOffset(fingerTable[i].getSuccessor().getServerId());
+				successorOffset = getOffset(fingerTable[i].getSuccessor().serverId.array());
 
 				/**
-				 * Checks whether the new node should be set as the successors or not. 
-				 * if the new node successes the table entry (startOffset <= newNodeOffset) and
+				 * Checks whether the new thisNode should be set as the successors or not. 
+				 * if the new thisNode successes the table entry (startOffset <= newNodeOffset) and
 				 * if it is a much suitable successors than the existing one 
 				 * (newNodeOffset < successorOffset || successorOffset == 0), 
-				 * the new node will be set as the successors for that fingertable entry.
+				 * the new thisNode will be set as the successors for that fingertable entry.
 				 * 0-----finger.table.entry.start------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
 				if (startOffset.compareTo(newNodeOffset) != 1
