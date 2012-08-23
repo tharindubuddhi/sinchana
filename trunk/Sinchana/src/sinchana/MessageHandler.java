@@ -27,6 +27,7 @@ public class MessageHandler {
 	private final SinchanaServer server;
 	private final Node thisNode;
 	private final byte[] serverId;
+	private final BigInteger serverIdAsBigInt;
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private final Semaphore messageQueueLock = new Semaphore(0);
 	private boolean waitOnMessageQueueLock = false;
@@ -115,6 +116,7 @@ public class MessageHandler {
 		this.server = server;
 		this.thisNode = server.getNode();
 		this.serverId = thisNode.getServerId();
+		this.serverIdAsBigInt = server.getServerIdAsBigInt();
 		incomingMessageQueueThread.start();
 	}
 
@@ -349,7 +351,14 @@ public class MessageHandler {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(byte[] id) {
-		return SinchanaServer.GRID_SIZE.add(new BigInteger(id)).subtract(server.getServerIdAsBigInt()).mod(SinchanaServer.GRID_SIZE);
+		for (int i = 0; i < 20; i++) {
+			if ((this.serverId[i] + 256) % 256 > (id[i] + 256) % 256) {
+				return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt);
+			} else if ((this.serverId[i] + 256) % 256 < (id[i] + 256) % 256) {
+				return new BigInteger(1, id).subtract(serverIdAsBigInt);
+			}
+		}
+		return ZERO;
 	}
 
 	/**	 
