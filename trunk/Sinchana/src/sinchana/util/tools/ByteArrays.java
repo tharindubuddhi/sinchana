@@ -16,11 +16,11 @@ import sinchana.thrift.Node;
 public class ByteArrays {
 
 	public static String idToReadableString(Node node) {
-		return toReadableString(node.serverId.array());
+		return idToReadableString(node.serverId.array());
 	}
 	
 	public static String idToReadableString(ByteBuffer byteBuffer) {
-		return toReadableString(byteBuffer.array());
+		return idToReadableString(byteBuffer.array());
 	}
 
 	public static String idToReadableString(byte[] arrayToRead) {

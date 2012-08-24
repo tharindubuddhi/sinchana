@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
+import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -66,7 +67,7 @@ public class TapestryTable implements RoutingHandler {
 	 */
 	@Override
 	public void init() {
-		initFingerTable();
+		this.initFingerTable();
 	}
 
 	/**
@@ -143,7 +144,7 @@ public class TapestryTable implements RoutingHandler {
 	}
 
 	@Override
-	public Node getNextNode(byte[] destination) {
+	public Node getNextNode(byte[] destination, byte[] lastHop) {
 		int raw = getRaw(this.serverId, destination);
 		if (raw == -1) {
 			return thisNode;
@@ -191,8 +192,7 @@ public class TapestryTable implements RoutingHandler {
 
 				column = (column + 1) % TABLE_WIDTH;
 				if (iRaw == raw && iColumn == column) {
-					throw new RuntimeException("This happens :P");
-					//return;
+					return thisNode;
 				}
 			}
 		}
@@ -200,7 +200,7 @@ public class TapestryTable implements RoutingHandler {
 
 	@Override
 	public Set<Node> getNeighbourSet() {
-		//initializes an empty node set.
+		//initializes an empty thisNode set.
 		Set<Node> neighbourSet = new HashSet<Node>();
 		synchronized (fingerTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
@@ -228,7 +228,7 @@ public class TapestryTable implements RoutingHandler {
 				}
 			}
 		}
-		//returns the node set.
+		//returns the thisNode set.
 		return neighbourSet;
 	}
 
@@ -251,57 +251,66 @@ public class TapestryTable implements RoutingHandler {
 
 	private boolean addNode(Node node) {
 		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
-		Node tempNodeToUpdate = node;
+		BigInteger successorOffset, pointerOffset, tempNodeOffset, newNodeOffset = getOffset(node.serverId.array());
+		Node tempNodeToUpdate;
 		synchronized (successors) {
-			BigInteger successorWRT = ZERO;
+			pointerOffset = ZERO;
+			tempNodeOffset = newNodeOffset;
+			tempNodeToUpdate = node;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
-				 * Checks whether the new node should be set as the successors or not. 
-				 * if successors is the server itself (successorOffset == 0) or if the new node 
+				 * Checks whether the new thisNode should be set as the successors or not. 
+				 * if successors is the server itself (successorOffset == 0) or if the new thisNode 
 				 * is not the server it self (newNodeOffset != 0) and it successes 
 				 * the server than the existing successors (newNodeOffset < successorOffset), 
-				 * the new node will be set as the successors.
+				 * the new thisNode will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
-				if (successorWRT.compareTo(newNodeOffset) == -1
-						&& (successors[i] == null
-						|| newNodeOffset.compareTo(getOffset(successors[i].serverId.array())) == -1)) {
+				successorOffset = successors[i] == null ? ZERO : getOffset(successors[i].serverId.array());
+				if (pointerOffset.compareTo(newNodeOffset) == -1
+						&& (successorOffset.equals(ZERO) || newNodeOffset.compareTo(successorOffset) == -1)) {
 					Node temp = this.successors[i];
 					this.successors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
 					updatedSuccessors = true;
+					pointerOffset = tempNodeOffset;
+					tempNodeOffset = successorOffset;
+				} else {
+					pointerOffset = successorOffset;
 				}
 				if (tempNodeToUpdate == null || successors[i] == null) {
 					break;
 				}
-				successorWRT = getOffset(successors[i].serverId.array());
 			}
 		}
-		tempNodeToUpdate = node;
 		synchronized (predecessors) {
-			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
+			pointerOffset = SinchanaServer.GRID_SIZE;
+			tempNodeOffset = newNodeOffset;
+			tempNodeToUpdate = node;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
-				 * Checks whether the new node should be set as the predecessors or not. 
-				 * if predecessors is the server itself (predecessorOffset == 0) or if the new node 
+				 * Checks whether the new thisNode should be set as the predecessors or not. 
+				 * if predecessors is the server itself (predecessorOffset == 0) or if the new thisNode 
 				 * is not the server it self (newNodeOffset != 0) and it predecesses 
 				 * the server than the existing predecessors (predecessorOffset < newNodeOffset), 
-				 * the new node will be set as the predecessors.
+				 * the new thisNode will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
-				if (newNodeOffset.compareTo(predecessorWRT) == -1
-						&& (predecessors[i] == null || getOffset(predecessors[i].serverId.array()).compareTo(newNodeOffset) == -1)) {
+				successorOffset = predecessors[i] == null ? ZERO : getOffset(predecessors[i].serverId.array());
+				if (newNodeOffset.compareTo(pointerOffset) == -1
+						&& (successorOffset.equals(ZERO) || successorOffset.compareTo(newNodeOffset) == -1)) {
 					Node temp = this.predecessors[i];
 					this.predecessors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
 					updatedPredecessors = true;
+					pointerOffset = tempNodeOffset;
+					tempNodeOffset = successorOffset;
+				} else {
+					pointerOffset = successorOffset;
 				}
 				if (tempNodeToUpdate == null || predecessors[i] == null) {
 					break;
 				}
-				predecessorWRT = getOffset(predecessors[i].serverId.array());
 			}
 		}
 		int raw = getRaw(this.serverId, node.serverId.array());
@@ -370,5 +379,49 @@ public class TapestryTable implements RoutingHandler {
 		int val = (id[20 - (raw * BASE_POWER / 8) - 1] + 256) % 256;
 		val = (int) (val / Math.pow(TABLE_WIDTH, raw % (8 / BASE_POWER)));
 		return val % TABLE_WIDTH;
+	}
+
+	@Override
+	public void printInfo() {
+		final String spaces = "****************************************";
+		System.out.println("--------------" + this.server.getServerIdAsString() + "--------------");
+		System.out.println("Routing Table");
+		synchronized (fingerTable) {
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				for (int j = 0; j < TABLE_WIDTH; j++) {
+					System.out.print(" |");
+					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
+						if (fingerTable[i][j][k] != null) {
+							System.out.print(" " + ByteArrays.idToReadableString(fingerTable[i][j][k].serverId));
+						} else {
+							System.out.print(" " + spaces);
+						}
+					}
+					System.out.print(" |");
+				}
+				System.out.println("");
+			}
+		}
+		System.out.println("Predecessors");
+		synchronized (predecessors) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+				if (predecessors[i] != null) {
+					System.out.print(" " + ByteArrays.idToReadableString(predecessors[i].serverId));
+				} else {
+					System.out.print(" " + spaces);
+				}
+			}
+		}
+		System.out.println("\nSuccessors");
+		synchronized (successors) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+				if (successors[i] != null) {
+					System.out.print(" " + ByteArrays.idToReadableString(successors[i].serverId));
+				} else {
+					System.out.print(" " + spaces);
+				}
+			}
+		}
+		System.out.println("\n");
 	}
 }

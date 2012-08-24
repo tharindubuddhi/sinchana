@@ -25,13 +25,9 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 	private SinchanaServer server;
 	private int testId;
-	private ServerUI gui = null;
 	private TesterController testerController;
 	private Semaphore threadLock = new Semaphore(0);
-	private boolean running = false;
 	private long numOfTestingMessages = 0;
-	private static final byte[] MESSAGE = "Hi, Sinchana!".getBytes();
-	private static final byte[] RETURN_MESSAGE = "Greetings :)".getBytes();
 	String address = "127.0.0.1";
 	String remoteNodeAddress = address + ":8000";
 
@@ -56,9 +52,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			});
 			server.registerSinchanaTestInterface(this);
 			server.startServer();
-			if (TesterController.GUI_ON) {
-				this.gui = new ServerUI(this);
-			}
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
@@ -70,7 +63,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	public void startServer() {
 		Thread thread = new Thread(this);
 		thread.start();
-		this.running = true;
 	}
 
 	/**
@@ -78,13 +70,19 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 */
 	public void stopServer() {
 		server.stopServer();
-		this.running = false;
 	}
+
+	boolean isRunning() {
+		return server.isRunning();
+	}
+
+	boolean isJoined() {
+		return server.isJoined();
+	}
+
 	/**
 	 * 
 	 */
-	private long startTime = System.currentTimeMillis(), endTime = -1;
-
 	public void startTest(long numOfTestingMessages) {
 		this.numOfTestingMessages += numOfTestingMessages;
 		threadLock.release();
@@ -96,27 +94,14 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	public void startRingTest() {
 		this.server.testRing();
 	}
-	private SinchanaResponseHandler srh = new SinchanaResponseHandler() {
 
-		@Override
-		public void response(byte[] message) {
-		}
-
-		@Override
-		public void error(byte[] message) {
-			System.out.println(TAG_ERROR + new String(message));
-		}
-	};
-	private static final String TAG_ERROR = "ERROR: ";
-	Random random = new Random();
+	public void printTableInfo() {
+		server.printTableInfo();
+	}
 
 	@Override
 	public void run() {
 		try {
-			if (this.gui != null) {
-				this.gui.setServerId(new String(server.getNode().serverId.array()));
-				this.gui.setVisible(true);
-			}
 			server.join(remoteNodeAddress);
 			System.out.println(server.getServerIdAsString() + ": joined the ring");
 			while (true) {
@@ -133,6 +118,21 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			ex.printStackTrace();
 		}
 	}
+	private SinchanaResponseHandler srh = new SinchanaResponseHandler() {
+
+		@Override
+		public void response(byte[] message) {
+		}
+
+		@Override
+		public void error(byte[] message) {
+			System.out.println(TAG_ERROR + new String(message));
+		}
+	};
+	private static final byte[] MESSAGE = "Hi, Sinchana!".getBytes();
+	private static final byte[] RETURN_MESSAGE = "Greetings :)".getBytes();
+	private static final String TAG_ERROR = "ERROR: ";
+	private final Random random = new Random();
 
 	/**
 	 * 
@@ -143,9 +143,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		if (isStable) {
 			Logger.log(this.server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
 					this.server.getServerIdAsString() + " is now stable!");
-			if (this.gui != null) {
-				this.gui.setMessage("stabilized!");
-			}
 			testerController.incrementCompletedCount(this.testId);
 		}
 	}
@@ -155,7 +152,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 * @return
 	 */
 	public byte[] getServerId() {
-		return server.getNode().serverId.array();
+		return server.getNode().getServerId();
 	}
 
 	public int getTestId() {
@@ -168,14 +165,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 */
 	public SinchanaServer getServer() {
 		return server;
-	}
-
-	public boolean isRunning() {
-		return running;
-	}
-
-	public ServerUI getGui() {
-		return gui;
 	}
 
 	@Override
@@ -225,7 +214,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		}
 		requestLifetime += lifetime;
 	}
-	
+
 	@Override
 	public synchronized void incIncomingMessageCount() {
 		inputMessageCount++;

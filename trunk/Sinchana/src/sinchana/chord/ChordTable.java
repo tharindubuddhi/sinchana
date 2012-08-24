@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
+import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -23,15 +24,16 @@ import sinchana.CONFIGURATIONS;
  */
 public class ChordTable implements RoutingHandler {
 
+	private static final int SUCCESSOR_LEVELS = 3;
+	private static final int NUMBER_OF_TABLE_ENTRIES = 3;
+	private static final int TABLE_SIZE = 160;
 	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	public static final BigInteger ONE = new BigInteger("1", CONFIGURATIONS.NUMBER_BASE);
 	public static final BigInteger TWO = new BigInteger("2", CONFIGURATIONS.NUMBER_BASE);
-	public static final int TABLE_SIZE = 160;
-	public static final int SUCCESSOR_LEVEL = 3;
 	private final FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
 	private final SinchanaServer server;
-	private final Node[] successors = new Node[SUCCESSOR_LEVEL];
-	private final Node[] predecessors = new Node[SUCCESSOR_LEVEL];
+	private final Node[] successors = new Node[SUCCESSOR_LEVELS];
+	private final Node[] predecessors = new Node[SUCCESSOR_LEVELS];
 	private final byte[] serverId;
 	private final Node thisNode;
 	private final BigInteger serverIdAsBigInt;
@@ -72,9 +74,11 @@ public class ChordTable implements RoutingHandler {
 				 * initializes the table by setting this server as the successors for
 				 * all the table entries.
 				 */
-				fingerTable[i] = new FingerTableEntry();
+				fingerTable[i] = new FingerTableEntry(NUMBER_OF_TABLE_ENTRIES);
 				fingerTable[i].setStart(TWO.pow(i).add(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE));
+				fingerTable[i].setStartOffset(SinchanaServer.GRID_SIZE.add(fingerTable[i].getStart()).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE));
 				fingerTable[i].setEnd(TWO.pow(i + 1).add(serverIdAsBigInt).subtract(ONE).mod(SinchanaServer.GRID_SIZE));
+				fingerTable[i].setEndOffset(SinchanaServer.GRID_SIZE.add(fingerTable[i].getEnd()).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE));
 			}
 		}
 		this.initFingerTable();
@@ -82,24 +86,26 @@ public class ChordTable implements RoutingHandler {
 
 	/**
 	 * Initialize routing table. The server it self will be set as the 
-	 * predecessors, successors and as all the successors entries in the finger table.
+	 * predecessor, successor and as all the successor entries in the finger table.
 	 */
 	private void initFingerTable() {
 		synchronized (fingerTable) {
-			for (int i = 0; i < fingerTable.length; i++) {
-				fingerTable[i].setSuccessor(thisNode.deepCopy());
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				for (int j = 0; j < NUMBER_OF_TABLE_ENTRIES; j++) {
+					fingerTable[i].setSuccessor((j == 0 ? thisNode.deepCopy() : null), j);
+				}
 			}
 		}
 		/**
-		 * initializes by setting this server it self as the predecessors and successors.
+		 * initializes by setting this server it self as the predecessor and successor.
 		 */
 		synchronized (predecessors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				predecessors[i] = null;
 			}
 		}
 		synchronized (successors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				successors[i] = null;
 			}
 		}
@@ -111,8 +117,8 @@ public class ChordTable implements RoutingHandler {
 	}
 
 	/**
-	 * Optimizes the finger table. Sends messages to the each successors in 
-	 * the finger table entries to find the optimal successors for those entries.
+	 * Optimizes the finger table. Sends messages to the each successor in 
+	 * the finger table entries to find the optimal successor for those entries.
 	 */
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
@@ -150,28 +156,21 @@ public class ChordTable implements RoutingHandler {
 	}
 
 	@Override
-	public Node getNextNode(byte[] destination) {
+	public Node getNextNode(byte[] destination, byte[] lastHop) {
 
-		BigInteger destinationOffset, startOffset, endOffset;
 		//calculates the offset to the destination.
-		destinationOffset = getOffset(destination);
+		BigInteger destinationOffset = getOffset(destination);
 		//takes finger table entries one by one.
 		synchronized (fingerTable) {
 			for (FingerTableEntry fingerTableEntry : fingerTable) {
-				startOffset = getOffset(fingerTableEntry.getStart());
-				endOffset = getOffset(fingerTableEntry.getEnd());
 				/**
 				 * checks whether the destination lies within the start and end of the table entry.
 				 * If so, returns the successors of that entry.
 				 * 0-----finger.table.entry.start------destination.id-------finger.table.entry.end----------End.of.Grid
 				 */
-				if (startOffset.compareTo(destinationOffset) != 1
-						&& destinationOffset.compareTo(endOffset) != 1) {
-//				Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 4,
-//						"Next hop for the destination " + destination
-//						+ " in " + fingerTableEntry.getStart() + "-" + fingerTableEntry.getEnd()
-//						+ " is " + fingerTableEntry.getSuccessor().serverId);
-					return fingerTableEntry.getSuccessor();
+				if (fingerTableEntry.getStartOffset().compareTo(destinationOffset) != 1
+						&& destinationOffset.compareTo(fingerTableEntry.getEndOffset()) != 1) {
+					return fingerTableEntry.getSuccessors()[0];
 				}
 			}
 		}
@@ -179,8 +178,6 @@ public class ChordTable implements RoutingHandler {
 		 * the only id which is not found in the table is the id of this server itself.
 		 * Successor of that id is this server. So returns this server.
 		 */
-//		Logger.log(this.server.serverId, Logger.LEVEL_FINE, Logger.CLASS_ROUTING_TABLE, 4,
-//				"Next hop for the destination " + destination + " is this server");
 		return thisNode;
 	}
 
@@ -192,30 +189,33 @@ public class ChordTable implements RoutingHandler {
 			for (FingerTableEntry fingerTableEntry : fingerTable) {
 				/**
 				 * add each successors in the finger table to the set if it is
-				 * not this server it self. This is because the requester knows 
+				 * not this server it self. This is because the requester knows
 				 * about this server, so sending it again is a waste.
 				 */
-				if (fingerTableEntry.getSuccessor() != null
-						&& !Arrays.equals(fingerTableEntry.getSuccessor().serverId.array(), this.serverId)) {
-					neighbourSet.add(fingerTableEntry.getSuccessor());
+				Node[] entrySuccessors = fingerTableEntry.getSuccessors();
+				for (Node node : entrySuccessors) {
+					if (node != null && !Arrays.equals(node.serverId.array(), this.serverId)) {
+						neighbourSet.add(node);
+					}
 				}
 			}
 		}
 		//adds the predecessors & the successors.
 		synchronized (predecessors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (predecessors[i] != null) {
 					neighbourSet.add(this.predecessors[i]);
 				}
 			}
 		}
 		synchronized (successors) {
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (successors[i] != null) {
 					neighbourSet.add(this.successors[i]);
 				}
 			}
 		}
+		//returns the thisNode set.
 		return neighbourSet;
 	}
 
@@ -238,10 +238,13 @@ public class ChordTable implements RoutingHandler {
 
 	private boolean addNode(Node node) {
 		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
-		Node tempNodeToUpdate = node;
+		BigInteger successorOffset, pointerOffset, tempNodeOffset, newNodeOffset = getOffset(node.serverId.array());
+		Node tempNodeToUpdate;
 		synchronized (successors) {
-			BigInteger successorWRT = ZERO;
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			pointerOffset = ZERO;
+			tempNodeOffset = newNodeOffset;
+			tempNodeToUpdate = node;
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
 				 * Checks whether the new thisNode should be set as the successors or not. 
 				 * if successors is the server itself (successorOffset == 0) or if the new thisNode 
@@ -250,25 +253,28 @@ public class ChordTable implements RoutingHandler {
 				 * the new thisNode will be set as the successors.
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
-				if (successorWRT.compareTo(newNodeOffset) == -1
-						&& (successors[i] == null
-						|| newNodeOffset.compareTo(getOffset(successors[i].serverId.array())) == -1)) {
+				successorOffset = successors[i] == null ? ZERO : getOffset(successors[i].serverId.array());
+				if (pointerOffset.compareTo(newNodeOffset) == -1
+						&& (successorOffset.equals(ZERO) || newNodeOffset.compareTo(successorOffset) == -1)) {
 					Node temp = this.successors[i];
 					this.successors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
 					updatedSuccessors = true;
+					pointerOffset = tempNodeOffset;
+					tempNodeOffset = successorOffset;
+				} else {
+					pointerOffset = successorOffset;
 				}
 				if (tempNodeToUpdate == null || successors[i] == null) {
 					break;
 				}
-				successorWRT = getOffset(successors[i].serverId.array());
 			}
 		}
-		tempNodeToUpdate = node;
 		synchronized (predecessors) {
-			BigInteger predecessorWRT = SinchanaServer.GRID_SIZE;
-			for (int i = 0; i < SUCCESSOR_LEVEL; i++) {
+			pointerOffset = SinchanaServer.GRID_SIZE;
+			tempNodeOffset = newNodeOffset;
+			tempNodeToUpdate = node;
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
 				 * Checks whether the new thisNode should be set as the predecessors or not. 
 				 * if predecessors is the server itself (predecessorOffset == 0) or if the new thisNode 
@@ -277,40 +283,56 @@ public class ChordTable implements RoutingHandler {
 				 * the new thisNode will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
-				BigInteger newNodeOffset = getOffset(tempNodeToUpdate.serverId.array());
-				if (newNodeOffset.compareTo(predecessorWRT) == -1
-						&& (predecessors[i] == null || getOffset(predecessors[i].serverId.array()).compareTo(newNodeOffset) == -1)) {
+				successorOffset = predecessors[i] == null ? ZERO : getOffset(predecessors[i].serverId.array());
+				if (newNodeOffset.compareTo(pointerOffset) == -1
+						&& (successorOffset.equals(ZERO) || successorOffset.compareTo(newNodeOffset) == -1)) {
 					Node temp = this.predecessors[i];
 					this.predecessors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
 					updatedPredecessors = true;
+					pointerOffset = tempNodeOffset;
+					tempNodeOffset = successorOffset;
+				} else {
+					pointerOffset = successorOffset;
 				}
 				if (tempNodeToUpdate == null || predecessors[i] == null) {
 					break;
 				}
-				predecessorWRT = getOffset(predecessors[i].serverId.array());
 			}
 		}
 		synchronized (fingerTable) {
-			BigInteger startOffset, successorOffset;
-			BigInteger newNodeOffset = getOffset(node.serverId.array());
-			for (int i = 0; i < fingerTable.length; i++) {
-				startOffset = getOffset(fingerTable[i].getStart());
-				successorOffset = getOffset(fingerTable[i].getSuccessor().serverId.array());
-
-				/**
-				 * Checks whether the new thisNode should be set as the successors or not. 
-				 * if the new thisNode successes the table entry (startOffset <= newNodeOffset) and
-				 * if it is a much suitable successors than the existing one 
-				 * (newNodeOffset < successorOffset || successorOffset == 0), 
-				 * the new thisNode will be set as the successors for that fingertable entry.
-				 * 0-----finger.table.entry.start------new.server.id-------existing.successors.id----------End.of.Grid
-				 */
-				if (startOffset.compareTo(newNodeOffset) != 1
-						&& (newNodeOffset.compareTo(successorOffset) == -1
-						|| successorOffset.equals(ZERO))) {
-					fingerTable[i].setSuccessor(node.deepCopy());
-					updatedTable = true;
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				if (fingerTable[i].getStartOffset().compareTo(newNodeOffset) != 1) {
+					tempNodeToUpdate = node;
+					tempNodeOffset = newNodeOffset;
+					pointerOffset = ZERO;
+					for (int j = 0; j < NUMBER_OF_TABLE_ENTRIES; j++) {
+						/**
+						 * Checks whether the new thisNode should be set as the successors or not. 
+						 * if the new thisNode successes the table entry (startOffset <= newNodeOffset) and
+						 * if it is a much suitable successors than the existing one 
+						 * (newNodeOffset < successorOffset || successorOffset == 0), 
+						 * the new thisNode will be set as the successors for that fingertable entry.
+						 * 0-----finger.table.entry.start------new.server.id-------existing.successors.id----------End.of.Grid
+						 */
+						Node entry = fingerTable[i].getSuccessors()[j];
+						successorOffset = entry == null ? ZERO : getOffset(entry.serverId.array());
+						if (pointerOffset.compareTo(tempNodeOffset) == -1
+								&& (successorOffset.equals(ZERO) || tempNodeOffset.compareTo(successorOffset) == -1)) {
+							fingerTable[i].setSuccessor(tempNodeToUpdate.deepCopy(), j);
+							tempNodeToUpdate = entry;
+							updatedTable = true;
+							pointerOffset = tempNodeOffset;
+							tempNodeOffset = successorOffset;
+						} else {
+							pointerOffset = successorOffset;
+						}
+						if (tempNodeToUpdate == null || fingerTable[i].getSuccessors()[j] == null) {
+							break;
+						}
+					}
+				} else {
+					break;
 				}
 			}
 		}
@@ -322,7 +344,6 @@ public class ChordTable implements RoutingHandler {
 		if (neighbourSet.contains(nodeToRemove)) {
 			neighbourSet.remove(nodeToRemove);
 			//reset the predecessors, successors and finger table entries.
-
 			initFingerTable();
 			for (Node node : neighbourSet) {
 				addNode(node);
@@ -350,7 +371,46 @@ public class ChordTable implements RoutingHandler {
 		return ZERO;
 	}
 
-	private BigInteger getOffset(BigInteger id) {
-		return SinchanaServer.GRID_SIZE.add(id).subtract(serverIdAsBigInt).mod(SinchanaServer.GRID_SIZE);
+	@Override
+	public void printInfo() {
+		final String spaces = "****************************************";
+		System.out.println("--------------" + this.server.getServerIdAsString() + "--------------");
+		System.out.println("Routing Table");
+		synchronized (fingerTable) {
+			for (int i = 0; i < TABLE_SIZE; i++) {
+				System.out.print(ByteArrays.idToReadableString(fingerTable[i].getStart().toByteArray())
+						+ "\t" + ByteArrays.idToReadableString(fingerTable[i].getEnd().toByteArray())
+						+ "\t\t");
+				for (int j = 0; j < NUMBER_OF_TABLE_ENTRIES; j++) {
+					if (fingerTable[i].getSuccessors()[j] != null) {
+						System.out.print(" " + ByteArrays.idToReadableString(fingerTable[i].getSuccessors()[j]));
+					} else {
+						System.out.print(" " + spaces);
+					}
+				}
+				System.out.println("");
+			}
+		}
+		System.out.println("Predecessors");
+		synchronized (predecessors) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+				if (predecessors[i] != null) {
+					System.out.print(" " + ByteArrays.idToReadableString(predecessors[i].serverId));
+				} else {
+					System.out.print(" " + spaces);
+				}
+			}
+		}
+		System.out.println("\nSuccessors");
+		synchronized (successors) {
+			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+				if (successors[i] != null) {
+					System.out.print(" " + ByteArrays.idToReadableString(successors[i].serverId));
+				} else {
+					System.out.print(" " + spaces);
+				}
+			}
+		}
+		System.out.println("\n");
 	}
 }

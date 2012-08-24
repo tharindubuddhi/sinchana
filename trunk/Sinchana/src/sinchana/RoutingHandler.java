@@ -35,7 +35,7 @@ public interface RoutingHandler {
 	 * @param destination Destination id.
 	 * @return NExt hop (node) to reach to the destination.
 	 */
-	public abstract Node getNextNode(byte[] destination);
+	public abstract Node getNextNode(byte[] destination, byte[] lastHop);
 
 	/**
 	 * Returns the set of nodes contains successor, predecessor and all the
@@ -67,4 +67,6 @@ public interface RoutingHandler {
 	 * @param node Node to be added to the routing table.
 	 */
 	public abstract boolean updateTable(Node node, boolean add);
+	
+	public abstract void printInfo();
 }
