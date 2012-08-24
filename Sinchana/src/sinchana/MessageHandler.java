@@ -126,9 +126,9 @@ public class MessageHandler {
 	 * @return
 	 */
 	public boolean queueMessage(Message message) {
-		if (this.server.getSinchanaTestInterface() != null) {
-			this.server.getSinchanaTestInterface().incIncomingMessageCount();
-			this.server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
+		if (server.getSinchanaTestInterface() != null) {
+			server.getSinchanaTestInterface().incIncomingMessageCount();
+			server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
 		}
 		synchronized (incomingMessageQueue) {
 			return incomingMessageQueue.offer(message);
@@ -136,6 +136,10 @@ public class MessageHandler {
 	}
 
 	public void addRequest(Message message) throws InterruptedException {
+		if (server.getSinchanaTestInterface() != null) {
+			server.getSinchanaTestInterface().incIncomingMessageCount();
+			server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
+		}
 		boolean success = false;
 		synchronized (incomingMessageQueue) {
 			success = incomingMessageQueue.size() == 0 && incomingMessageQueue.offer(message);

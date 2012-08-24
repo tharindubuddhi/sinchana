@@ -27,10 +27,4 @@ public class CONFIGURATIONS {
 	public static final int MAX_JOIN_RETRIES = 5;
 	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 30 * 1000; //milliseconds
 	public static final byte[] SERVICE_TAG = "-@-SINCHANA_SERVICE".getBytes();
-	/**Test Configurations**/
-	public static final boolean GUI_ON = false;
-	public static final boolean USE_REMOTE_CACHE_SERVER = false;
-	public static final boolean CLEAR_CACHE_SERVER = true;
-	public static final int ROUND_TRIP_TIME = 0;
-	public static final boolean DO_LOG = false;
 }

@@ -10,7 +10,6 @@
  */
 package sinchana.test;
 
-import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -18,14 +17,8 @@ import javax.swing.table.DefaultTableModel;
  */
 public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
-	DefaultTableModel dtm;
-	Object[] nodes;
-	Object[] expectedCount;
-	Object[] recievedCount;
-	Object[] duration;
 	private TesterController testerController;
 	private long startNodeThreadId = 0;
-	private long startAutoTestThreadId = 0;
 
 	/** Creates new form ControllerUI
 	 * @param tc 
@@ -35,31 +28,6 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 		initComponents();
 		setLocationRelativeTo(null);
 
-	}
-
-	/**
-	 * 
-	 * @param coloms
-	 */
-	public void initTableInfo(String[] coloms) {
-		dtm = new DefaultTableModel();
-		dtm.setColumnIdentifiers(coloms);
-		dtm.setColumnCount(coloms.length);
-		table.setModel(dtm);
-	}
-
-	/**
-	 * 
-	 * @param data
-	 */
-	public void setTableInfo(Object[][] data) {
-		dtm.setRowCount(data.length);
-		for (int i = 0; i < data.length; i++) {
-			int length = data[i].length;
-			for (int j = 0; j < length; j++) {
-				dtm.setValueAt(data[i][j], i, j);
-			}
-		}
 	}
 
 	/**
@@ -90,8 +58,6 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         portRange = new javax.swing.JTextField();
         numOfTesters = new javax.swing.JTextField();
         ringTestButton = new javax.swing.JButton();
-        numOfAutoTesters = new javax.swing.JTextField();
-        autoTestButton = new javax.swing.JButton();
         sendMessagePanel = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         reqId = new javax.swing.JTextField();
@@ -100,8 +66,11 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         jLabel7 = new javax.swing.JLabel();
         message = new javax.swing.JTextField();
         sendButton = new javax.swing.JButton();
-        statPanel = new javax.swing.JPanel();
-        statField = new javax.swing.JLabel();
+        messagePanel = new javax.swing.JPanel();
+        numOfMsgsField = new javax.swing.JTextField();
+        sendMsgButton = new javax.swing.JButton();
+        sendMsgAutoButton = new javax.swing.JButton();
+        resetAndWatchButton = new javax.swing.JButton();
         servicePanel = new javax.swing.JPanel();
         egLabel = new javax.swing.JLabel();
         dataCountTextField = new javax.swing.JTextField();
@@ -109,8 +78,8 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         retrieveButton = new javax.swing.JButton();
         removeAmountTextField = new javax.swing.JTextField();
         dataRemoveButton = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        table = new javax.swing.JTable();
+        statPanel = new javax.swing.JPanel();
+        statField = new javax.swing.JLabel();
         statusField = new javax.swing.JLabel();
         loggerControlPanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
@@ -128,7 +97,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        jPanel1.setLayout(new java.awt.GridLayout(4, 1, 0, 4));
+        jPanel1.setLayout(new java.awt.GridLayout(5, 1, 0, 4));
 
         autoTestButtonPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -144,13 +113,13 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         portRange.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
         portRange.setText("8000");
         portRange.setToolTipText("No of Testing Nodes");
-        portRange.setPreferredSize(new java.awt.Dimension(32, 24));
+        portRange.setPreferredSize(new java.awt.Dimension(96, 24));
         autoTestButtonPanel.add(portRange);
 
         numOfTesters.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
         numOfTesters.setText("10");
         numOfTesters.setToolTipText("No of Testing Nodes");
-        numOfTesters.setPreferredSize(new java.awt.Dimension(32, 24));
+        numOfTesters.setPreferredSize(new java.awt.Dimension(64, 24));
         autoTestButtonPanel.add(numOfTesters);
 
         ringTestButton.setText("Test Ring");
@@ -162,22 +131,6 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
             }
         });
         autoTestButtonPanel.add(ringTestButton);
-
-        numOfAutoTesters.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        numOfAutoTesters.setText("1000");
-        numOfAutoTesters.setToolTipText("No of Auto Testing Nodes");
-        numOfAutoTesters.setPreferredSize(new java.awt.Dimension(32, 24));
-        autoTestButtonPanel.add(numOfAutoTesters);
-
-        autoTestButton.setText("Test Message System");
-        autoTestButton.setEnabled(false);
-        autoTestButton.setPreferredSize(new java.awt.Dimension(134, 24));
-        autoTestButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                autoTestButtonActionPerformed(evt);
-            }
-        });
-        autoTestButtonPanel.add(autoTestButton);
 
         jPanel1.add(autoTestButtonPanel);
 
@@ -224,13 +177,42 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
         jPanel1.add(sendMessagePanel);
 
-        statPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        messagePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
-        statField.setText("Stat");
-        statField.setPreferredSize(new java.awt.Dimension(520, 24));
-        statPanel.add(statField);
+        numOfMsgsField.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
+        numOfMsgsField.setText("1000");
+        numOfMsgsField.setToolTipText("No of Testing Nodes");
+        numOfMsgsField.setPreferredSize(new java.awt.Dimension(108, 24));
+        messagePanel.add(numOfMsgsField);
 
-        jPanel1.add(statPanel);
+        sendMsgButton.setText("Send Msg.");
+        sendMsgButton.setPreferredSize(new java.awt.Dimension(134, 24));
+        sendMsgButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sendMsgButtonActionPerformed(evt);
+            }
+        });
+        messagePanel.add(sendMsgButton);
+
+        sendMsgAutoButton.setText("Send Continuesly");
+        sendMsgAutoButton.setPreferredSize(new java.awt.Dimension(134, 24));
+        sendMsgAutoButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sendMsgAutoButtonActionPerformed(evt);
+            }
+        });
+        messagePanel.add(sendMsgAutoButton);
+
+        resetAndWatchButton.setText("Reset & Watch");
+        resetAndWatchButton.setPreferredSize(new java.awt.Dimension(134, 24));
+        resetAndWatchButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                resetAndWatchButtonActionPerformed(evt);
+            }
+        });
+        messagePanel.add(resetAndWatchButton);
+
+        jPanel1.add(messagePanel);
 
         servicePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -277,35 +259,18 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 
         jPanel1.add(servicePanel);
 
+        statPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+
+        statField.setText("Stat");
+        statField.setPreferredSize(new java.awt.Dimension(520, 24));
+        statPanel.add(statField);
+
+        jPanel1.add(statPanel);
+
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.insets = new java.awt.Insets(2, 0, 2, 0);
         getContentPane().add(jPanel1, gridBagConstraints);
-
-        jScrollPane1.setPreferredSize(new java.awt.Dimension(452, 180));
-
-        table.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        table.setPreferredSize(new java.awt.Dimension(300, 150));
-        jScrollPane1.setViewportView(table);
-
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(2, 0, 2, 0);
-        getContentPane().add(jScrollPane1, gridBagConstraints);
 
         statusField.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         statusField.setText("Status...");
@@ -389,28 +354,17 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
     }// </editor-fold>//GEN-END:initComponents
 
 private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
-
 //		testerController.send(message.getText(), this.destId.getText(), this.reqId.getText());
 //                testerController.publishService(10);
 //	testerController.storeData();
 }//GEN-LAST:event_sendButtonActionPerformed
 
 private void startNodeSetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNodeSetButtonActionPerformed
-//		this.startNodeSetButton.setEnabled(false);
-//		this.numOfTesters.setEnabled(false);
 	Thread thread = new Thread(this);
 	this.startNodeThreadId = thread.getId();
 	thread.start();
 	this.ringTestButton.setEnabled(true);
-	this.autoTestButton.setEnabled(true);
 }//GEN-LAST:event_startNodeSetButtonActionPerformed
-
-private void autoTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autoTestButtonActionPerformed
-	this.autoTestButton.setEnabled(false);
-	Thread thread = new Thread(this);
-	this.startAutoTestThreadId = thread.getId();
-	thread.start();
-}//GEN-LAST:event_autoTestButtonActionPerformed
 
 private void ringTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ringTestButtonActionPerformed
 
@@ -430,26 +384,40 @@ private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
 }//GEN-LAST:event_printLogButtonActionPerformed
 
 private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_storeButtonActionPerformed
-    testerController.storeData(Integer.parseInt(dataCountTextField.getText()));
-    
+	testerController.storeData(Integer.parseInt(dataCountTextField.getText()));
+
 }//GEN-LAST:event_storeButtonActionPerformed
 
 private void retrieveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_retrieveButtonActionPerformed
-testerController.retrieveData();
+	testerController.retrieveData();
 }//GEN-LAST:event_retrieveButtonActionPerformed
 
 private void dataRemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataRemoveButtonActionPerformed
-testerController.removeData(Integer.parseInt(removeAmountTextField.getText()));
+	testerController.removeData(Integer.parseInt(removeAmountTextField.getText()));
 }//GEN-LAST:event_dataRemoveButtonActionPerformed
 
 private void logClassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logClassActionPerformed
 // TODO add your handling code here:
 }//GEN-LAST:event_logClassActionPerformed
+
+private void resetAndWatchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetAndWatchButtonActionPerformed
+
+	testerController.resetAndWatch();
+}//GEN-LAST:event_resetAndWatchButtonActionPerformed
+
+private void sendMsgButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgButtonActionPerformed
+
+	testerController.test(Long.parseLong(this.numOfMsgsField.getText()));
+}//GEN-LAST:event_sendMsgButtonActionPerformed
+
+private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgAutoButtonActionPerformed
+
+	testerController.startAutoTest(Long.parseLong(this.numOfMsgsField.getText()));
+}//GEN-LAST:event_sendMsgAutoButtonActionPerformed
 	/**
 	 * @param args the command line arguments
 	 */
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton autoTestButton;
     private javax.swing.JPanel autoTestButtonPanel;
     private javax.swing.JTextField contatain;
     private javax.swing.JTextField dataCountTextField;
@@ -465,30 +433,32 @@ private void logClassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField logClass;
     private javax.swing.JTextField logLocation;
     private javax.swing.JTextField logNodeID;
     private javax.swing.JTextField logType;
     private javax.swing.JPanel loggerControlPanel;
     private javax.swing.JTextField message;
-    private javax.swing.JTextField numOfAutoTesters;
+    private javax.swing.JPanel messagePanel;
+    private javax.swing.JTextField numOfMsgsField;
     private javax.swing.JTextField numOfTesters;
     private javax.swing.JTextField portRange;
     private javax.swing.JButton printLogButton;
     private javax.swing.JTextField removeAmountTextField;
     private javax.swing.JTextField reqId;
+    private javax.swing.JButton resetAndWatchButton;
     private javax.swing.JButton retrieveButton;
     private javax.swing.JButton ringTestButton;
     private javax.swing.JButton sendButton;
     private javax.swing.JPanel sendMessagePanel;
+    private javax.swing.JButton sendMsgAutoButton;
+    private javax.swing.JButton sendMsgButton;
     private javax.swing.JPanel servicePanel;
     private javax.swing.JButton startNodeSetButton;
     private javax.swing.JLabel statField;
     private javax.swing.JPanel statPanel;
     private javax.swing.JLabel statusField;
     private javax.swing.JButton storeButton;
-    private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
 
 	@Override
@@ -496,9 +466,6 @@ private void logClassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 		if (Thread.currentThread().getId() == this.startNodeThreadId) {
 			testerController.startNodeSet(Integer.parseInt(this.portRange.getText()),
 					Integer.parseInt(this.numOfTesters.getText()));
-		} else if (Thread.currentThread().getId() == this.startAutoTestThreadId) {
-			testerController.startAutoTest(Long.parseLong(this.numOfAutoTesters.getText()));
-			this.autoTestButton.setEnabled(true);
 		}
 	}
 }

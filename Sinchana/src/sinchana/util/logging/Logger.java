@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import sinchana.CONFIGURATIONS;
+import sinchana.test.TesterController;
 import sinchana.thrift.Node;
 import sinchana.util.tools.ByteArrays;
 
@@ -73,7 +74,7 @@ public final class Logger {
 		if (CURRENT_LOG_LEVEL > type) {
 			return;
 		}
-		if (CONFIGURATIONS.DO_LOG) {
+		if (TesterController.DO_LOG) {
 			Log nl = new Log();
 			nl.node = node;
 			nl.level = type;
