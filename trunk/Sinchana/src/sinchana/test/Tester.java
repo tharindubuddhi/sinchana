@@ -5,7 +5,6 @@
 package sinchana.test;
 
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
@@ -13,8 +12,6 @@ import org.apache.thrift.TException;
 import sinchana.SinchanaServer;
 import sinchana.SinchanaRequestHandler;
 import sinchana.SinchanaTestInterface;
-import sinchana.chord.FingerTableEntry;
-import sinchana.thrift.Node;
 import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
 import sinchana.CONFIGURATIONS;
@@ -53,12 +50,13 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 				@Override
 				public byte[] request(byte[] message) {
+					TesterController.incTotalCount();
 					return RETURN_MESSAGE;
 				}
 			});
 			server.registerSinchanaTestInterface(this);
 			server.startServer();
-			if (CONFIGURATIONS.GUI_ON) {
+			if (TesterController.GUI_ON) {
 				this.gui = new ServerUI(this);
 			}
 		} catch (Exception ex) {
@@ -125,7 +123,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				threadLock.acquire();
 				while (numOfTestingMessages > 0) {
 					BigInteger bi = new BigInteger(160, random);
-					server.sendRequest(Arrays.copyOf(bi.toByteArray(), 20), MESSAGE, srh);
+					server.sendRequest(Arrays.copyOf(bi.toByteArray(), 20), MESSAGE, null);
 					numOfTestingMessages--;
 				}
 			}
@@ -149,50 +147,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				this.gui.setMessage("stabilized!");
 			}
 			testerController.incrementCompletedCount(this.testId);
-		}
-	}
-
-	/**
-	 * 
-	 * @param predecessor
-	 */
-	@Override
-	public void setPredecessor(Node predecessor) {
-		if (this.gui != null) {
-			this.gui.setPredecessorId(predecessor != null ? new String(predecessor.serverId.array()) : "n/a");
-		}
-	}
-
-	/**
-	 * 
-	 * @param successor
-	 */
-	@Override
-	public void setSuccessor(Node successor) {
-		if (this.gui != null) {
-			this.gui.setSuccessorId(successor != null ? new String(successor.serverId.array()) : "n/a");
-		}
-	}
-
-	/**
-	 * 
-	 * @param fingerTableEntrys
-	 */
-	@Override
-	public void setRoutingTable(FingerTableEntry[] fingerTableEntrys) {
-		if (this.gui != null) {
-			this.gui.setTableInfo(fingerTableEntrys);
-		}
-	}
-
-	/**
-	 * 
-	 * @param status
-	 */
-	@Override
-	public void setStatus(String status) {
-		if (this.gui != null) {
-			this.gui.setMessage(status);
 		}
 	}
 
@@ -224,17 +178,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		return gui;
 	}
 
-	/**
-	 * 
-	 * @param isRunning
-	 */
-	@Override
-	public void setServerIsRunning(boolean isRunning) {
-		if (this.gui != null) {
-			this.gui.setServerRunning(isRunning);
-		}
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		return this.testId == ((Tester) obj).testId;
@@ -243,29 +186,6 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public int hashCode() {
 		return this.server.getNode().serverId.hashCode();
-	}
-	private long inputMessageCount = 0;
-	private long avarageInputMessageQueueSize = 0;
-	private long maxInputMessageQueueSize = 0;
-	private long tempMaxInputMessageQueueSize = 0;
-	private long inputMessageQueueTimesCount = 0;
-	private long requestCount = 0;
-	private long requestViaPredecessorsCount = 0;
-	private long requestLifetime = 0;
-	private boolean inputMessageQueueFull = false;
-
-	@Override
-	public synchronized void incIncomingMessageCount() {
-		inputMessageCount++;
-	}
-
-	@Override
-	public synchronized void setMessageQueueSize(int size) {
-		tempMaxInputMessageQueueSize = Math.max(size, tempMaxInputMessageQueueSize);
-		maxInputMessageQueueSize = tempMaxInputMessageQueueSize;
-		inputMessageQueueFull = size >= CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE - 1;
-		avarageInputMessageQueueSize += size;
-		inputMessageQueueTimesCount++;
 	}
 
 	public long[] getTestData() {
@@ -287,6 +207,15 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		requestLifetime = 0;
 		return data;
 	}
+	private long inputMessageCount = 0;
+	private long avarageInputMessageQueueSize = 0;
+	private long maxInputMessageQueueSize = 0;
+	private long tempMaxInputMessageQueueSize = 0;
+	private long inputMessageQueueTimesCount = 0;
+	private long requestCount = 0;
+	private long requestViaPredecessorsCount = 0;
+	private long requestLifetime = 0;
+	private boolean inputMessageQueueFull = false;
 
 	@Override
 	public synchronized void incRequestCount(int lifetime, boolean routedViaPredecessors) {
@@ -295,5 +224,19 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			requestViaPredecessorsCount++;
 		}
 		requestLifetime += lifetime;
+	}
+	
+	@Override
+	public synchronized void incIncomingMessageCount() {
+		inputMessageCount++;
+	}
+
+	@Override
+	public synchronized void setMessageQueueSize(int size) {
+		tempMaxInputMessageQueueSize = Math.max(size, tempMaxInputMessageQueueSize);
+		maxInputMessageQueueSize = tempMaxInputMessageQueueSize;
+		inputMessageQueueFull = size >= CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE - 1;
+		avarageInputMessageQueueSize += size;
+		inputMessageQueueTimesCount++;
 	}
 }

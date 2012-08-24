@@ -206,9 +206,6 @@ public class IOHandler {
 		for (int i = 0; i < CONFIGURATIONS.NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS; i++) {
 			new Thread(outputMessageQueueProcessor).start();
 		}
-		if (this.server.getSinchanaTestInterface() != null) {
-			this.server.getSinchanaTestInterface().setServerIsRunning(true);
-		}
 	}
 
 	public void stopServer() {
@@ -217,8 +214,5 @@ public class IOHandler {
 			tServer.stop();
 		}
 		this.server.getConnectionPool().closeAllConnections();
-		if (this.server.getSinchanaTestInterface() != null) {
-			this.server.getSinchanaTestInterface().setServerIsRunning(false);
-		}
 	}
 }

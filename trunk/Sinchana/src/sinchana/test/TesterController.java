@@ -12,7 +12,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 
@@ -22,15 +21,15 @@ import sinchana.thrift.MessageType;
  */
 public class TesterController {
 
-	public static int NUM_OF_TESTING_NODES = 0;
-	public static int max_buffer_size = 0;
+	public static final boolean GUI_ON = false;
+	public static final boolean USE_REMOTE_CACHE_SERVER = false;
+	public static final boolean CLEAR_CACHE_SERVER = true;
+	public static final int ROUND_TRIP_TIME = 0;
+	public static final boolean DO_LOG = false;
+	public static final long WATCH_TIME_OUT = 10 * 1000; //milliseconds.
 	private final Map<Integer, Tester> testServers = new HashMap<Integer, Tester>();
 	private final ControllerUI cui = new ControllerUI(this);
-	private int completedCount = 0;
 	private final Timer timer = new Timer();
-	public static int errorCount = 0;
-	public static int totalCount = 0;
-	private int numOfTestMsg = 0;
 
 	/**
 	 * 
@@ -41,7 +40,7 @@ public class TesterController {
 		Properties props = System.getProperties();
 //        props.put("http.proxyHost", "cache.mrt.ac.lk");
 //        props.put("http.proxyPort", "3128");
-		if (CONFIGURATIONS.CLEAR_CACHE_SERVER) {
+		if (CLEAR_CACHE_SERVER) {
 			LocalCacheServer.clear();
 		}
 		TesterController testerController = new TesterController();
@@ -96,10 +95,6 @@ public class TesterController {
 							+ TAG_REMAINING_MSGS + numOfTestMsgs);
 				}
 				oldTime = newTime;
-//				if (!Arrays.equals(maxTester, maxTesterOld)) {
-//					System.out.println("Max: " + ByteArrays.toReadableString(maxTester).toUpperCase());
-//					maxTesterOld = maxTester;
-//				}
 			}
 		}, 1000, 1000);
 		timer.scheduleAtFixedRate(new TimerTask() {
@@ -128,14 +123,14 @@ public class TesterController {
 	 */
 	public void startNodeSet(int portRange, int numOfTesters) {
 		Tester tester;
-		for (int i = NUM_OF_TESTING_NODES; i < NUM_OF_TESTING_NODES + numOfTesters; i++) {
+		for (int i = numOfTestingNodes; i < numOfTestingNodes + numOfTesters; i++) {
 			tester = new Tester(i, portRange + i, this);
 			testServers.put(i, tester);
 		}
-		NUM_OF_TESTING_NODES += numOfTesters;
-		byte[][] testServerIds = new byte[NUM_OF_TESTING_NODES][20];
+		numOfTestingNodes += numOfTesters;
+		byte[][] testServerIds = new byte[numOfTestingNodes][20];
 
-		for (int i = 0; i < NUM_OF_TESTING_NODES; i++) {
+		for (int i = 0; i < numOfTestingNodes; i++) {
 			testServerIds[i] = testServers.get(i).getServerId();
 		}
 
@@ -147,6 +142,9 @@ public class TesterController {
 			}
 		}
 	}
+	private int numOfTestingNodes = 0;
+	private int completedCount = 0;
+	private int numOfTestMsg = 0;
 
 	/**
 	 * 
@@ -191,7 +189,7 @@ public class TesterController {
 	 */
 	public synchronized void incrementCompletedCount(int id) {
 		completedCount++;
-		cui.setStatus(completedCount + " of " + NUM_OF_TESTING_NODES + " are stable...");
+		cui.setStatus(completedCount + " of " + numOfTestingNodes + " are stable...");
 	}
 
 	/**
@@ -298,11 +296,28 @@ public class TesterController {
 	}
 	private static final String FILTER_SPLITTER = " ";
 
-	public static synchronized void inc() {
-		if (++c >= 10000) {
-			System.out.println("count: " + c);
-			c = 0;
-		}
+	void resetAndWatch() {
+		timer.scheduleAtFixedRate(new TimerTask() {
+
+			@Override
+			public void run() {
+				long time = System.currentTimeMillis();
+				System.out.println(time - prevTime + "ms\t\tcount = " + totalCount);
+				totalCount = 0;
+				prevTime = time;
+			}
+		}, 0, WATCH_TIME_OUT);
+
 	}
-	private static int c = 0;
+	private long prevTime = System.currentTimeMillis();
+
+	public static synchronized void incTotalCount() {
+		totalCount++;
+	}
+	private static int totalCount = 0;
+
+	public static synchronized void incErrorCount() {
+		errorCount++;
+	}
+	private static int errorCount = 0;
 }

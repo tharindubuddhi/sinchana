@@ -50,7 +50,7 @@ public class LocalCacheServer {
 	}
 
 	public static void clear() {
-		if (CONFIGURATIONS.USE_REMOTE_CACHE_SERVER) {
+		if (TesterController.USE_REMOTE_CACHE_SERVER) {
 			try {
 				URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=true");
 				URLConnection yc = yahoo.openConnection();
@@ -67,7 +67,7 @@ public class LocalCacheServer {
 	}
 
 	public static String getRemoteNode(String address, int portId) {
-		if (CONFIGURATIONS.USE_REMOTE_CACHE_SERVER) {
+		if (TesterController.USE_REMOTE_CACHE_SERVER) {
 			try {
 				URL url = new URL("http://cseanremo.appspot.com/remoteip?"
 						+ "sid=" + address + "@" + portId
