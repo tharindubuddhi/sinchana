@@ -128,6 +128,17 @@ public class SinchanaServer {
 		this.iOHandler.startServer();
 	}
 
+	/**
+	 * Stop the server.
+	 */
+	public void stopServer() {
+		iOHandler.stopServer();
+	}
+
+	public boolean isRunning() {
+		return iOHandler.isRunning();
+	}
+
 	public void join(String remoteNodeAddress) throws TException, InterruptedException {
 		Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.JOIN_MESSAGE_LIFETIME);
 		if (remoteNodeAddress != null && !remoteNodeAddress.equals(this.node.address)) {
@@ -165,11 +176,12 @@ public class SinchanaServer {
 		}
 	}
 
-	/**
-	 * Stop the server.
-	 */
-	public void stopServer() {
-		iOHandler.stopServer();
+	public boolean isJoined() {
+		return joined;
+	}
+
+	public void printTableInfo() {
+		routingHandler.printInfo();
 	}
 
 	/**
@@ -258,10 +270,6 @@ public class SinchanaServer {
 		return SinchanaRequestHandler;
 	}
 
-	/**
-	 * Send a message. If the message type is MessageType.GET, targetKey field should be set.
-	 * @param message		Message to pass to the network.
-	 */
 	public void testRing() {
 		Message message = new Message(MessageType.TEST_RING, this.node, 1024);
 		message.setStation(this.node);

@@ -215,4 +215,8 @@ public class IOHandler {
 		}
 		this.server.getConnectionPool().closeAllConnections();
 	}
+
+	public boolean isRunning() {
+		return running;
+	}
 }

@@ -248,7 +248,7 @@ public class MessageHandler {
 				this.server.getIOHandler().send(message, predecessor);
 
 			} else {
-				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
+				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId(), message.station.getServerId());
 				this.server.getIOHandler().send(message, nextHop);
 			}
 		}

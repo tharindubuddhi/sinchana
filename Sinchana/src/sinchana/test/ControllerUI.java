@@ -10,7 +10,6 @@
  */
 package sinchana.test;
 
-
 /**
  *
  * @author Hiru
@@ -57,15 +56,10 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         startNodeSetButton = new javax.swing.JButton();
         portRange = new javax.swing.JTextField();
         numOfTesters = new javax.swing.JTextField();
-        ringTestButton = new javax.swing.JButton();
         sendMessagePanel = new javax.swing.JPanel();
-        jLabel5 = new javax.swing.JLabel();
-        reqId = new javax.swing.JTextField();
-        jLabel6 = new javax.swing.JLabel();
-        destId = new javax.swing.JTextField();
-        jLabel7 = new javax.swing.JLabel();
-        message = new javax.swing.JTextField();
-        sendButton = new javax.swing.JButton();
+        printTableInfoId = new javax.swing.JTextField();
+        printTableInfoButton = new javax.swing.JButton();
+        ringTestButton = new javax.swing.JButton();
         messagePanel = new javax.swing.JPanel();
         numOfMsgsField = new javax.swing.JTextField();
         sendMsgButton = new javax.swing.JButton();
@@ -122,58 +116,32 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         numOfTesters.setPreferredSize(new java.awt.Dimension(64, 24));
         autoTestButtonPanel.add(numOfTesters);
 
+        jPanel1.add(autoTestButtonPanel);
+
+        sendMessagePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+
+        printTableInfoId.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
+        printTableInfoId.setText("701EA28FCE4761E5C6866A4EB644661547A8D15C");
+        printTableInfoId.setPreferredSize(new java.awt.Dimension(180, 24));
+        sendMessagePanel.add(printTableInfoId);
+
+        printTableInfoButton.setText("Print Table Info");
+        printTableInfoButton.setPreferredSize(new java.awt.Dimension(134, 24));
+        printTableInfoButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                printTableInfoButtonActionPerformed(evt);
+            }
+        });
+        sendMessagePanel.add(printTableInfoButton);
+
         ringTestButton.setText("Test Ring");
-        ringTestButton.setEnabled(false);
         ringTestButton.setPreferredSize(new java.awt.Dimension(134, 24));
         ringTestButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ringTestButtonActionPerformed(evt);
             }
         });
-        autoTestButtonPanel.add(ringTestButton);
-
-        jPanel1.add(autoTestButtonPanel);
-
-        sendMessagePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
-
-        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel5.setText("Sender");
-        jLabel5.setPreferredSize(new java.awt.Dimension(56, 24));
-        sendMessagePanel.add(jLabel5);
-
-        reqId.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        reqId.setText("0");
-        reqId.setPreferredSize(new java.awt.Dimension(56, 24));
-        sendMessagePanel.add(reqId);
-
-        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel6.setText("Dest:");
-        jLabel6.setPreferredSize(new java.awt.Dimension(56, 24));
-        sendMessagePanel.add(jLabel6);
-
-        destId.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        destId.setText("0");
-        destId.setPreferredSize(new java.awt.Dimension(56, 24));
-        sendMessagePanel.add(destId);
-
-        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel7.setText("Message");
-        jLabel7.setPreferredSize(new java.awt.Dimension(72, 24));
-        sendMessagePanel.add(jLabel7);
-
-        message.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        message.setText("Where are you?");
-        message.setPreferredSize(new java.awt.Dimension(96, 24));
-        sendMessagePanel.add(message);
-
-        sendButton.setText("Send");
-        sendButton.setPreferredSize(new java.awt.Dimension(96, 24));
-        sendButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sendButtonActionPerformed(evt);
-            }
-        });
-        sendMessagePanel.add(sendButton);
+        sendMessagePanel.add(ringTestButton);
 
         jPanel1.add(sendMessagePanel);
 
@@ -353,11 +321,9 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
-//		testerController.send(message.getText(), this.destId.getText(), this.reqId.getText());
-//                testerController.publishService(10);
-//	testerController.storeData();
-}//GEN-LAST:event_sendButtonActionPerformed
+private void printTableInfoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printTableInfoButtonActionPerformed
+	testerController.printTableInfo(this.printTableInfoId.getText());
+}//GEN-LAST:event_printTableInfoButtonActionPerformed
 
 private void startNodeSetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNodeSetButtonActionPerformed
 	Thread thread = new Thread(this);
@@ -422,15 +388,11 @@ private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {/
     private javax.swing.JTextField contatain;
     private javax.swing.JTextField dataCountTextField;
     private javax.swing.JButton dataRemoveButton;
-    private javax.swing.JTextField destId;
     private javax.swing.JLabel egLabel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField logClass;
@@ -438,18 +400,17 @@ private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {/
     private javax.swing.JTextField logNodeID;
     private javax.swing.JTextField logType;
     private javax.swing.JPanel loggerControlPanel;
-    private javax.swing.JTextField message;
     private javax.swing.JPanel messagePanel;
     private javax.swing.JTextField numOfMsgsField;
     private javax.swing.JTextField numOfTesters;
     private javax.swing.JTextField portRange;
     private javax.swing.JButton printLogButton;
+    private javax.swing.JButton printTableInfoButton;
+    private javax.swing.JTextField printTableInfoId;
     private javax.swing.JTextField removeAmountTextField;
-    private javax.swing.JTextField reqId;
     private javax.swing.JButton resetAndWatchButton;
     private javax.swing.JButton retrieveButton;
     private javax.swing.JButton ringTestButton;
-    private javax.swing.JButton sendButton;
     private javax.swing.JPanel sendMessagePanel;
     private javax.swing.JButton sendMsgAutoButton;
     private javax.swing.JButton sendMsgButton;

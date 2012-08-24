@@ -14,8 +14,14 @@ import sinchana.thrift.Node;
 public class FingerTableEntry {
 
 	private BigInteger start;
+	private BigInteger startOffset;
 	private BigInteger end;
-	private Node successor;
+	private BigInteger endOffset;
+	private Node[] successors;
+	
+	public FingerTableEntry(int numOfTableEntries){
+		this.successors = new Node[numOfTableEntries];
+	}
 
 	/**
 	 * 
@@ -49,20 +55,38 @@ public class FingerTableEntry {
 		this.start = start;
 	}
 
+	public BigInteger getEndOffset() {
+		return endOffset;
+	}
+
+	public void setEndOffset(BigInteger endOffset) {
+		this.endOffset = endOffset;
+	}
+
+	public BigInteger getStartOffset() {
+		return startOffset;
+	}
+
+	public void setStartOffset(BigInteger startOffset) {
+		this.startOffset = startOffset;
+	}
+	
+	
+
 	/**
 	 * 
 	 * @return
 	 */
-	public Node getSuccessor() {
-		return successor;
+	public Node[] getSuccessors() {
+		return successors;
 	}
 
 	/**
 	 * 
 	 * @param successor
 	 */
-	public void setSuccessor(Node successor) {
-		this.successor = successor;
+	public void setSuccessor(Node successor, int index) {
+		this.successors[index] = successor;
 	}
 
 	/**
