@@ -23,6 +23,12 @@ import sinchana.util.tools.ByteArrays;
  */
 public class MessageHandler {
 
+	private static final byte[] ERROR_MSG_RESPONSE_HANDLER_NOT_FOUND = "Response handler not found".getBytes();
+	private static final byte[] ERROR_MSG_SERVICE_HANDLER_NOT_FOUND = "Service handler not found".getBytes();
+	private static final byte[] ERROR_MSG_DATA_STORE_HANDLER_NOT_FOUND = "Data handler not found".getBytes();
+	private static final byte[] ERROR_MSG_JOIN_REACCEPTANCE = "You have to wait...".getBytes();
+	private static final String TEST_RING_SEPARATOR = " > ";
+	private final Set<Node> nodes = new HashSet<Node>();
 	private final SinchanaServer server;
 	private final Node thisNode;
 	private final byte[] serverId;
@@ -30,11 +36,6 @@ public class MessageHandler {
 	private final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
 	private final Semaphore messageQueueLock = new Semaphore(0);
 	private boolean waitOnMessageQueueLock = false;
-	private static final String ERROR_MSG_JOIN_REACCEPTANCE = "You have to wait at least (ms) ";
-	private static final String ERROR_MSG_RESPONSE_HANDLER_NOT_FOUND = "Response handler not found";
-	private static final String ERROR_MSG_SERVICE_HANDLER_NOT_FOUND = "Service handler not found";
-	private static final String ERROR_MSG_DATA_STORE_HANDLER_NOT_FOUND = "Data handler not found";
-	private static final String TEST_RING_SEPARATOR = " > ";
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
 	 * determined by MESSAGE_BUFFER_SIZE.
@@ -115,11 +116,11 @@ public class MessageHandler {
 		this.server = server;
 		this.thisNode = server.getNode();
 		this.serverId = thisNode.getServerId();
-		this.serverIdAsBigInt = server.getServerIdAsBigInt();
+		this.serverIdAsBigInt = new BigInteger(1, this.serverId);
 		incomingMessageQueueThread.start();
 	}
 
-	public boolean queueMessage(Message message) {
+	boolean queueMessage(Message message) {
 		if (server.getSinchanaTestInterface() != null) {
 			server.getSinchanaTestInterface().incIncomingMessageCount();
 			server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
@@ -129,7 +130,7 @@ public class MessageHandler {
 		}
 	}
 
-	public void addRequest(Message message) throws InterruptedException {
+	void addRequest(Message message) throws InterruptedException {
 		if (server.getSinchanaTestInterface() != null) {
 			server.getSinchanaTestInterface().incIncomingMessageCount();
 			server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
@@ -185,17 +186,13 @@ public class MessageHandler {
 		boolean updated = false;
 		if (message.isSetFailedNodeSet()) {
 			Set<Node> failedNodeSet = message.getFailedNodeSet();
-			this.server.getConnectionPool().updateFailedNodeInfo(failedNodeSet, true);
 			for (Node node : failedNodeSet) {
-				updated = updated || this.server.getRoutingHandler().updateTable(node, false);
+				this.server.getConnectionPool().updateNodeInfo(node, false);
+				updated = this.server.getRoutingHandler().updateTable(node, false) || updated;
 			}
 		}
-		if (!Arrays.equals(message.source.serverId.array(), serverId)) {
-			nodes.add(message.source);
-		}
-		if (!Arrays.equals(message.station.serverId.array(), serverId)) {
-			nodes.add(message.station);
-		}
+		nodes.add(message.source);
+		nodes.add(message.station);
 		if (message.isSetNeighbourSet()) {
 			nodes.addAll(message.getNeighbourSet());
 		}
@@ -210,15 +207,14 @@ public class MessageHandler {
 						continue;
 					}
 				}
-				this.server.getConnectionPool().updateFailedNodeInfo(node, false);
-				updated = updated || this.server.getRoutingHandler().updateTable(node, true);
+				this.server.getConnectionPool().updateNodeInfo(node, true);
+				updated = this.server.getRoutingHandler().updateTable(node, true) || updated;
 			}
 		}
 		if (updated) {
 			this.server.getRoutingHandler().triggerOptimize();
 		}
 	}
-	private final Set<Node> nodes = new HashSet<Node>();
 
 	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
@@ -252,7 +248,7 @@ public class MessageHandler {
 						+ CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT - System.currentTimeMillis();
 				if (remainingTime > 0) {
 					message.setSuccess(false);
-					message.setError(ERROR_MSG_JOIN_REACCEPTANCE + remainingTime);
+					message.setError(ERROR_MSG_JOIN_REACCEPTANCE);
 					server.getIOHandler().send(message, message.source);
 				}
 				return;
@@ -300,6 +296,7 @@ public class MessageHandler {
 	private void processDiscoverNeighbours(Message message) {
 		if (!Arrays.equals(message.source.serverId.array(), serverId)) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
+			message.setFailedNodeSet(this.server.getConnectionPool().getFailedNodes());
 			this.server.getIOHandler().send(message, message.source);
 		}
 	}

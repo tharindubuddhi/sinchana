@@ -36,12 +36,14 @@ public interface RoutingHandler {
 	 */
 	public abstract Set<Node> getNeighbourSet();
 
+	public abstract boolean isInTheTable(Node nodeToCkeck);
+
 	/**
 	 * Triggers the routing table optimization functions.
 	 */
 	public abstract void triggerOptimize();
 
 	public abstract boolean updateTable(Node node, boolean add);
-	
+
 	public abstract void printInfo();
 }

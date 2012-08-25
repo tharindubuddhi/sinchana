@@ -33,13 +33,14 @@ public class Connection {
 	private TProtocol protocol;
 	private boolean opened = false;
 	private boolean failed = false;
+	private boolean firstUse = true;
 	private boolean joinedBackSinceLastFail = false;
 
-	public Connection(Node node) {
+	Connection(Node node) {
 		this.node = node;
 	}
 
-	public void open() throws TTransportException {
+	void open() throws TTransportException {
 		if (opened) {
 			return;
 		}
@@ -61,7 +62,7 @@ public class Connection {
 		}
 	}
 
-	public boolean isAlive() {
+	boolean isAlive() {
 		boolean prevOpened = opened;
 		try {
 			open();
@@ -72,6 +73,7 @@ public class Connection {
 			client.ping();
 			roundTripTime = System.currentTimeMillis() - st;
 			lastKnownSuccessConnectTime = st;
+			numOfOpenTries = 0;
 			failed = false;
 		} catch (TException ex) {
 			lastKnownFailedTime = System.currentTimeMillis();
@@ -87,27 +89,27 @@ public class Connection {
 		return true;
 	}
 
-	public void close() {
+	void close() {
 		if (transport != null && transport.isOpen()) {
 			transport.close();
 		}
 		opened = false;
 	}
 
-	public void reset() {
+	void reset() {
 		close();
 		numOfOpenTries = 0;
 		failed = false;
 	}
 
-	public void failed() {
+	void failed() {
 		lastKnownFailedTime = System.currentTimeMillis();
 		lastHeardFailedTime = lastKnownFailedTime;
 		numOfOpenTries++;
 		close();
 	}
 
-	public void failedPermenently() {
+	void failedPermenently() {
 		lastKnownFailedTime = System.currentTimeMillis();
 		lastHeardFailedTime = lastKnownFailedTime;
 		numOfOpenTries++;
@@ -115,66 +117,77 @@ public class Connection {
 		close();
 	}
 
-	void failedByInfo(boolean reportFailure) {
-		if (reportFailure) {
+	boolean updateInfo(boolean alive) {
+		if (alive) {
+			if (firstUse) {
+				firstUse = false;
+				return isAlive();
+			}
+			if (!failed || !isAlive()) {
+				return false;
+			}
+			numOfOpenTries = 0;
+			failed = false;
+		} else {
+			if (firstUse) {
+				firstUse = false;
+				return !isAlive();
+			}			
 			if (failed || isAlive()) {
-				return;
+				return false;
 			}
 			lastHeardFailedTime = System.currentTimeMillis();
 			failed = true;
-		} else {
-			if (!failed || !isAlive()) {
-				return;
-			}
 		}
+		return true;
 	}
 
-	public long getLastUsedTime() {
+	long getLastUsedTime() {
 		return lastUsedTime;
 	}
 
-	public long getLastOpenTime() {
+	long getLastOpenTime() {
 		return lastOpenTime;
 	}
 
-	public Client getClient() {
+	Client getClient() {
 		lastUsedTime = System.currentTimeMillis();
 		return client;
 	}
 
-	public int getNumOfOpenTries() {
+	int getNumOfOpenTries() {
 		return numOfOpenTries;
 	}
 
-	public boolean isOpened() {
+	boolean isOpened() {
 		return opened;
 	}
 
-	public boolean isJoinedBackSinceLastFail() {
+	boolean isJoinedBackSinceLastFail() {
 		return joinedBackSinceLastFail;
 	}
 
-	public long getLastHeardFailedTime() {
+	long getLastHeardFailedTime() {
 		return lastHeardFailedTime;
 	}
 
-	public long getLastKnownFailedTime() {
+	long getLastKnownFailedTime() {
 		return lastKnownFailedTime;
 	}
 
-	public long getLastKnownSuccessConnectTime() {
+	long getLastKnownSuccessConnectTime() {
 		return lastKnownSuccessConnectTime;
 	}
 
-	public long getRoundTripTime() {
+	long getRoundTripTime() {
 		return roundTripTime;
 	}
 
-	public boolean isFailed() {
+	boolean isFailed() {
 		return failed;
 	}
 
-	public Node getNode() {
+	Node getNode() {
 		return node;
 	}
 }

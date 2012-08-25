@@ -4,7 +4,6 @@
  */
 package sinchana;
 
-import java.util.Arrays;
 import java.util.concurrent.SynchronousQueue;
 import org.apache.thrift.TException;
 
@@ -18,7 +17,6 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
-import sinchana.util.tools.ByteArrays;
 
 /**
  *
@@ -28,15 +26,15 @@ public class IOHandler {
 
 	public static final int ACCEPT_ERROR = 1;
 	public static final int SUCCESS = 2;
+	private static final byte[] ERROR_MSG_LIFE_TIME_EXPIRED = "Messaage is terminated as lifetime expired!".getBytes();
+	private static final byte[] ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED 
+			= "Messaage is terminated as maximum number of retries is exceeded!".getBytes();
 	private final SinchanaServer server;
 	private final Node thisNode;
-	private final byte[] serverId;
 	private final SynchronousQueue<Message> outputMessageQueue = new SynchronousQueue<Message>();
 	private TServer tServer;
 	private TTransportException tTransportException = null;
 	private boolean running = false;
-	private static final String ERROR_MSG_LIFE_TIME_EXPIRED = "Messaage is terminated as lifetime expired!";
-	private static final String ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED = "Messaage is terminated as maximum number of retries is exceeded!";
 	private final Runnable outputMessageQueueProcessor = new Runnable() {
 
 		@Override
@@ -55,10 +53,9 @@ public class IOHandler {
 	 * 
 	 * @param svr
 	 */
-	public IOHandler(SinchanaServer svr) {
+	IOHandler(SinchanaServer svr) {
 		this.server = svr;
 		thisNode = server.getNode();
-		this.serverId = thisNode.getServerId();
 	}
 
 	public void send(Message message, Node destination) {
@@ -142,10 +139,6 @@ public class IOHandler {
 					connection.failedPermenently();
 					boolean updated = server.getRoutingHandler().updateTable(message.destination, false);
 					if (updated) {
-						Logger.log(thisNode, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
-								"Node " + ByteArrays.idToReadableString(message.destination)
-								+ " @ "
-								+ message.destination.address + " is removed from the routing table!");
 						server.getRoutingHandler().triggerOptimize();
 					}
 					if (isRoutable(message)) {
@@ -163,7 +156,7 @@ public class IOHandler {
 		throw new RuntimeException("This is unacceptable :P");
 	}
 
-	public int directSend(Message message) throws TException {
+	int directSend(Message message) throws TException {
 		message.setStation(thisNode);
 		Connection connection = this.server.getConnectionPool().getConnection(message.destination);
 		synchronized (connection) {
@@ -172,7 +165,7 @@ public class IOHandler {
 		}
 	}
 
-	public synchronized void startServer() throws TTransportException, InterruptedException {
+	synchronized void startServer() throws TTransportException, InterruptedException {
 		if (tServer == null || !tServer.isServing()) {
 			Thread thread = new Thread(new Runnable() {
 
@@ -208,7 +201,7 @@ public class IOHandler {
 		}
 	}
 
-	public void stopServer() {
+	void stopServer() {
 		running = false;
 		if (tServer != null && tServer.isServing()) {
 			tServer.stop();
@@ -216,7 +209,7 @@ public class IOHandler {
 		this.server.getConnectionPool().closeAllConnections();
 	}
 
-	public boolean isRunning() {
+	boolean isRunning() {
 		return running;
 	}
 }

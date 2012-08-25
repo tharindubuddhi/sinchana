@@ -1,66 +1,61 @@
 package sinchana.test;
 
-import java.net.UnknownHostException;
+import java.math.BigInteger;
+import java.util.Random;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
-import sinchana.SinchanaServer;
 import sinchana.SinchanaRequestCallback;
 import sinchana.SinchanaResponseCallback;
-import sinchana.exceptions.SinchanaInterruptedException;
-import sinchana.exceptions.SinchanaTimeOutException;
+import sinchana.SinchanaServer;
+import sinchana.util.tools.Hash;
 
 public class TestClass {
 
-	public static void main(String[] args) throws InterruptedException, UnknownHostException, SinchanaTimeOutException, SinchanaInterruptedException, TTransportException, TException {
+	private static final String localAddress = "127.0.0.1";
+	private static final int port = 6000;
+	private static final byte[] message = "Hi".getBytes();
+	private static final byte[] response = "Hello".getBytes();
+	private static final Random random = new Random();
+	private static final SinchanaServer[] servers = new SinchanaServer[10];
+	private static final SinchanaRequestCallback requestCallback = new SinchanaRequestCallback() {
 
-		String localAddress = "127.0.0.1";
-		
-		final SinchanaServer sinchanaServer = new SinchanaServer(localAddress + ":" + 2000);
+		@Override
+		public synchronized byte[] request(byte[] message) {
+			return response;
+		}
+	};
+	private static final SinchanaResponseCallback responseCallback = new SinchanaResponseCallback() {
 
-		sinchanaServer.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
-
-			@Override
-			public byte[] request(byte[] message) {
-				System.out.println("S1B: " + new String(message));
-				return ("Hi " + new String(message)).getBytes();
+		@Override
+		public synchronized void response(byte[] message) {
+			if (++count % 1000 == 0) {
+				end = System.currentTimeMillis();
+				System.out.println(count + "\t" + (end - start));
 			}
-		});
+		}
 
-		System.out.println("starting " + sinchanaServer.getNode().serverId.array());
-		sinchanaServer.startServer();
-		sinchanaServer.join(null);
+		@Override
+		public synchronized void error(byte[] error) {
+			throw new UnsupportedOperationException("Not supported yet.");
+		}
+	};
+	private static long start, end, count = 0;
 
+	public static void main(String[] args) throws TTransportException, InterruptedException, TException {
 
-		final SinchanaServer sinchanaServer2 = new SinchanaServer(localAddress + ":" + 2001);
+		for (int i = 0; i < servers.length; i++) {
+			servers[i] = new SinchanaServer(localAddress + ":" + (port + i));
+			servers[i].registerSinchanaRequestCallback(requestCallback);
+			servers[i].startServer();
+			servers[i].join(localAddress + ":" + port);
+		}
 
-		sinchanaServer2.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
+		start = System.currentTimeMillis();
 
-			@Override
-			public byte[] request(byte[] message) {
-				System.out.println("S2B: " + new String(message));
-				return ("Hi " + new String(message)).getBytes();
-			}
-		});
-
-		System.out.println("starting " + sinchanaServer2.getNode().serverId.array());
-		sinchanaServer2.startServer();
-		sinchanaServer2.join(localAddress + ":" + 2000);
-		sinchanaServer2.sendRequest(sinchanaServer.getNode().serverId.array(), "Hello".getBytes(), null);
-		sinchanaServer2.sendRequest(sinchanaServer.getNode().serverId.array(), "Hello".getBytes(), new SinchanaResponseCallback() {
-
-			@Override
-			public void response(byte[] message) {
-				System.out.println("S2S: " + new String(message));
-			}
-
-			@Override
-			public void error(byte[] message) {
-				throw new UnsupportedOperationException("Not supported yet.");
-			}
-		});
-		System.out.println("passed ;)");
-		byte[] resp = sinchanaServer2.sendRequest(sinchanaServer.getNode().serverId.array(), "Hello".getBytes());
-		sinchanaServer2.sendRequest(sinchanaServer.getNode().serverId.array(), "Hello".getBytes(), null);
-		System.out.println("done :) " + new String(resp));
+		for (int i = 0; i < 1000000; i++) {
+			String val = new BigInteger(160, random).toString(16);
+			int id = (int) (Math.random() * servers.length);
+			servers[id].sendRequest(Hash.generateId(val), message, responseCallback);
+		}
 	}
 }

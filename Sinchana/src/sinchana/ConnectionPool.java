@@ -9,8 +9,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import sinchana.CONFIGURATIONS;
-import sinchana.SinchanaServer;
 import sinchana.thrift.Node;
 
 /**
@@ -27,11 +25,11 @@ public class ConnectionPool {
 	 * initialized is passed as the argument
 	 * @param s		SinchanaServer instance.
 	 */
-	public ConnectionPool(SinchanaServer svr) {
+	ConnectionPool(SinchanaServer svr) {
 		this.server = svr;
 	}
 
-	public synchronized Connection getConnection(Node node) {
+	synchronized Connection getConnection(Node node) {
 		String id = new String(node.serverId.array());
 		if (pool.containsKey(id)) {
 			return pool.get(id);
@@ -50,7 +48,7 @@ public class ConnectionPool {
 		return connection;
 	}
 
-	public boolean isAlive(byte[] nodeId) {
+	boolean isAlive(byte[] nodeId) {
 		Connection connection = pool.get(new String(nodeId));
 		return connection.isAlive();
 	}
@@ -66,7 +64,7 @@ public class ConnectionPool {
 		return count;
 	}
 
-	public boolean hasReportFailed(Node node) {
+	boolean hasReportFailed(Node node) {
 		String id = new String(node.serverId.array());
 		synchronized (pool) {
 			return pool.containsKey(id) && pool.get(id).isFailed();
@@ -115,7 +113,7 @@ public class ConnectionPool {
 	/**
 	 * Closes all the connections in the connection pool.
 	 */
-	public void closeAllConnections() {
+	void closeAllConnections() {
 		synchronized (pool) {
 			Collection<Connection> values = pool.values();
 			for (Connection connection : values) {
@@ -124,17 +122,10 @@ public class ConnectionPool {
 			pool.clear();
 		}
 	}
-
-	public void updateFailedNodeInfo(Set<Node> failedNodeSet, boolean reportFailure) {
-		for (Node node : failedNodeSet) {
-			Connection connection = getConnection(node);
-			connection.failedByInfo(reportFailure);
-		}
-	}
-
-	public void updateFailedNodeInfo(Node node, boolean reportFailure) {
+	
+	boolean updateNodeInfo(Node node, boolean alive){
 		Connection connection = getConnection(node);
-		connection.failedByInfo(reportFailure);
+		return connection.updateInfo(alive);
 	}
 
 	public Set<Node> getFailedNodes() {

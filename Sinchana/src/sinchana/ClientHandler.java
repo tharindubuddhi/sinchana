@@ -14,7 +14,6 @@ import sinchana.service.SinchanaServiceInterface;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
@@ -27,14 +26,14 @@ import sinchana.util.tools.Hash;
  */
 public class ClientHandler {
 
+	private static final String ERROR_MSG_TIMED_OUT = "Timed out!";
+	private static final String ERROR_MSG_INTERRUPTED = "Interrupted!";
 	private final SinchanaServer server;
 	private final Node thisNode;
 	private final ConcurrentHashMap<Long, ClientData> clientsMap = new ConcurrentHashMap<Long, ClientData>();
 	private final Timer timer = new Timer();
-	private static final String ERROR_MSG_TIMED_OUT = "Timed out!";
-	private static final String ERROR_MSG_INTERRUPTED = "Interrupted!";
 
-	public ClientHandler(SinchanaServer svr) {
+	ClientHandler(SinchanaServer svr) {
 		this.server = svr;
 		this.thisNode = server.getNode();
 		timer.scheduleAtFixedRate(new TimerTask() {
@@ -61,7 +60,7 @@ public class ClientHandler {
 		}, 1000, 1000);
 	}
 
-	public void setResponse(Message message) {
+	void setResponse(Message message) {
 		ClientData clientData = clientsMap.remove(message.getId());
 		if (clientData != null) {
 			clientData.resolved = true;
@@ -142,17 +141,17 @@ public class ClientHandler {
 					if (clientData.waiting) {
 						clientData.data = message.getData();
 						clientData.success = false;
-						clientData.error = message.getError().getBytes();
+						clientData.error = message.getError();
 						clientData.lock.release();
 					} else {
-						((SinchanaCallBack) clientData.sinchanaCallBackHandler).error(message.getError().getBytes());
+						((SinchanaCallBack) clientData.sinchanaCallBackHandler).error(message.getError());
 					}
 					break;
 			}
 		}
 	}
 
-	public ClientData addRequest(byte[] key, byte[] data, MessageType type, long timeOut, TimeUnit timeUnit) throws SinchanaTimeOutException, SinchanaInterruptedException {
+	ClientData addRequest(byte[] key, byte[] data, MessageType type, long timeOut, TimeUnit timeUnit) throws SinchanaTimeOutException, InterruptedException {
 		ClientData clientData = null;
 		long requestId = -1;
 		Message message = new Message(type, thisNode, CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
@@ -195,7 +194,7 @@ public class ClientHandler {
 				clientData.lock.acquire();
 			}
 		} catch (InterruptedException ex) {
-			throw new SinchanaInterruptedException(ERROR_MSG_INTERRUPTED + ex);
+			throw ex;
 		} finally {
 			clientsMap.remove(requestId);
 		}
@@ -205,7 +204,7 @@ public class ClientHandler {
 		return clientData;
 	}
 
-	public void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBack scbh) throws InterruptedException {
+	void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBack scbh) throws InterruptedException {
 		long requestId = -1;
 		Message message = new Message(type, thisNode, CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
@@ -245,7 +244,7 @@ public class ClientHandler {
 		server.getMessageHandler().addRequest(message);
 	}
 
-	public class ClientData {
+	class ClientData {
 
 		long key;
 		final Semaphore lock = new Semaphore(0);

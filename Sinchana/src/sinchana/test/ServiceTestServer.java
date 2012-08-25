@@ -59,9 +59,7 @@ public class ServiceTestServer {
 			}
 		} catch (SinchanaTimeOutException ste) {
 			System.out.println(ste.getMessage());
-		} catch (SinchanaInterruptedException sie) {
-			System.out.println(sie.getMessage());
-		}
+		} 
 		try {
 			reference = sinchanaServer3.discoverService("GreetingsService".getBytes());
 			if (reference != null) {
@@ -77,9 +75,7 @@ public class ServiceTestServer {
 			}
 		} catch (SinchanaTimeOutException ste) {
 			System.out.println(ste.getMessage());
-		} catch (SinchanaInterruptedException sie) {
-			System.out.println(sie.getMessage());
-		}
+		} 
 		SinchanaServiceCallback ssh = new SinchanaServiceCallback() {
 
 			@Override
