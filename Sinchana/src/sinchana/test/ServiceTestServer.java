@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.SinchanaServer;
-import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.service.SinchanaServiceCallback;
 import sinchana.util.tools.ByteArrays;
