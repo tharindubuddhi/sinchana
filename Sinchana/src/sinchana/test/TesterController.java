@@ -18,19 +18,18 @@ import java.util.logging.Logger;
 import sinchana.CONFIGURATIONS;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
-import sinchana.util.tools.ByteArrays;
 
 /**
  *
  * @author Hiru
  */
 public class TesterController {
-	
+
 	public static final boolean USE_REMOTE_CACHE_SERVER = false;
 	public static final boolean CLEAR_CACHE_SERVER = true;
 	public static final int ROUND_TRIP_TIME = 0;
 	public static final boolean DO_LOG = false;
-	public static final long WATCH_TIME_OUT = 10 * 1000; //milliseconds.
+	public static final long WATCH_TIME_OUT = 5 * 1000; //milliseconds.
 	private final Map<Integer, Tester> testServers = new HashMap<Integer, Tester>();
 	private final ControllerUI cui = new ControllerUI(this);
 	private final Timer timer = new Timer();
@@ -49,18 +48,18 @@ public class TesterController {
 		}
 		TesterController testerController = new TesterController();
 	}
-	
+
 	private TesterController() {
 		cui.setVisible(true);
 		timer.scheduleAtFixedRate(new TimerTask() {
-			
+
 			long totalMessageIncome, totalInputMessageQueue,
 					totalResolves, totalResolvesViaPredecessors,
 					maxInputMessageQueueSize, totalLifeTime, numOfTestMsgs;
 			long newTime, oldTime = System.currentTimeMillis();
 			int numOfFullInputBuffs;
 			byte[] maxTester = TAG_NOT_AVAILABLE.getBytes();
-			
+
 			@Override
 			public void run() {
 				totalMessageIncome = 0;
@@ -102,7 +101,7 @@ public class TesterController {
 			}
 		}, 1000, 1000);
 		timer.scheduleAtFixedRate(new TimerTask() {
-			
+
 			@Override
 			public void run() {
 				if (numOfTestMsg > 0) {
@@ -133,11 +132,11 @@ public class TesterController {
 		}
 		numOfTestingNodes += numOfTesters;
 		byte[][] testServerIds = new byte[numOfTestingNodes][20];
-		
+
 		for (int i = 0; i < numOfTestingNodes; i++) {
 			testServerIds[i] = testServers.get(i).getServerId();
 		}
-		
+
 		Set<Integer> keySet = testServers.keySet();
 		for (int key : keySet) {
 			tester = testServers.get(key);
@@ -157,21 +156,14 @@ public class TesterController {
 	public void startAutoTest(long numOfTestMessages) {
 		numOfTestMsg = (int) numOfTestMessages;
 	}
-	
+
 	public void test(long numOfTestMessages) {
 		int numOfTestServers = testServers.size();
 		int randomId;
-		long randomAmount = 0;
 		while (numOfTestMessages > 0) {
 			randomId = (int) (Math.random() * numOfTestServers);
-			if (numOfTestMessages > 10) {
-				randomAmount = (long) (Math.random() * numOfTestMessages);
-				numOfTestMessages -= randomAmount;
-			} else {
-				randomAmount = numOfTestMessages;
-				numOfTestMessages = 0;
-			}
-			testServers.get(randomId).startTest(randomAmount);
+			testServers.get(randomId).startTest(1);
+			numOfTestMessages--;
 		}
 	}
 
@@ -185,7 +177,7 @@ public class TesterController {
 			break;
 		}
 	}
-	
+
 	public void printTableInfo(String idText) {
 		BigInteger id = new BigInteger(idText, CONFIGURATIONS.NUMBER_BASE);
 		Collection<Tester> testers = testServers.values();
@@ -207,34 +199,11 @@ public class TesterController {
 		cui.setStatus(completedCount + " of " + numOfTestingNodes + " are stable...");
 	}
 
-	/**
-	 * 
-	 * @param text
-	 * @param destination
-	 * @param requester
-	 */
-	public void send(String text, String destination, String requester) {
-		Set<Integer> keySet = testServers.keySet();
-		for (int key : keySet) {
-			if (Arrays.equals(testServers.get(key).getServerId(), requester.getBytes())) {
-				Message msg = new Message(MessageType.REQUEST, testServers.get(key).getServer().getNode(), 10);
-				msg.setDestinationId(destination.getBytes());
-				msg.setData(text.getBytes());
-//				testServers.get(key).getServer().send(msg);
-			}
-		}
-	}
-	String[] dataArray = null;
-	String[] datakeyArray = null;
-	int dataID = 1;
-	int storeNodeID = 5, retrieveNodeID = 7;
-	SinchanaDataHandlerImpl dataHandlerobject = new SinchanaDataHandlerImpl();
-	
 	public void storeData(int noOfData) {
-		
+
 		dataArray = new String[noOfData];
 		datakeyArray = new String[noOfData];
-		
+
 		for (int i = 0; i < noOfData; i++) {
 			dataArray[i] = DATA_TAG + dataID;
 			datakeyArray[i] = KEY_TAG + dataID;
@@ -251,10 +220,15 @@ public class TesterController {
 			}
 		}
 	}
+	String[] dataArray = null;
+	String[] datakeyArray = null;
+	int dataID = 1;
+	int storeNodeID = 5, retrieveNodeID = 7;
+	SinchanaDataHandlerImpl dataHandlerobject = new SinchanaDataHandlerImpl();
 	long startRetrieveTime = 0;
 	private static final String DATA_TAG = "data ";
 	private static final String KEY_TAG = "key ";
-	
+
 	public void retrieveData() {
 		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
 		dataHandlerobject.retrieveSuccessCount = 0;
@@ -267,7 +241,7 @@ public class TesterController {
 			}
 		}
 	}
-	
+
 	public void removeData(int randomAmount) {
 	}
 
@@ -310,27 +284,33 @@ public class TesterController {
 		sinchana.util.logging.Logger.print(nodeIds, levels, classIds, locations, containTextString);
 	}
 	private static final String FILTER_SPLITTER = " ";
-	
+
 	void resetAndWatch() {
 		timer.scheduleAtFixedRate(new TimerTask() {
-			
+
 			@Override
 			public void run() {
 				long time = System.currentTimeMillis();
-				System.out.println(time - prevTime + "ms\t\tcount = " + totalCount);
-				totalCount = 0;
+				tc = 0;
+				Collection<Tester> testers = testServers.values();
+				for (Tester tester : testers) {
+					int c = tester.getCount();
+					tc += c;
+					System.out.println(tester.getServerIdAsString() + ": " + c);
+				}
+				System.out.println(time - prevTime + "ms\t\tcount = " + tc);
 				prevTime = time;
 			}
 		}, 0, WATCH_TIME_OUT);
-		
 	}
 	private long prevTime = System.currentTimeMillis();
-	
+	private long tc = 0;
+
 	public static synchronized void incTotalCount() {
 		totalCount++;
 	}
 	private static int totalCount = 0;
-	
+
 	public static synchronized void incErrorCount() {
 		errorCount++;
 	}

@@ -68,11 +68,15 @@ public class IOHandler {
 					+ "that forwading within same node still happens :P \n" + message);
 		}
 		if (message.lifetime <= 0) {
+			if (!message.responseExpected) {
+				return;
+			}
 			message.setError(ERROR_MSG_LIFE_TIME_EXPIRED);
 			message.setDestination(message.source);
 			message.setDestinationId(message.source.serverId);
 			message.setType(MessageType.ERROR);
 			message.setSuccess(false);
+			message.setLifetime(1);
 			message.setSource(thisNode);
 		} else {
 			message.setDestination(destination.deepCopy());
@@ -115,7 +119,7 @@ public class IOHandler {
 		while (tries < CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES + 1) {
 			tries++;
 			if (tries > CONFIGURATIONS.NUM_OF_MAX_SEND_RETRIES) {
-				if (!isRoutable(message)) {
+				if (!isRoutable(message) || !message.responseExpected) {
 					return;
 				}
 				message.setError(ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED);
@@ -124,6 +128,7 @@ public class IOHandler {
 				message.setType(MessageType.ERROR);
 				message.setSuccess(false);
 				message.setSource(thisNode);
+				message.setLifetime(1);
 				tries = 0;
 			}
 			message.setStation(thisNode);

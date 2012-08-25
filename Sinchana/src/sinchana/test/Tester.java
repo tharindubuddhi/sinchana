@@ -5,7 +5,6 @@
 package sinchana.test;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
 import org.apache.thrift.TException;
@@ -16,6 +15,7 @@ import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
 import sinchana.CONFIGURATIONS;
 import sinchana.SinchanaResponseHandler;
+import sinchana.util.tools.Hash;
 
 /**
  *
@@ -46,7 +46,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 
 				@Override
 				public byte[] request(byte[] message) {
-					TesterController.incTotalCount();
+//					TesterController.incTotalCount();
+					inc();
 					return RETURN_MESSAGE;
 				}
 			});
@@ -107,8 +108,9 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			while (true) {
 				threadLock.acquire();
 				while (numOfTestingMessages > 0) {
-					BigInteger bi = new BigInteger(160, random);
-					server.sendRequest(Arrays.copyOf(bi.toByteArray(), 20), MESSAGE, null);
+					String val = new BigInteger(160, random).toString(CONFIGURATIONS.NUMBER_BASE);
+					byte[] mid = Hash.generateId(val);
+					server.sendRequest(mid, MESSAGE, srh);
 					numOfTestingMessages--;
 				}
 			}
@@ -155,6 +157,10 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		return server.getNode().getServerId();
 	}
 
+	public String getServerIdAsString() {
+		return server.getServerIdAsString();
+	}
+
 	public int getTestId() {
 		return testId;
 	}
@@ -176,6 +182,17 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	public int hashCode() {
 		return this.server.getNode().serverId.hashCode();
 	}
+
+	private synchronized void inc() {
+		count++;
+	}
+
+	public int getCount() {
+		int t = count;
+		count = 0;
+		return t;
+	}
+	private int count = 0;
 
 	public long[] getTestData() {
 		long[] data = new long[8];
