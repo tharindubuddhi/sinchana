@@ -4,13 +4,13 @@
  */
 package sinchana.service;
 
-import sinchana.SinchanaCallBackHandler;
+import sinchana.SinchanaCallBack;
 
 /**
  *
  * @author Hiru
  */
-public interface SinchanaServiceHandler extends SinchanaCallBackHandler {
+public interface SinchanaServiceCallback extends SinchanaCallBack {
 
 	public abstract void serviceFound(byte[] key, boolean success, byte[] data);
 

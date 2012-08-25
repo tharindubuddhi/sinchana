@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
-import sinchana.connection.Connection;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -120,11 +119,6 @@ public class MessageHandler {
 		incomingMessageQueueThread.start();
 	}
 
-	/**
-	 * 
-	 * @param message
-	 * @return
-	 */
 	public boolean queueMessage(Message message) {
 		if (server.getSinchanaTestInterface() != null) {
 			server.getSinchanaTestInterface().incIncomingMessageCount();
@@ -153,10 +147,6 @@ public class MessageHandler {
 		}
 	}
 
-	/**
-	 * 
-	 * @param message
-	 */
 	private synchronized void processMessage(Message message) {
 
 		this.updateTableWithMessage(message);
@@ -248,7 +238,7 @@ public class MessageHandler {
 				this.server.getIOHandler().send(message, predecessor);
 
 			} else {
-				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId(), message.station.getServerId());
+				Node nextHop = this.server.getRoutingHandler().getNextNode(message.getDestinationId());
 				this.server.getIOHandler().send(message, nextHop);
 			}
 		}
@@ -383,19 +373,19 @@ public class MessageHandler {
 		}
 		switch (message.type) {
 			case REQUEST:
-				handlerAvailable = this.server.getSinchanaRequestHandler() != null;
+				handlerAvailable = this.server.getSinchanaRequestCallback() != null;
 				if (responseExpected) {
 					returnMessage.setType(MessageType.RESPONSE);
 					returnMessage.setSuccess(handlerAvailable);
 					returnMessage.setLifetime(1 + message.lifetime);
 					returnMessage.setRoutedViaPredecessors(message.routedViaPredecessors);
 					if (handlerAvailable) {
-						returnMessage.setData(this.server.getSinchanaRequestHandler().request(message.getData()));
+						returnMessage.setData(this.server.getSinchanaRequestCallback().request(message.getData()));
 					} else {
 						returnMessage.setError(ERROR_MSG_RESPONSE_HANDLER_NOT_FOUND);
 					}
 				} else if (handlerAvailable) {
-					this.server.getSinchanaRequestHandler().request(message.getData());
+					this.server.getSinchanaRequestCallback().request(message.getData());
 				}
 				break;
 			case STORE_DATA:

@@ -10,10 +10,6 @@ package sinchana;
  */
 public interface SinchanaTestInterface {
 
-	/**
-	 * 
-	 * @param isStable
-	 */
 	public abstract void setStable(boolean isStable);
 
 	public abstract void setMessageQueueSize(int size);

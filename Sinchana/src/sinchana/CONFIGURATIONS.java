@@ -13,7 +13,7 @@ public class CONFIGURATIONS {
 	/**Sinchana DHT Configurations**/
 	public static final int NUM_OF_MAX_OPENED_CONNECTION = 24;
 	public static final int NODE_POOL_SIZE = 72;
-	public static final int REQUEST_MESSAGE_LIFETIME = 48;
+	public static final int REQUEST_MESSAGE_LIFETIME = 120;
 	public static final int JOIN_MESSAGE_LIFETIME = 1024;
 	public static final int NUMBER_BASE = 16;
 	public static final int INPUT_MESSAGE_BUFFER_SIZE = 8192;
@@ -25,7 +25,7 @@ public class CONFIGURATIONS {
 	public static final long FAILED_REACCEPT_TIME_OUT = 60 * 1000;	//milliseconds
 	public static final int JOIN_RETRY_TIME_OUT = 5; //Seconds
 	public static final int MAX_JOIN_RETRIES = 5;
-	public static final int CHOKE_LIMIT = 1000;
+	public static final int CHOKE_LIMIT = 200; //Number of request per second. Roughly, = (system throughput / number of testing nodes).
 	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 60 * 1000; //milliseconds
 	public static final byte[] SERVICE_TAG = "-@-SINCHANA_SERVICE".getBytes();
 }

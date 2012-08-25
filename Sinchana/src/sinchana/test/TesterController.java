@@ -10,11 +10,13 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sinchana.CONFIGURATIONS;
+import sinchana.util.tools.Hash;
 
 /**
  *
@@ -155,12 +157,30 @@ public class TesterController {
 	}
 
 	public void test(int numOfTestMessages) {
-		int amount = numOfTestMessages / testServers.size();
-		Collection<Tester> testers = testServers.values();
-		for (Tester tester : testers) {
-			tester.startTest(amount);
+//		int amount = numOfTestMessages / testServers.size();
+//		Collection<Tester> testers = testServers.values();
+//		for (Tester tester : testers) {
+//			tester.startTest(amount);
+//		}
+		testWithOneThread(numOfTestMessages);
+	}
+
+	public void testWithOneThread(int numOfMsgs) {
+		int numOfTestServers = testServers.size();
+		while (numOfMsgs > 0) {
+			String val = new BigInteger(160, random).toString(CONFIGURATIONS.NUMBER_BASE);
+			byte[] mid = Hash.generateId(val);
+			int tid = (int) (Math.random() * numOfTestServers);
+			try {
+				testServers.get(tid).getServer().sendRequest(mid, MESSAGE, null);
+			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			numOfMsgs--;
 		}
 	}
+	private final Random random = new Random();
+	private final byte[] MESSAGE = "Hi, Sinchana".getBytes();
 
 	/**
 	 * 
@@ -210,6 +230,8 @@ public class TesterController {
 		for (int i = 0; i < dataArray.length; i++) {
 			try {
 				testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(), dataHandlerobject);
+
+
 			} catch (InterruptedException ex) {
 				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 			}
@@ -231,6 +253,8 @@ public class TesterController {
 		for (int i = 0; i < datakeyArray.length; i++) {
 			try {
 				testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(), dataHandlerobject);
+
+
 			} catch (InterruptedException ex) {
 				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 			}
@@ -293,13 +317,15 @@ public class TesterController {
 					tc += c;
 					System.out.println(tester.getServerIdAsString() + ": " + c);
 				}
-				System.out.println(time - prevTime + "ms\t\tcount = " + tc);
+				tca += tc;
+				System.out.println(time - prevTime + "ms\t\tcount: " + tc
+						+ "\tacumilated count: " + tca + "\tthroughput: " + (tc * 1000 / (time - prevTime)));
 				prevTime = time;
 			}
 		}, 0, WATCH_TIME_OUT);
 	}
 	private long prevTime = System.currentTimeMillis();
-	private long tc = 0;
+	private long tc = 0, tca = 0;
 
 	public static synchronized void incTotalCount() {
 		totalCount++;

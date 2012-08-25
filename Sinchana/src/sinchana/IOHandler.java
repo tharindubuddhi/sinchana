@@ -7,7 +7,6 @@ package sinchana;
 import java.util.Arrays;
 import java.util.concurrent.SynchronousQueue;
 import org.apache.thrift.TException;
-import sinchana.connection.*;
 
 import sinchana.thrift.Message;
 import sinchana.thrift.DHTServer;
@@ -63,10 +62,6 @@ public class IOHandler {
 	}
 
 	public void send(Message message, Node destination) {
-		if (Arrays.equals(serverId, destination.serverId.array())) {
-			System.out.println(this.server.getServerIdAsString() + ": just to let you know "
-					+ "that forwading within same node still happens :P \n" + message);
-		}
 		if (message.lifetime <= 0) {
 			if (!message.responseExpected) {
 				return;

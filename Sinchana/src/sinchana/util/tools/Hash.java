@@ -14,13 +14,13 @@ import java.security.NoSuchAlgorithmException;
  */
 public class Hash {
 
-	private static final String ALRORYTHM = "SHA-1";
+	private static final String ALGORITHM = "SHA-1";
 	private static final String ENCODING = "utf8";
 	private static final String ERROR = "Error calculating hash value";
 
 	public static byte[] generateId(String address) {
 		try {
-			MessageDigest cript = MessageDigest.getInstance(ALRORYTHM);
+			MessageDigest cript = MessageDigest.getInstance(ALGORITHM);
 			cript.reset();
 			cript.update(address.getBytes(ENCODING));
 			byte[] digest = cript.digest();

@@ -4,13 +4,13 @@
  */
 package sinchana.dataStore;
 
-import sinchana.SinchanaCallBackHandler;
+import sinchana.SinchanaCallBack;
 
 /**
  *
  * @author Hiru
  */
-public interface SinchanaDataHandler extends SinchanaCallBackHandler {
+public interface SinchanaDataCallback extends SinchanaCallBack {
 
 	public abstract void isStored(byte[] key, boolean success);
 

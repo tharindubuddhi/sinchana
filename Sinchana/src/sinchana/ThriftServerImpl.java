@@ -23,13 +23,6 @@ public class ThriftServerImpl implements DHTServer.Iface {
 		this.server = svr;
 	}
 
-	/**
-	 * This method will be called when a message is received and the message 
-	 * will be passed as the argument. 
-	 * @param message Message transfered to the this node.
-	 * @return 
-	 * @throws TException
-	 */
 	@Override
 	public int transfer(Message message) throws TException {
 		message.lifetime--;
