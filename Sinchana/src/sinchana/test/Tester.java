@@ -111,6 +111,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 					String val = new BigInteger(160, random).toString(CONFIGURATIONS.NUMBER_BASE);
 					byte[] mid = Hash.generateId(val);
 					server.sendRequest(mid, MESSAGE, null);
+					choke();
 					numOfTestingMessages--;
 				}
 			}
@@ -135,6 +136,20 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	private static final byte[] RETURN_MESSAGE = "Greetings :)".getBytes();
 	private static final String TAG_ERROR = "ERROR: ";
 	private final Random random = new Random();
+
+	private void choke() throws InterruptedException {
+		chokeCount++;
+		time = System.currentTimeMillis();
+		if (milestone == -1 || time - milestone >= 1000) {
+			milestone = time;
+			chokeCount = 0;
+		}
+		if (chokeCount > CONFIGURATIONS.CHOKE_LIMIT) {
+			Thread.sleep(1000 - (time - milestone));
+		}
+	}
+	private long milestone = -1, time = - 1;
+	private int chokeCount = 0;
 
 	/**
 	 * 

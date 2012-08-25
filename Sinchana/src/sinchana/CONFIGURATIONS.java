@@ -25,6 +25,7 @@ public class CONFIGURATIONS {
 	public static final long FAILED_REACCEPT_TIME_OUT = 60 * 1000;	//milliseconds
 	public static final int JOIN_RETRY_TIME_OUT = 5; //Seconds
 	public static final int MAX_JOIN_RETRIES = 5;
+	public static final int CHOKE_LIMIT = 1000;
 	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 60 * 1000; //milliseconds
 	public static final byte[] SERVICE_TAG = "-@-SINCHANA_SERVICE".getBytes();
 }
