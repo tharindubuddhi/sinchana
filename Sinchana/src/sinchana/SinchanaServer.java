@@ -512,7 +512,7 @@ public class SinchanaServer {
 	 * @throws SinchanaInvalidArgumentException If the SinchanaServiceInterface is null
 	 */
 	public void publishService(byte[] key, SinchanaServiceInterface sinchanaServiceInterface) throws InterruptedException, SinchanaInvalidArgumentException {
-		if(sinchanaServiceInterface == null){
+		if (sinchanaServiceInterface == null) {
 			throw new SinchanaInvalidArgumentException("SinchanaServiceInterface cannot be null.");
 		}
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
@@ -532,11 +532,12 @@ public class SinchanaServer {
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 * @throws SinchanaInvalidArgumentException If the SinchanaServiceInterface is null
 	 */
-	public void removeService(byte[] key, SinchanaServiceInterface sinchanaServiceInterface) throws InterruptedException, SinchanaInvalidArgumentException {
-		if(sinchanaServiceInterface == null){
-			throw new SinchanaInvalidArgumentException("SinchanaServiceInterface cannot be null.");
+	public void removeService(byte[] key) throws InterruptedException, SinchanaInvalidArgumentException {
+		SinchanaServiceInterface ssi = this.sinchanaServiceStore.get(key);
+		if (ssi == null) {
+			throw new SinchanaInvalidArgumentException("No such service found in this server!");
 		}
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
-		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, sinchanaServiceInterface);
+		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi);
 	}
 }
