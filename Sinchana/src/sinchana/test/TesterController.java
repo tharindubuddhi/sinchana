@@ -5,7 +5,6 @@
 package sinchana.test;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.HashMap;
@@ -16,8 +15,6 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sinchana.CONFIGURATIONS;
-import sinchana.thrift.Message;
-import sinchana.thrift.MessageType;
 
 /**
  *
@@ -157,13 +154,11 @@ public class TesterController {
 		numOfTestMsg = (int) numOfTestMessages;
 	}
 
-	public void test(long numOfTestMessages) {
-		int numOfTestServers = testServers.size();
-		int randomId;
-		while (numOfTestMessages > 0) {
-			randomId = (int) (Math.random() * numOfTestServers);
-			testServers.get(randomId).startTest(1);
-			numOfTestMessages--;
+	public void test(int numOfTestMessages) {
+		int amount = numOfTestMessages / testServers.size();
+		Collection<Tester> testers = testServers.values();
+		for (Tester tester : testers) {
+			tester.startTest(amount);
 		}
 	}
 
