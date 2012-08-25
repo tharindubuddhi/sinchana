@@ -16,6 +16,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sinchana.CONFIGURATIONS;
+import sinchana.exceptions.SinchanaInvalidArgumentException;
 import sinchana.util.tools.Hash;
 
 /**
@@ -157,15 +158,15 @@ public class TesterController {
 	}
 
 	public void test(int numOfTestMessages) {
-//		int amount = numOfTestMessages / testServers.size();
-//		Collection<Tester> testers = testServers.values();
-//		for (Tester tester : testers) {
-//			tester.startTest(amount);
-//		}
-		testWithOneThread(numOfTestMessages);
+		int amount = numOfTestMessages / testServers.size();
+		Collection<Tester> testers = testServers.values();
+		for (Tester tester : testers) {
+			tester.startTest(amount);
+		}
 	}
 
 	public void testWithOneThread(int numOfMsgs) {
+		this.totalCountAccumilated = 0;
 		int numOfTestServers = testServers.size();
 		while (numOfMsgs > 0) {
 			String val = new BigInteger(160, random).toString(CONFIGURATIONS.NUMBER_BASE);
@@ -174,6 +175,8 @@ public class TesterController {
 			try {
 				testServers.get(tid).getServer().sendRequest(mid, MESSAGE, null);
 			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (SinchanaInvalidArgumentException ex) {
 				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			numOfMsgs--;
@@ -310,22 +313,21 @@ public class TesterController {
 			@Override
 			public void run() {
 				long time = System.currentTimeMillis();
-				tc = 0;
+				long tc = 0;
 				Collection<Tester> testers = testServers.values();
 				for (Tester tester : testers) {
-					int c = tester.getCount();
-					tc += c;
-					System.out.println(tester.getServerIdAsString() + ": " + c);
+					tc += tester.getCount();
+//					System.out.println(tester.getServerIdAsString() + ": " + c);
 				}
-				tca += tc;
+				totalCountAccumilated += tc;
 				System.out.println(time - prevTime + "ms\t\tcount: " + tc
-						+ "\tacumilated count: " + tca + "\tthroughput: " + (tc * 1000 / (time - prevTime)));
+						+ "\tacumilated count: " + totalCountAccumilated + "\tthroughput: " + (tc * 1000 / (time - prevTime)));
 				prevTime = time;
 			}
 		}, 0, WATCH_TIME_OUT);
 	}
 	private long prevTime = System.currentTimeMillis();
-	private long tc = 0, tca = 0;
+	private long totalCountAccumilated = 0;
 
 	public static synchronized void incTotalCount() {
 		totalCount++;

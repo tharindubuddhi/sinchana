@@ -92,7 +92,7 @@ public class TapestryTable implements RoutingHandler {
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
-//		msg.setNeighbourSet(getNeighbourSet());
+		msg.setNeighbourSet(getNeighbourSet());
 		for (Node node : predecessors) {
 			if (node == null) {
 				break;
@@ -179,6 +179,38 @@ public class TapestryTable implements RoutingHandler {
 		}
 	}
 
+	@Override
+	public boolean isInTheTable(Node nodeToCkeck) {
+		byte[] id = nodeToCkeck.serverId.array();
+		for (int i = 0; i < TABLE_SIZE; i++) {
+			for (int j = 0; j < TABLE_WIDTH; j++) {
+				for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
+					if (fingerTable[i][j][k] != null
+							&& Arrays.equals(fingerTable[i][j][k].serverId.array(), id)) {
+						return true;
+					}
+				}
+			}
+		}
+		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+			if (predecessors[i] == null) {
+				break;
+			}
+			if (Arrays.equals(predecessors[i].serverId.array(), id)) {
+				return true;
+			}
+		}
+		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+			if (successors[i] == null) {
+				break;
+			}
+			if (Arrays.equals(successors[i].serverId.array(), id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public Set<Node> getNeighbourSet() {
 		//initializes an empty thisNode set.

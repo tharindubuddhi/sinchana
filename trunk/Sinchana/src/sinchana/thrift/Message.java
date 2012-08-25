@@ -71,7 +71,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
   public Set<Node> failedNodeSet; // optional
   public boolean success; // optional
   public boolean responseExpected; // optional
-  public String error; // optional
+  public ByteBuffer error; // optional
   public int retryCount; // optional
   public long timeStamp; // optional
   public boolean routedViaPredecessors; // optional
@@ -228,7 +228,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     tmpMap.put(_Fields.RESPONSE_EXPECTED, new org.apache.thrift.meta_data.FieldMetaData("responseExpected", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.ERROR, new org.apache.thrift.meta_data.FieldMetaData("error", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     tmpMap.put(_Fields.RETRY_COUNT, new org.apache.thrift.meta_data.FieldMetaData("retryCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.TIME_STAMP, new org.apache.thrift.meta_data.FieldMetaData("timeStamp", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -303,7 +303,8 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     this.success = other.success;
     this.responseExpected = other.responseExpected;
     if (other.isSetError()) {
-      this.error = other.error;
+      this.error = org.apache.thrift.TBaseHelper.copyBinary(other.error);
+;
     }
     this.retryCount = other.retryCount;
     this.timeStamp = other.timeStamp;
@@ -718,11 +719,21 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
     __isset_bit_vector.set(__RESPONSEEXPECTED_ISSET_ID, value);
   }
 
-  public String getError() {
-    return this.error;
+  public byte[] getError() {
+    setError(org.apache.thrift.TBaseHelper.rightSize(error));
+    return error == null ? null : error.array();
   }
 
-  public Message setError(String error) {
+  public ByteBuffer bufferForError() {
+    return error;
+  }
+
+  public Message setError(byte[] error) {
+    setError(error == null ? (ByteBuffer)null : ByteBuffer.wrap(error));
+    return this;
+  }
+
+  public Message setError(ByteBuffer error) {
     this.error = error;
     return this;
   }
@@ -921,7 +932,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (value == null) {
         unsetError();
       } else {
-        setError((String)value);
+        setError((ByteBuffer)value);
       }
       break;
 
@@ -1539,7 +1550,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (this.error == null) {
         sb.append("null");
       } else {
-        sb.append(this.error);
+        org.apache.thrift.TBaseHelper.toString(this.error, sb);
       }
       first = false;
     }
@@ -1743,7 +1754,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
             break;
           case 14: // ERROR
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.error = iprot.readString();
+              struct.error = iprot.readBinary();
               struct.setErrorIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -1885,7 +1896,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
       if (struct.error != null) {
         if (struct.isSetError()) {
           oprot.writeFieldBegin(ERROR_FIELD_DESC);
-          oprot.writeString(struct.error);
+          oprot.writeBinary(struct.error);
           oprot.writeFieldEnd();
         }
       }
@@ -2011,7 +2022,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         oprot.writeBool(struct.responseExpected);
       }
       if (struct.isSetError()) {
-        oprot.writeString(struct.error);
+        oprot.writeBinary(struct.error);
       }
       if (struct.isSetRetryCount()) {
         oprot.writeI32(struct.retryCount);
@@ -2098,7 +2109,7 @@ public class Message implements org.apache.thrift.TBase<Message, Message._Fields
         struct.setResponseExpectedIsSet(true);
       }
       if (incoming.get(10)) {
-        struct.error = iprot.readString();
+        struct.error = iprot.readBinary();
         struct.setErrorIsSet(true);
       }
       if (incoming.get(11)) {

@@ -36,7 +36,7 @@ struct Message {
     11: optional set<Node> failedNodeSet,
     12: optional bool success,
     13: optional bool responseExpected,
-    14: optional string error,
+    14: optional binary error,
     15: optional i32 retryCount,
     16: optional i64 timeStamp,
     17: optional bool routedViaPredecessors    

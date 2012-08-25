@@ -374,7 +374,7 @@ private void resetAndWatchButtonActionPerformed(java.awt.event.ActionEvent evt) 
 	
 private void sendMsgButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgButtonActionPerformed
 	
-	testerController.test(Integer.parseInt(this.numOfMsgsField.getText()));
+	testerController.testWithOneThread(Integer.parseInt(this.numOfMsgsField.getText()));
 }//GEN-LAST:event_sendMsgButtonActionPerformed
 	
 private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgAutoButtonActionPerformed

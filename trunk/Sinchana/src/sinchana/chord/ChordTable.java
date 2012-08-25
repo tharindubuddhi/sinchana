@@ -104,7 +104,7 @@ public class ChordTable implements RoutingHandler {
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
-//		msg.setNeighbourSet(getNeighbourSet());
+		msg.setNeighbourSet(getNeighbourSet());
 		for (Node node : predecessors) {
 			if (node == null) {
 				break;
@@ -160,6 +160,36 @@ public class ChordTable implements RoutingHandler {
 		 * Successor of that id is this server. So returns this server.
 		 */
 		return thisNode;
+	}
+
+	@Override
+	public boolean isInTheTable(Node nodeToCkeck) {
+		byte[] id = nodeToCkeck.serverId.array();
+		for (FingerTableEntry fingerTableEntry : fingerTable) {
+			Node[] entrySuccessors = fingerTableEntry.getSuccessors();
+			for (Node node : entrySuccessors) {
+				if (node != null && Arrays.equals(node.serverId.array(), id)) {
+					return true;
+				}
+			}
+		}
+		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+			if (predecessors[i] == null) {
+				break;
+			}
+			if (Arrays.equals(predecessors[i].serverId.array(), id)) {
+				return true;
+			}
+		}
+		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+			if (successors[i] == null) {
+				break;
+			}
+			if (Arrays.equals(successors[i].serverId.array(), id)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

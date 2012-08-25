@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
+import sinchana.util.logging.Logger;
 import sinchana.util.tools.ByteArrays;
 
 /**
@@ -40,8 +41,8 @@ public class PastryTable implements RoutingHandler {
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
-	public PastryTable(SinchanaServer server) {
-		this.server = server;
+	public PastryTable(SinchanaServer svr) {
+		this.server = svr;
 		this.thisNode = server.getNode();
 		this.serverId = thisNode.serverId.array();
 		this.serverIdAsBigInt = new BigInteger(1, serverId);
@@ -92,7 +93,7 @@ public class PastryTable implements RoutingHandler {
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
-//		msg.setNeighbourSet(getNeighbourSet());
+		msg.setNeighbourSet(getNeighbourSet());
 		for (Node node : predecessors) {
 			if (node == null) {
 				break;
@@ -181,6 +182,38 @@ public class PastryTable implements RoutingHandler {
 				}
 			}
 		}
+	}
+
+	@Override
+	public boolean isInTheTable(Node nodeToCkeck) {
+		byte[] id = nodeToCkeck.serverId.array();
+		for (int i = 0; i < TABLE_SIZE; i++) {
+			for (int j = 0; j < TABLE_WIDTH; j++) {
+				for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
+					if (fingerTable[i][j][k] != null
+							&& Arrays.equals(fingerTable[i][j][k].serverId.array(), id)) {
+						return true;
+					}
+				}
+			}
+		}
+		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+			if (predecessors[i] == null) {
+				break;
+			}
+			if (Arrays.equals(predecessors[i].serverId.array(), id)) {
+				return true;
+			}
+		}
+		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+			if (successors[i] == null) {
+				break;
+			}
+			if (Arrays.equals(successors[i].serverId.array(), id)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -323,6 +356,9 @@ public class PastryTable implements RoutingHandler {
 			for (Node node : neighbourSet) {
 				addNode(node);
 			}
+//			Logger.log(thisNode, Logger.LEVEL_WARNING, Logger.CLASS_THRIFT_SERVER, 1,
+//					"Node " + ByteArrays.idToReadableString(nodeToRemove)
+//					+ " @ " + nodeToRemove.address + " is removed from the routing table!");
 			return true;
 		} else {
 			return false;

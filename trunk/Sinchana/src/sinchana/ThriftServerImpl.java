@@ -6,6 +6,7 @@ package sinchana;
 
 import java.nio.ByteBuffer;
 import org.apache.thrift.TException;
+import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.thrift.DHTServer;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
@@ -35,35 +36,59 @@ public class ThriftServerImpl implements DHTServer.Iface {
 	@Override
 	public ByteBuffer discoverService(ByteBuffer serviceKey) throws TException {
 		byte[] formattedKey = ByteArrays.arrayConcat(serviceKey.array(), CONFIGURATIONS.SERVICE_TAG);
-		return ByteBuffer.wrap(server.getClientHandler().addRequest(formattedKey, null,
-				MessageType.GET_DATA, -1, null).data);
+		try {
+			return ByteBuffer.wrap(server.getClientHandler().addRequest(formattedKey, null,
+					MessageType.GET_DATA, -1, null).data);
+		} catch (InterruptedException ex) {
+			throw new SinchanaInterruptedException(ex);
+		}
 	}
 
 	@Override
 	public ByteBuffer getService(ByteBuffer reference, ByteBuffer data) throws TException {
-		return ByteBuffer.wrap(server.getClientHandler().addRequest(reference.array(), data.array(),
-				MessageType.GET_SERVICE, -1, null).data);
+		try {
+			return ByteBuffer.wrap(server.getClientHandler().addRequest(reference.array(), data.array(),
+					MessageType.GET_SERVICE, -1, null).data);
+		} catch (InterruptedException ex) {
+			throw new SinchanaInterruptedException(ex);
+		}
 	}
 
 	@Override
 	public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws TException {
-		return server.getClientHandler().addRequest(dataKey.array(), data.array(), MessageType.STORE_DATA, -1, null).success;
+		try {
+			return server.getClientHandler().addRequest(dataKey.array(), data.array(), MessageType.STORE_DATA, -1, null).success;
+		} catch (InterruptedException ex) {
+			throw new SinchanaInterruptedException(ex);
+		}
 	}
 
 	@Override
 	public boolean removeData(ByteBuffer dataKey) throws TException {
-		return server.getClientHandler().addRequest(dataKey.array(), null, MessageType.DELETE_DATA, -1, null).success;
+		try {
+			return server.getClientHandler().addRequest(dataKey.array(), null, MessageType.DELETE_DATA, -1, null).success;
+		} catch (InterruptedException ex) {
+			throw new SinchanaInterruptedException(ex);
+		}
 	}
 
 	@Override
 	public ByteBuffer getData(ByteBuffer dataKey) throws TException {
-		return ByteBuffer.wrap(server.getClientHandler().addRequest(dataKey.array(), null, MessageType.GET_DATA, -1, null).data);
+		try {
+			return ByteBuffer.wrap(server.getClientHandler().addRequest(dataKey.array(), null, MessageType.GET_DATA, -1, null).data);
+		} catch (InterruptedException ex) {
+			throw new SinchanaInterruptedException(ex);
+		}
 	}
 
 	@Override
 	public ByteBuffer request(ByteBuffer destination, ByteBuffer message) throws TException {
-		return ByteBuffer.wrap(server.getClientHandler().addRequest(destination.array(), message.array(),
-				MessageType.REQUEST, -1, null).data);
+		try {
+			return ByteBuffer.wrap(server.getClientHandler().addRequest(destination.array(), message.array(),
+					MessageType.REQUEST, -1, null).data);
+		} catch (InterruptedException ex) {
+			throw new SinchanaInterruptedException(ex);
+		}
 	}
 
 	@Override
