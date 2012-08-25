@@ -528,7 +528,6 @@ public class SinchanaServer {
 	/**
 	 * Removes the service asynchronously. The thread is blocked until the task is queued to send.
 	 * @param key service key
-	 * @param sinchanaServiceInterface SinchanaServiceInterface to handle responses.
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 * @throws SinchanaInvalidArgumentException If the SinchanaServiceInterface is null
 	 */
