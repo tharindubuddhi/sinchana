@@ -8,7 +8,7 @@ package sinchana;
  *
  * @author Hiru
  */
-public interface SinchanaCallBackHandler {
+public interface SinchanaCallBack {
 
 	public abstract void error(byte[] error);
 }

@@ -36,12 +36,12 @@ package sinchana;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.dataStore.SinchanaDataStoreInterface;
-import sinchana.dataStore.SinchanaDataHandler;
+import sinchana.dataStore.SinchanaDataCallback;
 import sinchana.dataStore.SinchanaDataStoreImpl;
 import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.service.SinchanaServiceStore;
-import sinchana.service.SinchanaServiceHandler;
+import sinchana.service.SinchanaServiceCallback;
 import sinchana.service.SinchanaServiceInterface;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -49,7 +49,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import sinchana.connection.ConnectionPool;
 import sinchana.exceptions.SinchanaJoinException;
 import sinchana.chord.ChordTable;
 import sinchana.tapastry.TapestryTable;
@@ -66,8 +65,11 @@ import sinchana.util.tools.Hash;
  */
 public class SinchanaServer {
 
+	/**
+	 * Size of the Sinchana ring which is equal to 2^160.
+	 */
+	public static final BigInteger GRID_SIZE = new BigInteger("2", CONFIGURATIONS.NUMBER_BASE).pow(160);
 	private static final String ERROR_MSG_JOIN_FAILED = "Join failed. Maximum number of retries exceeded!";
-	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final IOHandler iOHandler;
 	private final RoutingHandler routingHandler;
 	private final MessageHandler messageHandler;
@@ -79,17 +81,14 @@ public class SinchanaServer {
 	private final String serverIdAsString;
 	private final Semaphore joinLock = new Semaphore(0);
 	private boolean joined = false;
-	private SinchanaRequestHandler SinchanaRequestHandler = null;
+	private SinchanaRequestCallback sinchanaRequestCallback = null;
 	private SinchanaTestInterface sinchanaTestInterface = null;
 	private SinchanaDataStoreInterface sinchanaDataStoreInterface = new SinchanaDataStoreImpl(this);
 
 	/**
-	 * Start a new node with the given server ID and next hop.
-	 * @param serverId		SinchanaServer ID. Generated using a hash function. 
-	 * @param anotherNode	Another node is the network. New node first
-	 * communicate with this node to discover the rest of the network.
-	 * @param address		URL of the server.
-	 * @param portId		Port Id number where the the server is running.
+	 * 
+	 * @param localPortId 
+	 * @throws UnknownHostException
 	 */
 	public SinchanaServer(int localPortId) throws UnknownHostException {
 		String localAddress = InetAddress.getLocalHost().getHostAddress() + ":" + localPortId;
@@ -106,6 +105,10 @@ public class SinchanaServer {
 		this.routingHandler = new PastryTable(this);
 	}
 
+	/**
+	 * Class constructor.
+	 * @param localAddress 
+	 */
 	public SinchanaServer(String localAddress) {
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsBigInt = new BigInteger(1, this.node.serverId.array());
@@ -121,7 +124,9 @@ public class SinchanaServer {
 	}
 
 	/**
-	 * Start the server.
+	 * 
+	 * @throws TTransportException
+	 * @throws InterruptedException
 	 */
 	public void startServer() throws TTransportException, InterruptedException {
 		this.routingHandler.init();
@@ -129,16 +134,26 @@ public class SinchanaServer {
 	}
 
 	/**
-	 * Stop the server.
+	 * 
 	 */
 	public void stopServer() {
 		iOHandler.stopServer();
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean isRunning() {
 		return iOHandler.isRunning();
 	}
 
+	/**
+	 * 
+	 * @param remoteNodeAddress
+	 * @throws TException
+	 * @throws InterruptedException
+	 */
 	public void join(String remoteNodeAddress) throws TException, InterruptedException {
 		Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.JOIN_MESSAGE_LIFETIME);
 		if (remoteNodeAddress != null && !remoteNodeAddress.equals(this.node.address)) {
@@ -160,6 +175,9 @@ public class SinchanaServer {
 		}
 	}
 
+	/**
+	 * 
+	 */
 	public void join() {
 		Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.JOIN_MESSAGE_LIFETIME);
 		msg.setStation(this.node);
@@ -176,41 +194,46 @@ public class SinchanaServer {
 		}
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean isJoined() {
 		return joined;
 	}
 
+	/**
+	 * 
+	 */
 	public void printTableInfo() {
 		routingHandler.printInfo();
 	}
 
 	/**
-	 * Register SinchanaRequestHandler. The callback functions in this interface 
-	 * will be called when an event occurs. 
-	 * @param sinchanaInterface		SinchanaRequestHandler instance.
+	 * 
+	 * @param src
 	 */
-	public void registerSinchanaRequestHandler(SinchanaRequestHandler srh) {
-		this.SinchanaRequestHandler = srh;
+	public void registerSinchanaRequestCallback(SinchanaRequestCallback src) {
+		this.sinchanaRequestCallback = src;
 	}
 
 	/**
-	 * Register SinchanaTestInterface. This is only for the testing purposes. 
-	 * The callback functions in this interface will be called when an event occurs. 
-	 * @param sinchanaTestInterface			SinchanaTestInteface instance.
+	 * 
+	 * @param sinchanaTestInterface
 	 */
 	public void registerSinchanaTestInterface(SinchanaTestInterface sinchanaTestInterface) {
 		this.sinchanaTestInterface = sinchanaTestInterface;
 	}
 
+	/**
+	 * 
+	 * @param sdsi
+	 */
 	public void registerSinchanaStoreInterface(SinchanaDataStoreInterface sdsi) {
 		this.sinchanaDataStoreInterface = sdsi;
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
-	public MessageHandler getMessageHandler() {
+	MessageHandler getMessageHandler() {
 		return messageHandler;
 	}
 
@@ -222,135 +245,309 @@ public class SinchanaServer {
 		return iOHandler;
 	}
 
+	RoutingHandler getRoutingHandler() {
+		return routingHandler;
+	}
+
 	/**
 	 * 
 	 * @return
 	 */
-	public RoutingHandler getRoutingHandler() {
-		return routingHandler;
-	}
-
 	public ConnectionPool getConnectionPool() {
 		return connectionPool;
 	}
 
-	public ClientHandler getClientHandler() {
+	ClientHandler getClientHandler() {
 		return clientHandler;
 	}
 
-	public SinchanaServiceStore getSinchanaServiceStore() {
+	SinchanaServiceStore getSinchanaServiceStore() {
 		return sinchanaServiceStore;
 	}
 
-	public SinchanaDataStoreInterface getSinchanaDataStoreInterface() {
+	SinchanaDataStoreInterface getSinchanaDataStoreInterface() {
 		return sinchanaDataStoreInterface;
-	}
-
-	public Node getNode() {
-		return node;
-	}
-
-	public BigInteger getServerIdAsBigInt() {
-		return serverIdAsBigInt;
-	}
-
-	public String getServerIdAsString() {
-		return serverIdAsString;
 	}
 
 	/**
 	 * 
 	 * @return
 	 */
-	public SinchanaTestInterface getSinchanaTestInterface() {
+	public Node getNode() {
+		return node;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public BigInteger getServerIdAsBigInt() {
+		return serverIdAsBigInt;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getServerIdAsString() {
+		return serverIdAsString;
+	}
+
+	SinchanaTestInterface getSinchanaTestInterface() {
 		return sinchanaTestInterface;
 	}
 
-	public sinchana.SinchanaRequestHandler getSinchanaRequestHandler() {
-		return SinchanaRequestHandler;
-	}
+	/**
+	 * 
+	 * @return
+	 */
+	public SinchanaRequestCallback getSinchanaRequestCallback() {
+		return sinchanaRequestCallback;
+	}	
 
+	/**
+	 * 
+	 */
 	public void testRing() {
 		Message message = new Message(MessageType.TEST_RING, this.node, 1024);
 		message.setStation(this.node);
 		this.getMessageHandler().queueMessage(message);
 	}
 
+	/**
+	 * 
+	 * @param destination
+	 * @param message
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] sendRequest(byte[] destination, byte[] message) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, -1, null).data;
 	}
 
+	/**
+	 * 
+	 * @param destination
+	 * @param message
+	 * @param timeOut
+	 * @param timeUnit
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] sendRequest(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, timeOut, timeUnit).data;
 	}
 
-	public void sendRequest(byte[] destination, byte[] message, SinchanaResponseHandler callBack) throws InterruptedException {
+	/**
+	 * 
+	 * @param destination
+	 * @param message
+	 * @param callBack
+	 * @throws InterruptedException
+	 */
+	public void sendRequest(byte[] destination, byte[] message, SinchanaResponseCallback callBack) throws InterruptedException {
 		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack);
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param data
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public boolean storeData(byte[] key, byte[] data) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, -1, null).success;
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param data
+	 * @param timeOut
+	 * @param timeUnit
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public boolean storeData(byte[] key, byte[] data, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, timeOut, timeUnit).success;
 	}
 
-	public void storeData(byte[] key, byte[] data, SinchanaDataHandler callBack) throws InterruptedException {
+	/**
+	 * 
+	 * @param key
+	 * @param data
+	 * @param callBack
+	 * @throws InterruptedException
+	 */
+	public void storeData(byte[] key, byte[] data, SinchanaDataCallback callBack) throws InterruptedException {
 		this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, callBack);
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] getData(byte[] key) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, -1, null).data;
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param timeOut
+	 * @param timeUnit
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] getData(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, timeOut, timeUnit).data;
 	}
 
-	public void getData(byte[] key, SinchanaDataHandler callBack) throws InterruptedException {
+	/**
+	 * 
+	 * @param key
+	 * @param callBack
+	 * @throws InterruptedException
+	 */
+	public void getData(byte[] key, SinchanaDataCallback callBack) throws InterruptedException {
 		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack);
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public boolean deleteData(byte[] key) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, -1, null).success;
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param timeOut
+	 * @param timeUnit
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public boolean deleteData(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, timeOut, timeUnit).success;
 	}
 
-	public void deleteData(byte[] key, SinchanaDataHandler callBack) throws InterruptedException {
+	/**
+	 * 
+	 * @param key
+	 * @param callBack
+	 * @throws InterruptedException
+	 */
+	public void deleteData(byte[] key, SinchanaDataCallback callBack) throws InterruptedException {
 		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack);
 	}
 
+	/**
+	 * 
+	 * @param reference
+	 * @param data
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] invokeService(byte[] reference, byte[] data) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, -1, null).data;
 	}
 
+	/**
+	 * 
+	 * @param reference
+	 * @param data
+	 * @param timeOut
+	 * @param timeUnit
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] invokeService(byte[] reference, byte[] data, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, timeOut, timeUnit).data;
 	}
 
-	public void invokeService(byte[] reference, byte[] data, SinchanaServiceHandler callBack) throws InterruptedException {
+	/**
+	 * 
+	 * @param reference
+	 * @param data
+	 * @param callBack
+	 * @throws InterruptedException
+	 */
+	public void invokeService(byte[] reference, byte[] data, SinchanaServiceCallback callBack) throws InterruptedException {
 		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack);
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] discoverService(byte[] key) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, -1, null).data;
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param timeOut
+	 * @param timeUnit
+	 * @return
+	 * @throws InterruptedException
+	 * @throws SinchanaTimeOutException
+	 * @throws SinchanaInterruptedException
+	 */
 	public byte[] discoverService(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException, SinchanaInterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, timeOut, timeUnit).data;
 	}
 
-	public void discoverService(byte[] key, SinchanaServiceHandler callBack) throws InterruptedException {
+	/**
+	 * 
+	 * @param key
+	 * @param callBack
+	 * @throws InterruptedException
+	 */
+	public void discoverService(byte[] key, SinchanaServiceCallback callBack) throws InterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, callBack);
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param ssi
+	 * @throws InterruptedException
+	 */
 	public void publishService(byte[] key, SinchanaServiceInterface ssi) throws InterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		byte[] formattedReference = ByteArrays.arrayConcat(this.node.serverId.array(), formattedKey);
@@ -362,6 +559,12 @@ public class SinchanaServer {
 		}
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param ssi
+	 * @throws InterruptedException
+	 */
 	public void removeService(byte[] key, SinchanaServiceInterface ssi) throws InterruptedException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi);

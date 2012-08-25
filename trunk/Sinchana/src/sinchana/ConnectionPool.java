@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package sinchana.connection;
+package sinchana;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,15 +31,6 @@ public class ConnectionPool {
 		this.server = svr;
 	}
 
-	/**
-	 * Returns the connection to the given destination. If the connection is
-	 * already opened and in the connection pool, it returns. Otherwise, open 
-	 * the connection to the destination and adds it to the connection pool.
-	 * @param serverId		SinchanaServer id of the destination.
-	 * @param address		URL of the destination.
-	 * @param portId		Port id of the destination.
-	 * @return				TTransport connection opened to the destination.
-	 */
 	public synchronized Connection getConnection(Node node) {
 		String id = new String(node.serverId.array());
 		if (pool.containsKey(id)) {
@@ -47,16 +38,10 @@ public class ConnectionPool {
 		}
 		Connection connection = new Connection(node);
 		if (CONFIGURATIONS.NODE_POOL_SIZE <= pool.size()) {
-//			Logger.log(this.server.getNode(), Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
-//					"Maximum number of nodes available exceeded! ("
-//					+ numberOfOpenedConnections + "/" + pool.size() + ")");
 			getSpaceForNodes();
 		}
 		int numberOfOpenedConnections = getNumberOfOpenedConnections();
 		while (CONFIGURATIONS.NUM_OF_MAX_OPENED_CONNECTION <= numberOfOpenedConnections) {
-//					Logger.log(this.server.serverId, Logger.LEVEL_WARNING, Logger.CLASS_CONNECTION_POOL, 1,
-//							"Maximum number of connections opened exceeded! ("
-//							+ numberOfOpenedConnections + "/" + pool.size() + " are opened).");
 			getSpaceForConnections();
 			numberOfOpenedConnections = getNumberOfOpenedConnections();
 		}

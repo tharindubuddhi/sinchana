@@ -7,10 +7,6 @@ package sinchana.dataStore;
 import java.util.concurrent.ConcurrentHashMap;
 import sinchana.SinchanaServer;
 
-/**
- *The class use to 
- * @author DELL
- */
 public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 
 	private final ConcurrentHashMap<String, byte[]> dataMap = new ConcurrentHashMap<String, byte[]>();

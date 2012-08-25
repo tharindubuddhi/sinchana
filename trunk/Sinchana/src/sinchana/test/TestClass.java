@@ -4,8 +4,8 @@ import java.net.UnknownHostException;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.SinchanaServer;
-import sinchana.SinchanaRequestHandler;
-import sinchana.SinchanaResponseHandler;
+import sinchana.SinchanaRequestCallback;
+import sinchana.SinchanaResponseCallback;
 import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaTimeOutException;
 
@@ -17,7 +17,7 @@ public class TestClass {
 		
 		final SinchanaServer sinchanaServer = new SinchanaServer(localAddress + ":" + 2000);
 
-		sinchanaServer.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
+		sinchanaServer.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
 
 			@Override
 			public byte[] request(byte[] message) {
@@ -33,7 +33,7 @@ public class TestClass {
 
 		final SinchanaServer sinchanaServer2 = new SinchanaServer(localAddress + ":" + 2001);
 
-		sinchanaServer2.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
+		sinchanaServer2.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
 
 			@Override
 			public byte[] request(byte[] message) {
@@ -46,7 +46,7 @@ public class TestClass {
 		sinchanaServer2.startServer();
 		sinchanaServer2.join(localAddress + ":" + 2000);
 		sinchanaServer2.sendRequest(sinchanaServer.getNode().serverId.array(), "Hello".getBytes(), null);
-		sinchanaServer2.sendRequest(sinchanaServer.getNode().serverId.array(), "Hello".getBytes(), new SinchanaResponseHandler() {
+		sinchanaServer2.sendRequest(sinchanaServer.getNode().serverId.array(), "Hello".getBytes(), new SinchanaResponseCallback() {
 
 			@Override
 			public void response(byte[] message) {

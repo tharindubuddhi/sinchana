@@ -15,7 +15,7 @@ package sinchana.test;
  * @author Hiru
  */
 public class ControllerUI extends javax.swing.JFrame implements Runnable {
-
+	
 	private TesterController testerController;
 	private long startNodeThreadId = 0;
 
@@ -26,7 +26,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 		this.testerController = tc;
 		initComponents();
 		setLocationRelativeTo(null);
-
+		
 	}
 
 	/**
@@ -36,7 +36,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 	public void setStatus(String status) {
 		this.statusField.setText(status);
 	}
-
+	
 	public void setStat(String status) {
 		this.statField.setText(status);
 	}
@@ -324,60 +324,61 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 private void printTableInfoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printTableInfoButtonActionPerformed
 	testerController.printTableInfo(this.printTableInfoId.getText());
 }//GEN-LAST:event_printTableInfoButtonActionPerformed
-
+	
 private void startNodeSetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNodeSetButtonActionPerformed
 	Thread thread = new Thread(this);
 	this.startNodeThreadId = thread.getId();
 	thread.start();
 	this.ringTestButton.setEnabled(true);
 }//GEN-LAST:event_startNodeSetButtonActionPerformed
-
+	
 private void ringTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ringTestButtonActionPerformed
-
+	
 	testerController.startRingTest();
-
+	
 }//GEN-LAST:event_ringTestButtonActionPerformed
-
+	
 private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printLogButtonActionPerformed
-
+	
 	testerController.printLogs(
 			this.logNodeID.getText(),
 			this.logType.getText(),
 			this.logClass.getText(),
 			this.logLocation.getText(),
 			this.contatain.getText());
-
+	
 }//GEN-LAST:event_printLogButtonActionPerformed
-
+	
 private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_storeButtonActionPerformed
 	testerController.storeData(Integer.parseInt(dataCountTextField.getText()));
-
+	
 }//GEN-LAST:event_storeButtonActionPerformed
-
+	
 private void retrieveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_retrieveButtonActionPerformed
 	testerController.retrieveData();
 }//GEN-LAST:event_retrieveButtonActionPerformed
-
+	
 private void dataRemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataRemoveButtonActionPerformed
 	testerController.removeData(Integer.parseInt(removeAmountTextField.getText()));
 }//GEN-LAST:event_dataRemoveButtonActionPerformed
-
+	
 private void logClassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logClassActionPerformed
 // TODO add your handling code here:
 }//GEN-LAST:event_logClassActionPerformed
-
+	
 private void resetAndWatchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetAndWatchButtonActionPerformed
-
+	
+	resetAndWatchButton.setEnabled(false);
 	testerController.resetAndWatch();
 }//GEN-LAST:event_resetAndWatchButtonActionPerformed
-
+	
 private void sendMsgButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgButtonActionPerformed
-
+	
 	testerController.test(Integer.parseInt(this.numOfMsgsField.getText()));
 }//GEN-LAST:event_sendMsgButtonActionPerformed
-
+	
 private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgAutoButtonActionPerformed
-
+	
 	testerController.startAutoTest(Long.parseLong(this.numOfMsgsField.getText()));
 }//GEN-LAST:event_sendMsgAutoButtonActionPerformed
 	/**

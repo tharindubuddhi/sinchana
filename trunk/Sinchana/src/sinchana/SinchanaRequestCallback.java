@@ -9,7 +9,7 @@ package sinchana;
  *
  * @author Hiru
  */
-public interface SinchanaRequestHandler {
+public interface SinchanaRequestCallback {
 
 	public abstract byte[] request(byte[] message);
 	

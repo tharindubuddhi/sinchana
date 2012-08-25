@@ -4,10 +4,6 @@
  */
 package sinchana.dataStore;
 
-/**
- *
- * @author Hiru
- */
 public interface SinchanaDataStoreInterface {
 
 	public abstract boolean store(byte[] key, byte[] data);

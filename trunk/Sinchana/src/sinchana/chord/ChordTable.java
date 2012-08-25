@@ -40,10 +40,6 @@ public class ChordTable implements RoutingHandler {
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
-	/**
-	 * Class constructor with the server instance where the routing table is initialize.
-	 * @param server		SinchanaServer instance. The routing table will be initialize based on this.
-	 */
 	public ChordTable(SinchanaServer server) {
 		this.server = server;
 		this.thisNode = server.getNode();
@@ -61,10 +57,6 @@ public class ChordTable implements RoutingHandler {
 		}, 1000, 1000);
 	}
 
-	/**
-	 * Initialize routing table. This resets the routing table and calls 
-	 * <code>initFingerTable</code> 
-	 */
 	@Override
 	public void init() {
 		synchronized (fingerTable) {
@@ -84,10 +76,6 @@ public class ChordTable implements RoutingHandler {
 		this.initFingerTable();
 	}
 
-	/**
-	 * Initialize routing table. The server it self will be set as the 
-	 * predecessor, successor and as all the successor entries in the finger table.
-	 */
 	private void initFingerTable() {
 		synchronized (fingerTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
@@ -96,9 +84,6 @@ public class ChordTable implements RoutingHandler {
 				}
 			}
 		}
-		/**
-		 * initializes by setting this server it self as the predecessor and successor.
-		 */
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				predecessors[i] = null;
@@ -116,10 +101,6 @@ public class ChordTable implements RoutingHandler {
 		timeOutCount = CONFIGURATIONS.ROUTING_OPTIMIZATION_TIME_OUT;
 	}
 
-	/**
-	 * Optimizes the finger table. Sends messages to the each successor in 
-	 * the finger table entries to find the optimal successor for those entries.
-	 */
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
@@ -156,7 +137,7 @@ public class ChordTable implements RoutingHandler {
 	}
 
 	@Override
-	public Node getNextNode(byte[] destination, byte[] lastHop) {
+	public Node getNextNode(byte[] destination) {
 
 		//calculates the offset to the destination.
 		BigInteger destinationOffset = getOffset(destination);

@@ -5,16 +5,17 @@
 package sinchana.test;
 
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.util.Random;
 import java.util.logging.Level;
 import org.apache.thrift.TException;
 import sinchana.SinchanaServer;
-import sinchana.SinchanaRequestHandler;
+import sinchana.SinchanaRequestCallback;
 import sinchana.SinchanaTestInterface;
 import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
 import sinchana.CONFIGURATIONS;
-import sinchana.SinchanaResponseHandler;
+import sinchana.SinchanaResponseCallback;
 import sinchana.util.tools.Hash;
 
 /**
@@ -39,10 +40,12 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 */
 	public Tester(int testId, int portId, TesterController tc) {
 		try {
+//			address = InetAddress.getLocalHost().getHostAddress();
+//			remoteNodeAddress = address + ":8000";
 			this.testId = testId;
 			this.testerController = tc;
 			server = new SinchanaServer(address + ":" + portId);
-			server.registerSinchanaRequestHandler(new SinchanaRequestHandler() {
+			server.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
 
 				@Override
 				public byte[] request(byte[] message) {
@@ -100,6 +103,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 		server.printTableInfo();
 	}
 
+	
+
 	@Override
 	public void run() {
 		try {
@@ -121,7 +126,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			ex.printStackTrace();
 		}
 	}
-	private SinchanaResponseHandler srh = new SinchanaResponseHandler() {
+	private SinchanaResponseCallback srh = new SinchanaResponseCallback() {
 
 		@Override
 		public void response(byte[] message) {

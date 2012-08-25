@@ -4,13 +4,13 @@
  */
 package sinchana.test;
 
-import sinchana.dataStore.SinchanaDataHandler;
+import sinchana.dataStore.SinchanaDataCallback;
 
 /**
  *
  * @author DELL
  */
-public class SinchanaDataHandlerImpl implements SinchanaDataHandler {
+public class SinchanaDataHandlerImpl implements SinchanaDataCallback {
 
 	public long startStoreTime, startRetrieveTime;
 	public int storeSuccessCount, storeFailureCount, retrieveSuccessCount, retrieveFailureCount;

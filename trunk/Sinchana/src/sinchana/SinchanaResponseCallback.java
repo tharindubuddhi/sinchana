@@ -9,7 +9,7 @@ package sinchana;
  *
  * @author Hiru
  */
-public interface SinchanaResponseHandler extends SinchanaCallBackHandler{
+public interface SinchanaResponseCallback extends SinchanaCallBack{
 
 	public abstract void response(byte[] message);
 }

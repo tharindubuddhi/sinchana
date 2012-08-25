@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Timer;
 import java.util.TimerTask;
-import sinchana.dataStore.SinchanaDataHandler;
-import sinchana.service.SinchanaServiceHandler;
+import sinchana.dataStore.SinchanaDataCallback;
+import sinchana.service.SinchanaServiceCallback;
 import sinchana.service.SinchanaServiceInterface;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
@@ -72,7 +72,7 @@ public class ClientHandler {
 						clientData.success = message.isSuccess();
 						clientData.lock.release();
 					} else {
-						((SinchanaServiceHandler) clientData.sinchanaCallBackHandler).serviceResponse(
+						((SinchanaServiceCallback) clientData.sinchanaCallBackHandler).serviceResponse(
 								Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
 								message.isSuccess(), message.getData());
 					}
@@ -83,10 +83,10 @@ public class ClientHandler {
 						clientData.data = message.getData();
 						clientData.lock.release();
 					} else {
-						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataHandler) {
-							((SinchanaDataHandler) clientData.sinchanaCallBackHandler).response(clientData.dataKey, message.getData());
-						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceHandler) {
-							((SinchanaServiceHandler) clientData.sinchanaCallBackHandler).serviceFound(
+						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
+							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).response(clientData.dataKey, message.getData());
+						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceCallback) {
+							((SinchanaServiceCallback) clientData.sinchanaCallBackHandler).serviceFound(
 									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
 									message.isSuccess(), message.getData());
 						}
@@ -97,8 +97,8 @@ public class ClientHandler {
 						clientData.data = message.getData();
 						clientData.lock.release();
 					} else {
-						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataHandler) {
-							((SinchanaDataHandler) clientData.sinchanaCallBackHandler).isStored(clientData.dataKey, message.success);
+						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
+							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).isStored(clientData.dataKey, message.success);
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceInterface) {
 							((SinchanaServiceInterface) clientData.sinchanaCallBackHandler).isPublished(
 									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
@@ -111,8 +111,8 @@ public class ClientHandler {
 						clientData.data = message.getData();
 						clientData.lock.release();
 					} else {
-						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataHandler) {
-							((SinchanaDataHandler) clientData.sinchanaCallBackHandler).isRemoved(clientData.dataKey, message.success);
+						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
+							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).isRemoved(clientData.dataKey, message.success);
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceInterface) {
 							if (message.success) {
 								boolean success = this.server.getSinchanaServiceStore().removeService(clientData.dataKey);
@@ -135,7 +135,7 @@ public class ClientHandler {
 						clientData.data = message.getData();
 						clientData.lock.release();
 					} else {
-						((SinchanaResponseHandler) clientData.sinchanaCallBackHandler).response(message.getData());
+						((SinchanaResponseCallback) clientData.sinchanaCallBackHandler).response(message.getData());
 					}
 					break;
 				case ERROR:
@@ -145,7 +145,7 @@ public class ClientHandler {
 						clientData.error = message.getError().getBytes();
 						clientData.lock.release();
 					} else {
-						((SinchanaCallBackHandler) clientData.sinchanaCallBackHandler).error(message.getError().getBytes());
+						((SinchanaCallBack) clientData.sinchanaCallBackHandler).error(message.getError().getBytes());
 					}
 					break;
 			}
@@ -205,7 +205,7 @@ public class ClientHandler {
 		return clientData;
 	}
 
-	public void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBackHandler scbh) throws InterruptedException {
+	public void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBack scbh) throws InterruptedException {
 		long requestId = -1;
 		Message message = new Message(type, thisNode, CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
@@ -254,6 +254,6 @@ public class ClientHandler {
 		byte[] error;
 		boolean valid = true, success = false, waiting = false, resolved = false;
 		long time;
-		SinchanaCallBackHandler sinchanaCallBackHandler;
+		SinchanaCallBack sinchanaCallBackHandler;
 	}
 }

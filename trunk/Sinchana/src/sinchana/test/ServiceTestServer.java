@@ -11,7 +11,7 @@ import org.apache.thrift.transport.TTransportException;
 import sinchana.SinchanaServer;
 import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaTimeOutException;
-import sinchana.service.SinchanaServiceHandler;
+import sinchana.service.SinchanaServiceCallback;
 import sinchana.util.tools.ByteArrays;
 
 /**
@@ -80,7 +80,7 @@ public class ServiceTestServer {
 		} catch (SinchanaInterruptedException sie) {
 			System.out.println(sie.getMessage());
 		}
-		SinchanaServiceHandler ssh = new SinchanaServiceHandler() {
+		SinchanaServiceCallback ssh = new SinchanaServiceCallback() {
 
 			@Override
 			public void serviceFound(byte[] key, boolean success, byte[] data) {
