@@ -110,7 +110,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 				while (numOfTestingMessages > 0) {
 					String val = new BigInteger(160, random).toString(CONFIGURATIONS.NUMBER_BASE);
 					byte[] mid = Hash.generateId(val);
-					server.sendRequest(mid, MESSAGE, srh);
+					server.sendRequest(mid, MESSAGE, null);
 					numOfTestingMessages--;
 				}
 			}
