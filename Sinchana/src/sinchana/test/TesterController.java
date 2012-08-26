@@ -16,7 +16,10 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sinchana.CONFIGURATIONS;
+import sinchana.dataStore.SinchanaDataStoreImpl;
+import sinchana.exceptions.SinchanaInterruptedException;
 import sinchana.exceptions.SinchanaInvalidArgumentException;
+import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.util.tools.Hash;
 
 /**
@@ -38,9 +41,11 @@ public class TesterController {
 	 * 
 	 * @param args
 	 */
+    
 	public static void main(String[] args) {
-//        Uncomment when you have a proxy network        
-		Properties props = System.getProperties();
+//        Uncomment when you have a proxy network and you need to connect to internet
+        
+//		Properties props = System.getProperties();
 //        props.put("http.proxyHost", "cache.mrt.ac.lk");
 //        props.put("http.proxyPort", "3128");
 		if (CLEAR_CACHE_SERVER) {
@@ -227,17 +232,24 @@ public class TesterController {
 			datakeyArray[i] = KEY_TAG + dataID;
 			dataID++;
 		}
-		dataHandlerobject.startStoreTime = System.currentTimeMillis();
-		dataHandlerobject.storeSuccessCount = 0;
-		dataHandlerobject.storeFailureCount = 0;
+//		dataHandlerobject.startStoreTime = System.currentTimeMillis();
+//		dataHandlerobject.storeSuccessCount = 0;
+//		dataHandlerobject.storeFailureCount = 0;
+        //SinchanaDataStoreImpl dataimpl = (SinchanaDataStoreImpl) testServers.get(storeNodeID).getServer().getSinchanaDataStoreInterface();  
+        SinchanaDataStoreImpl.storeSuccessCount = 0;
+        SinchanaDataStoreImpl.lastCount=0;
+        SinchanaDataStoreImpl.startStoreTime = System.currentTimeMillis();
+        SinchanaDataStoreImpl.lastTime = System.currentTimeMillis();
 		for (int i = 0; i < dataArray.length; i++) {
-			try {
-				testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(), dataHandlerobject);
-
-
-			} catch (InterruptedException ex) {
-				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
-			}
+			             
+                try {
+                    testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes());
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (SinchanaTimeOutException ex) {
+                    Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+			
 		}
 	}
 	String[] dataArray = null;
@@ -249,6 +261,7 @@ public class TesterController {
 	private static final String DATA_TAG = "data ";
 	private static final String KEY_TAG = "key ";
 
+    
 	public void retrieveData() {
 		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
 		dataHandlerobject.retrieveSuccessCount = 0;
