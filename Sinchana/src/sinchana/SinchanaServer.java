@@ -66,15 +66,13 @@ public class SinchanaServer {
 	/**
 	 * Size of the Sinchana ring which is equal to 2^160.
 	 */
-	public static final BigInteger GRID_SIZE = new BigInteger("2", CONFIGURATIONS.NUMBER_BASE).pow(160);
-	private static final String ERROR_MSG_JOIN_FAILED = "Join failed. Maximum number of retries exceeded!";
+	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
 	private final IOHandler iOHandler;
 	private final RoutingHandler routingHandler;
 	private final MessageHandler messageHandler;
 	private final ConnectionPool connectionPool;
 	private final ClientHandler clientHandler;
 	private final SinchanaServiceStore sinchanaServiceStore;
-	private final BigInteger serverIdAsBigInt;
 	private final Node node;
 	private final String serverIdAsString;
 	private final Semaphore joinLock = new Semaphore(0);
@@ -89,7 +87,6 @@ public class SinchanaServer {
 	 */
 	public SinchanaServer(String localAddress) {
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
-		this.serverIdAsBigInt = new BigInteger(1, this.node.serverId.array());
 		this.serverIdAsString = ByteArrays.idToReadableString(node.serverId);
 		this.iOHandler = new IOHandler(this);
 		this.messageHandler = new MessageHandler(this);
@@ -129,7 +126,7 @@ public class SinchanaServer {
 	/**
 	 * Join the ring by connecting to the Sinchana server in the given address. Thread is blocked until the join is completed.
 	 * @param remoteNodeAddress address of the remote Sinchana server in [host name]:[port id] format. Passing <code>null</code> or
-	 * the same address which is used to initialize the server will couse the server to start alone as a root node.
+	 * the same address which is used to initialize the server will cause the server to start alone as a root node.
 	 * @throws TException if a problem encountered while connecting to the remote server.
 	 * @throws InterruptedException if the thread is interrupted before the join is completed.
 	 */
@@ -141,7 +138,7 @@ public class SinchanaServer {
 			int joinAttempt = 0;
 			while (!joined) {
 				if (++joinAttempt > CONFIGURATIONS.MAX_JOIN_RETRIES) {
-					throw new SinchanaJoinException(ERROR_MSG_JOIN_FAILED);
+					throw new SinchanaJoinException(CONFIGURATIONS.ERROR_MSG_JOIN_FAILED);
 				}
 				System.out.println(this.serverIdAsString + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
 				this.iOHandler.directSend(msg);
@@ -155,7 +152,7 @@ public class SinchanaServer {
 	}
 
 	/**
-	 * Starts the server as the root node.
+	 * Initiates the ring as the root node.
 	 */
 	public void join() {
 		Message msg = new Message(MessageType.JOIN, this.node, CONFIGURATIONS.JOIN_MESSAGE_LIFETIME);
@@ -206,10 +203,10 @@ public class SinchanaServer {
 
 	/**
 	 * 
-	 * @param sdsi
+	 * @param sinchanaDataStoreInterface
 	 */
-	public void registerSinchanaStoreInterface(SinchanaDataStoreInterface sdsi) {
-		this.sinchanaDataStoreInterface = sdsi;
+	public void registerSinchanaStoreInterface(SinchanaDataStoreInterface sinchanaDataStoreInterface) {
+		this.sinchanaDataStoreInterface = sinchanaDataStoreInterface;
 	}
 
 	MessageHandler getMessageHandler() {
@@ -240,28 +237,24 @@ public class SinchanaServer {
 		return sinchanaDataStoreInterface;
 	}
 
-	public Node getNode() {
-		return node;
-	}
-
-	private BigInteger getServerIdAsBigInt() {
-		return serverIdAsBigInt;
-	}
-
-	/**
-	 * Returns server id in string format.
-	 * @return server id.
-	 */
-	public String getServerIdAsString() {
-		return serverIdAsString;
-	}
-
 	SinchanaTestInterface getSinchanaTestInterface() {
 		return sinchanaTestInterface;
 	}
 
-	public SinchanaRequestCallback getSinchanaRequestCallback() {
+	SinchanaRequestCallback getSinchanaRequestCallback() {
 		return sinchanaRequestCallback;
+	}
+
+	public Node getNode() {
+		return node;
+	}
+
+	/**
+	 * Returns server id in hex string format.
+	 * @return server id.
+	 */
+	public String getServerIdAsString() {
+		return serverIdAsString;
 	}
 
 	/**

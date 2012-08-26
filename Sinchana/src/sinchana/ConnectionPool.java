@@ -30,9 +30,8 @@ public class ConnectionPool {
 	}
 
 	synchronized Connection getConnection(Node node) {
-		String id = new String(node.serverId.array());
-		if (pool.containsKey(id)) {
-			return pool.get(id);
+		if (pool.containsKey(node.address)) {
+			return pool.get(node.address);
 		}
 		Connection connection = new Connection(node);
 		if (CONFIGURATIONS.NODE_POOL_SIZE <= pool.size()) {
@@ -43,14 +42,9 @@ public class ConnectionPool {
 			getSpaceForConnections();
 			numberOfOpenedConnections = getNumberOfOpenedConnections();
 		}
-		pool.put(id, connection);
+		pool.put(node.address, connection);
 		connection.getClient();
 		return connection;
-	}
-
-	boolean isAlive(byte[] nodeId) {
-		Connection connection = pool.get(new String(nodeId));
-		return connection.isAlive();
 	}
 
 	private int getNumberOfOpenedConnections() {
@@ -65,9 +59,8 @@ public class ConnectionPool {
 	}
 
 	boolean hasReportFailed(Node node) {
-		String id = new String(node.serverId.array());
 		synchronized (pool) {
-			return pool.containsKey(id) && pool.get(id).isFailed();
+			return pool.containsKey(node.address) && pool.get(node.address).isFailed();
 		}
 	}
 
