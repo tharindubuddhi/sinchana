@@ -188,7 +188,9 @@ public class MessageHandler {
 			Set<Node> failedNodeSet = message.getFailedNodeSet();
 			for (Node node : failedNodeSet) {
 				this.server.getConnectionPool().updateNodeInfo(node, false);
-				updated = this.server.getRoutingHandler().updateTable(node, false) || updated;
+				if (this.server.getRoutingHandler().isInTheTable(node)) {
+					updated = this.server.getRoutingHandler().updateTable(node, false) || updated;
+				}
 			}
 		}
 		nodes.add(message.source);
@@ -199,6 +201,9 @@ public class MessageHandler {
 		if (!nodes.isEmpty()) {
 			long time = System.currentTimeMillis();
 			for (Node node : nodes) {
+				if (Arrays.equals(node.serverId.array(), this.serverId)) {
+					continue;
+				}
 				if (server.getConnectionPool().hasReportFailed(node)) {
 					Connection failedConnection = server.getConnectionPool().getConnection(node);
 					if ((failedConnection.getLastHeardFailedTime() + CONFIGURATIONS.FAILED_REACCEPT_TIME_OUT) < time) {
@@ -208,7 +213,9 @@ public class MessageHandler {
 					}
 				}
 				this.server.getConnectionPool().updateNodeInfo(node, true);
-				updated = this.server.getRoutingHandler().updateTable(node, true) || updated;
+				if (!this.server.getRoutingHandler().isInTheTable(node)) {
+					updated = this.server.getRoutingHandler().updateTable(node, true) || updated;
+				}
 			}
 		}
 		if (updated) {

@@ -321,7 +321,7 @@ public class TesterController {
 				}
 				totalCountAccumilated += tc;
 				System.out.println(time - prevTime + "ms\t\tcount: " + tc
-						+ "\tacumilated count: " + totalCountAccumilated + "\tthroughput: " + (tc * 1000 / (time - prevTime)));
+						+ "\t\tacumilated count: " + totalCountAccumilated + "\t\tthroughput: " + (tc * 1000 / (time - prevTime)));
 				prevTime = time;
 			}
 		}, 0, WATCH_TIME_OUT);

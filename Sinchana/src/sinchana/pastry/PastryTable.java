@@ -187,14 +187,14 @@ public class PastryTable implements RoutingHandler {
 	@Override
 	public boolean isInTheTable(Node nodeToCkeck) {
 		byte[] id = nodeToCkeck.serverId.array();
-		for (int i = 0; i < TABLE_SIZE; i++) {
-			for (int j = 0; j < TABLE_WIDTH; j++) {
-				for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-					if (fingerTable[i][j][k] != null
-							&& Arrays.equals(fingerTable[i][j][k].serverId.array(), id)) {
-						return true;
-					}
-				}
+		int raw = getRaw(this.serverId, id);
+		int column = getColumn(id, raw);
+		for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
+			if (fingerTable[raw][column][i] == null) {
+				break;
+			}
+			if (Arrays.equals(fingerTable[raw][column][i].serverId.array(), id)) {
+				return true;
 			}
 		}
 		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
@@ -273,7 +273,6 @@ public class PastryTable implements RoutingHandler {
 		Node tempNodeToUpdate;
 		synchronized (successors) {
 			pointerOffset = ZERO;
-			tempNodeOffset = newNodeOffset;
 			tempNodeToUpdate = node;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
@@ -285,14 +284,13 @@ public class PastryTable implements RoutingHandler {
 				 * 0-----this.server.id------new.server.id-------existing.successors.id----------End.of.Grid
 				 */
 				successorOffset = successors[i] == null ? ZERO : getOffset(successors[i].serverId.array());
-				if (pointerOffset.compareTo(newNodeOffset) == -1
-						&& (successorOffset.equals(ZERO) || newNodeOffset.compareTo(successorOffset) == -1)) {
+				if (updatedSuccessors 
+						|| (pointerOffset.compareTo(newNodeOffset) == -1
+						&& (successorOffset.equals(ZERO) || newNodeOffset.compareTo(successorOffset) == -1))) {
 					Node temp = this.successors[i];
 					this.successors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
 					updatedSuccessors = true;
-					pointerOffset = tempNodeOffset;
-					tempNodeOffset = successorOffset;
 				} else {
 					pointerOffset = successorOffset;
 				}
@@ -303,7 +301,6 @@ public class PastryTable implements RoutingHandler {
 		}
 		synchronized (predecessors) {
 			pointerOffset = SinchanaServer.GRID_SIZE;
-			tempNodeOffset = newNodeOffset;
 			tempNodeToUpdate = node;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				/**
@@ -315,14 +312,13 @@ public class PastryTable implements RoutingHandler {
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
 				 */
 				successorOffset = predecessors[i] == null ? ZERO : getOffset(predecessors[i].serverId.array());
-				if (newNodeOffset.compareTo(pointerOffset) == -1
-						&& (successorOffset.equals(ZERO) || successorOffset.compareTo(newNodeOffset) == -1)) {
+				if (updatedPredecessors 
+						|| (newNodeOffset.compareTo(pointerOffset) == -1
+						&& (successorOffset.equals(ZERO) || successorOffset.compareTo(newNodeOffset) == -1))) {
 					Node temp = this.predecessors[i];
 					this.predecessors[i] = tempNodeToUpdate.deepCopy();
 					tempNodeToUpdate = temp;
 					updatedPredecessors = true;
-					pointerOffset = tempNodeOffset;
-					tempNodeOffset = successorOffset;
 				} else {
 					pointerOffset = successorOffset;
 				}
