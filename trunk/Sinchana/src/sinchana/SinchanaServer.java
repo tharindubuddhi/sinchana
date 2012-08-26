@@ -33,24 +33,25 @@
  ************************************************************************************/
 package sinchana;
 
-import org.apache.thrift.TException;
-import org.apache.thrift.transport.TTransportException;
-import sinchana.dataStore.SinchanaDataStoreInterface;
-import sinchana.dataStore.SinchanaDataCallback;
-import sinchana.dataStore.SinchanaDataStoreImpl;
-import sinchana.exceptions.SinchanaTimeOutException;
-import sinchana.service.SinchanaServiceStore;
-import sinchana.service.SinchanaServiceCallback;
-import sinchana.service.SinchanaServiceInterface;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import sinchana.exceptions.SinchanaJoinException;
+import org.apache.thrift.TException;
+import org.apache.thrift.transport.TTransportException;
+import sinchana.dataStore.SinchanaDataCallback;
+import sinchana.dataStore.SinchanaDataStoreImpl;
+import sinchana.dataStore.SinchanaDataStoreInterface;
+import sinchana.service.SinchanaServiceCallback;
+import sinchana.service.SinchanaServiceInterface;
+import sinchana.service.SinchanaServiceStore;
 import sinchana.exceptions.SinchanaInvalidArgumentException;
+import sinchana.exceptions.SinchanaInvalidRoutingAlgorithmException;
+import sinchana.exceptions.SinchanaJoinException;
+import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.chord.ChordTable;
-import sinchana.tapastry.TapestryTable;
 import sinchana.pastry.PastryTable;
+import sinchana.tapastry.TapestryTable;
 import sinchana.thrift.Message;
 import sinchana.thrift.MessageType;
 import sinchana.thrift.Node;
@@ -85,7 +86,7 @@ public class SinchanaServer {
 	 * SinchanaServer constructor.
 	 * @param localAddress url of the server in [host address]:[port id] format.
 	 */
-	public SinchanaServer(String localAddress) {
+	public SinchanaServer(String localAddress, String routingAlgorithm) throws SinchanaInvalidRoutingAlgorithmException {
 		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
 		this.serverIdAsString = ByteArrays.idToReadableString(node.serverId);
 		this.iOHandler = new IOHandler(this);
@@ -93,9 +94,16 @@ public class SinchanaServer {
 		this.connectionPool = new ConnectionPool(this);
 		this.clientHandler = new ClientHandler(this);
 		this.sinchanaServiceStore = new SinchanaServiceStore();
-//		this.routingHandler = new ChordTable(this);
-//		this.routingHandler = new TapestryTable(this);
-		this.routingHandler = new PastryTable(this);
+		if (CONFIGURATIONS.CHORD.equals(routingAlgorithm)) {
+			this.routingHandler = new ChordTable(this);
+		} else if (CONFIGURATIONS.TAPESTRY.equals(routingAlgorithm)) {
+			this.routingHandler = new TapestryTable(this);
+		} else if (CONFIGURATIONS.PASTRY.equals(routingAlgorithm)) {
+			this.routingHandler = new PastryTable(this);
+		} else {
+			throw new SinchanaInvalidRoutingAlgorithmException(CONFIGURATIONS.ERROR_MSG_INVALID_ROUTING_ALGORITHM);
+		}
+		System.out.println(this.serverIdAsString + " @ " + localAddress + " " + routingAlgorithm);
 	}
 
 	/**
@@ -105,7 +113,9 @@ public class SinchanaServer {
 	 */
 	public void startServer() throws TTransportException, InterruptedException {
 		this.routingHandler.init();
+		System.out.println(this.serverIdAsString + ": Starting on " + this.node.address);
 		this.iOHandler.startServer();
+		System.out.println(this.serverIdAsString + ": Started on " + this.node.address);
 	}
 
 	/**
@@ -278,7 +288,7 @@ public class SinchanaServer {
 	 */
 	public byte[] sendRequest(byte[] destination, byte[] message) throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException {
 		if (destination.length != 20) {
-			throw new SinchanaInvalidArgumentException("Destination address should be exactly 20 byte length.");
+			throw new SinchanaInvalidArgumentException(CONFIGURATIONS.ERROR_MSG_INVALID_ADDRESS_LENGTH);
 		}
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, -1, null).data;
 	}
@@ -297,7 +307,7 @@ public class SinchanaServer {
 	 */
 	public byte[] sendRequest(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit) throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException {
 		if (destination.length != 20) {
-			throw new SinchanaInvalidArgumentException("Destination address should be exactly 20 byte length.");
+			throw new SinchanaInvalidArgumentException(CONFIGURATIONS.ERROR_MSG_INVALID_ADDRESS_LENGTH);
 		}
 		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, timeOut, timeUnit).data;
 	}
@@ -313,7 +323,7 @@ public class SinchanaServer {
 	 */
 	public void sendRequest(byte[] destination, byte[] message, SinchanaResponseCallback callBack) throws InterruptedException, SinchanaInvalidArgumentException {
 		if (destination.length != 20) {
-			throw new SinchanaInvalidArgumentException("Destination address should be exactly 20 byte length.");
+			throw new SinchanaInvalidArgumentException(CONFIGURATIONS.ERROR_MSG_INVALID_ADDRESS_LENGTH);
 		}
 		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack);
 	}
@@ -506,7 +516,7 @@ public class SinchanaServer {
 	 */
 	public void publishService(byte[] key, SinchanaServiceInterface sinchanaServiceInterface) throws InterruptedException, SinchanaInvalidArgumentException {
 		if (sinchanaServiceInterface == null) {
-			throw new SinchanaInvalidArgumentException("SinchanaServiceInterface cannot be null.");
+			throw new SinchanaInvalidArgumentException(CONFIGURATIONS.ERROR_MSG_NULL_ARGUMENTS);
 		}
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		byte[] formattedReference = ByteArrays.arrayConcat(this.node.serverId.array(), formattedKey);
@@ -527,7 +537,7 @@ public class SinchanaServer {
 	public void removeService(byte[] key) throws InterruptedException, SinchanaInvalidArgumentException {
 		SinchanaServiceInterface ssi = this.sinchanaServiceStore.get(key);
 		if (ssi == null) {
-			throw new SinchanaInvalidArgumentException("No such service found in this server!");
+			throw new SinchanaInvalidArgumentException(CONFIGURATIONS.ERROR_MSG_NO_SUCH_SERVICE_FOUND);
 		}
 		byte[] formattedKey = ByteArrays.arrayConcat(key, CONFIGURATIONS.SERVICE_TAG);
 		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi);

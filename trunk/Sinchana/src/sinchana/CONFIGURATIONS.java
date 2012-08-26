@@ -37,7 +37,7 @@ package sinchana;
  *
  * @author S.A.H.S.Subasinghe
  */
-public class CONFIGURATIONS {
+public interface CONFIGURATIONS {
 
 	/**
 	 * Number of the maximum opened connections in the connection pool.
@@ -103,10 +103,42 @@ public class CONFIGURATIONS {
 	 */
 	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 120;
 	/**
-	 * Service tag which is used to separate service keys from data keys. This tag will be
-	 * appended to each service key automatically, before publishing the service.
+	 * Test ring separator.
 	 */
-	public static final byte[] SERVICE_TAG = "-@-SINCHANA_SERVICE".getBytes();
+	public static final String TEST_RING_SEPARATOR = " > ";
+	/**
+	 * Chord routing algorithm
+	 */
+	public static final String CHORD = "CHORD";
+	/**
+	 * Tapestry routing algorithm
+	 */
+	public static final String TAPESTRY = "TAPESTRY";
+	/**
+	 * Pastry routing algorithm
+	 */
+	public static final String PASTRY = "PASTRY";
+	/**
+	 * Error message to indicate a join failure because of the maximum number of join retries is exceeded.
+	 */
+	public static final String ERROR_MSG_JOIN_FAILED = "Join failed. Maximum number of retries exceeded!";
+	/**
+	 * Error message to indicate the service which is required is not found (on service remove).
+	 */
+	public static final String ERROR_MSG_NO_SUCH_SERVICE_FOUND = "No such service found in this server!";
+	/**
+	 * Error message to indicate an invalid address length. The length of an address should be exactly 20 bytes.
+	 */
+	public static final String ERROR_MSG_INVALID_ADDRESS_LENGTH = "Destination address should be exactly 20 byte length.";
+	/**
+	 * Error message to indicate null arguments.
+	 */
+	public static final String ERROR_MSG_NULL_ARGUMENTS = "Arguments cannot be null!";
+	/**
+	 * Error message to indicate initializing with an invalid routing algorithm.
+	 */
+	public static final String ERROR_MSG_INVALID_ROUTING_ALGORITHM = "Invalid routing algorithm! Use '" 
+			+ CHORD + "', '" + PASTRY + "' or '" + TAPESTRY + ".";
 	/**
 	 * Error message to indicate a termination of a message because it's life time is expired. 
 	 */
@@ -136,11 +168,8 @@ public class CONFIGURATIONS {
 	 */
 	public static final byte[] ERROR_MSG_TIMED_OUT = "Timed out!".getBytes();
 	/**
-	 * Error message to indicate a join failure because of the maximum number of join retries is exceeded.
+	 * Service tag which is used to separate service keys from data keys. This tag will be
+	 * appended to each service key automatically, before publishing the service.
 	 */
-	public static final String ERROR_MSG_JOIN_FAILED = "Join failed. Maximum number of retries exceeded!";
-	/**
-	 * Test ring separator.
-	 */
-	public static final String TEST_RING_SEPARATOR = " > ";
+	public static final byte[] SERVICE_TAG = "-@-SINCHANA_SERVICE".getBytes();
 }
