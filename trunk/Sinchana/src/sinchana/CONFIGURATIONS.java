@@ -21,7 +21,7 @@ public class CONFIGURATIONS {
 	/**
 	 * 
 	 */
-	public static final int REQUEST_MESSAGE_LIFETIME = 120;
+	public static final int REQUEST_MESSAGE_LIFETIME = 160;
 	/**
 	 * 
 	 */
@@ -73,7 +73,7 @@ public class CONFIGURATIONS {
 	/**
 	 * 
 	 */
-	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 60 * 1000; //milliseconds
+	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 120 * 1000; //milliseconds
 	/**
 	 * 
 	 */
