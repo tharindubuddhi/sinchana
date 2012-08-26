@@ -89,6 +89,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         printLogButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Testing UI");
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
         jPanel1.setLayout(new java.awt.GridLayout(5, 1, 0, 4));
@@ -154,7 +155,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         messagePanel.add(numOfMsgsField);
 
         sendMsgButton.setText("Send Msg.");
-        sendMsgButton.setPreferredSize(new java.awt.Dimension(134, 24));
+        sendMsgButton.setPreferredSize(new java.awt.Dimension(114, 24));
         sendMsgButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 sendMsgButtonActionPerformed(evt);
@@ -162,7 +163,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         });
         messagePanel.add(sendMsgButton);
 
-        sendMsgAutoButton.setText("Send Continuesly");
+        sendMsgAutoButton.setText("Send Continuous");
         sendMsgAutoButton.setPreferredSize(new java.awt.Dimension(134, 24));
         sendMsgAutoButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -190,9 +191,9 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         servicePanel.add(egLabel);
 
         dataCountTextField.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        dataCountTextField.setText("50");
+        dataCountTextField.setText("10000");
         dataCountTextField.setToolTipText("No of Auto Testing Nodes");
-        dataCountTextField.setPreferredSize(new java.awt.Dimension(32, 24));
+        dataCountTextField.setPreferredSize(new java.awt.Dimension(70, 24));
         servicePanel.add(dataCountTextField);
 
         storeButton.setText("Store");

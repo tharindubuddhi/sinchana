@@ -29,8 +29,9 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	private TesterController testerController;
 	private Semaphore threadLock = new Semaphore(0);
 	private long numOfTestingMessages = 0;
-	String address = "127.0.0.1";
+	String address = null;
 	String remoteNodeAddress = address + ":8000";
+//    String remoteNodeAddress = "10.8.98.15:8000";
 
 	/**
 	 * 
@@ -40,8 +41,8 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	 */
 	public Tester(int testId, int portId, TesterController tc) {
 		try {
-//			address = InetAddress.getLocalHost().getHostAddress();
-//			remoteNodeAddress = address + ":8000";
+			address = InetAddress.getLocalHost().getHostAddress();
+			remoteNodeAddress = address + ":8000";
 			this.testId = testId;
 			this.testerController = tc;
 			server = new SinchanaServer(address + ":" + portId);
