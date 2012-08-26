@@ -45,7 +45,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			remoteNodeAddress = address + ":8000";
 			this.testId = testId;
 			this.testerController = tc;
-			server = new SinchanaServer(address + ":" + portId);
+			server = new SinchanaServer(address + ":" + portId, CONFIGURATIONS.PASTRY);
 			server.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
 
 				@Override

@@ -8,7 +8,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
+import sinchana.CONFIGURATIONS;
 import sinchana.SinchanaServer;
+import sinchana.exceptions.SinchanaInvalidRoutingAlgorithmException;
 import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.service.SinchanaServiceCallback;
 import sinchana.util.tools.ByteArrays;
@@ -19,18 +21,18 @@ import sinchana.util.tools.ByteArrays;
  */
 public class ServiceTestServer {
 
-	public static void main(String[] args) throws InterruptedException, TTransportException, TException {
-		final SinchanaServer sinchanaServer1 = new SinchanaServer("127.0.0.1:9227");
+	public static void main(String[] args) throws InterruptedException, TTransportException, TException, SinchanaInvalidRoutingAlgorithmException {
+		final SinchanaServer sinchanaServer1 = new SinchanaServer("127.0.0.1:9227", CONFIGURATIONS.PASTRY);
 		sinchanaServer1.startServer();
 		sinchanaServer1.join(null);
 		System.out.println("S1: " + sinchanaServer1.getServerIdAsString() + " joined the ring");
 
-		final SinchanaServer sinchanaServer2 = new SinchanaServer("127.0.0.1:9228");
+		final SinchanaServer sinchanaServer2 = new SinchanaServer("127.0.0.1:9228", CONFIGURATIONS.PASTRY);
 		sinchanaServer2.startServer();
 		sinchanaServer2.join("127.0.0.1:9227");
 		System.out.println("S2: " + sinchanaServer2.getServerIdAsString() + " joined the ring");
 
-		final SinchanaServer sinchanaServer3 = new SinchanaServer("127.0.0.1:9229");
+		final SinchanaServer sinchanaServer3 = new SinchanaServer("127.0.0.1:9229", CONFIGURATIONS.PASTRY);
 		sinchanaServer3.startServer();
 		sinchanaServer3.join("127.0.0.1:9227");
 		System.out.println("S3: " + sinchanaServer3.getServerIdAsString() + " joined the ring");

@@ -18,14 +18,17 @@ public class ByteArrays {
 	public static String idToReadableString(Node node) {
 		return idToReadableString(node.serverId.array());
 	}
-	
+
 	public static String idToReadableString(ByteBuffer byteBuffer) {
 		return idToReadableString(byteBuffer.array());
 	}
 
 	public static String idToReadableString(byte[] arrayToRead) {
 		String val = new BigInteger(1, arrayToRead).toString(16).toUpperCase();
-		return (val.length() == 40 ? val : "0" + val);
+		while (val.length() < 40) {
+			val = "0" + val;
+		}
+		return val;
 	}
 
 	public static String toReadableString(ByteBuffer byteBuffer) {
@@ -35,7 +38,7 @@ public class ByteArrays {
 	public static String toReadableString(byte[] arrayToRead) {
 		return new BigInteger(1, arrayToRead).toString(16);
 	}
-	
+
 	public static byte[] arrayConcat(byte[] array1, byte[] array2) {
 		int pos = array1.length;
 		byte[] newArray = Arrays.copyOf(array1, pos + array2.length);
