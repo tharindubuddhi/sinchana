@@ -114,7 +114,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			while (true) {
 				threadLock.acquire();
 				while (numOfTestingMessages > 0) {
-					String val = new BigInteger(160, random).toString(CONFIGURATIONS.NUMBER_BASE);
+					String val = new BigInteger(160, random).toString(16);
 					byte[] mid = Hash.generateId(val);
 					server.sendRequest(mid, MESSAGE, srh);
 					choke();
@@ -150,7 +150,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			milestone = time;
 			chokeCount = 0;
 		}
-		if (chokeCount > CONFIGURATIONS.CHOKE_LIMIT) {
+		if (chokeCount > 200) {
 			Thread.sleep(1000 - (time - milestone));
 		}
 	}

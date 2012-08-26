@@ -26,9 +26,6 @@ public class IOHandler {
 
 	public static final int ACCEPT_ERROR = 1;
 	public static final int SUCCESS = 2;
-	private static final byte[] ERROR_MSG_LIFE_TIME_EXPIRED = "Messaage is terminated as lifetime expired!".getBytes();
-	private static final byte[] ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED 
-			= "Messaage is terminated as maximum number of retries is exceeded!".getBytes();
 	private final SinchanaServer server;
 	private final Node thisNode;
 	private final SynchronousQueue<Message> outputMessageQueue = new SynchronousQueue<Message>();
@@ -63,7 +60,7 @@ public class IOHandler {
 			if (!message.responseExpected) {
 				return;
 			}
-			message.setError(ERROR_MSG_LIFE_TIME_EXPIRED);
+			message.setError(CONFIGURATIONS.ERROR_MSG_LIFE_TIME_EXPIRED);
 			message.setDestination(message.source);
 			message.setDestinationId(message.source.serverId);
 			message.setType(MessageType.ERROR);
@@ -114,7 +111,7 @@ public class IOHandler {
 				if (!isRoutable(message) || !message.responseExpected) {
 					return;
 				}
-				message.setError(ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED);
+				message.setError(CONFIGURATIONS.ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED);
 				message.setDestination(message.source);
 				message.setDestinationId(message.source.serverId);
 				message.setType(MessageType.ERROR);

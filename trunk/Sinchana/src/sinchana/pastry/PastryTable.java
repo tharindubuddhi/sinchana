@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import sinchana.CONFIGURATIONS;
-import sinchana.util.logging.Logger;
 import sinchana.util.tools.ByteArrays;
 
 /**
@@ -30,7 +29,7 @@ public class PastryTable implements RoutingHandler {
 	private static final int BASE_POWER = 4;
 	private static final int TABLE_WIDTH = (int) Math.pow(2, BASE_POWER);
 	private static final int TABLE_SIZE = 40;
-	private static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
+	private static final BigInteger ZERO = new BigInteger("0", 16);
 	private final SinchanaServer server;
 	private final Node[] successors = new Node[SUCCESSOR_LEVELS];
 	private final Node[] predecessors = new Node[SUCCESSOR_LEVELS];

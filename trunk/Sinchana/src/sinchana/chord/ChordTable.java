@@ -27,9 +27,9 @@ public class ChordTable implements RoutingHandler {
 	private static final int SUCCESSOR_LEVELS = 3;
 	private static final int NUMBER_OF_TABLE_ENTRIES = 3;
 	private static final int TABLE_SIZE = 160;
-	public static final BigInteger ZERO = new BigInteger("0", CONFIGURATIONS.NUMBER_BASE);
-	public static final BigInteger ONE = new BigInteger("1", CONFIGURATIONS.NUMBER_BASE);
-	public static final BigInteger TWO = new BigInteger("2", CONFIGURATIONS.NUMBER_BASE);
+	public static final BigInteger ZERO = new BigInteger("0", 16);
+	public static final BigInteger ONE = new BigInteger("1", 16);
+	public static final BigInteger TWO = new BigInteger("2", 16);
 	private final FingerTableEntry[] fingerTable = new FingerTableEntry[TABLE_SIZE];
 	private final SinchanaServer server;
 	private final Node[] successors = new Node[SUCCESSOR_LEVELS];
@@ -139,38 +139,25 @@ public class ChordTable implements RoutingHandler {
 	@Override
 	public Node getNextNode(byte[] destination) {
 
-		//calculates the offset to the destination.
-		BigInteger destinationOffset = getOffset(destination);
-		//takes finger table entries one by one.
-		synchronized (fingerTable) {
-			for (FingerTableEntry fingerTableEntry : fingerTable) {
-				/**
-				 * checks whether the destination lies within the start and end of the table entry.
-				 * If so, returns the successors of that entry.
-				 * 0-----finger.table.entry.start------destination.id-------finger.table.entry.end----------End.of.Grid
-				 */
-				if (fingerTableEntry.getStartOffset().compareTo(destinationOffset) != 1
-						&& destinationOffset.compareTo(fingerTableEntry.getEndOffset()) != 1) {
-					return fingerTableEntry.getSuccessors()[0];
-				}
-			}
+		int raw = getRaw(destination);
+		if (raw == -1) {
+			return thisNode;
+		} else {
+			return fingerTable[raw].getSuccessors()[0];
 		}
-		/**
-		 * the only id which is not found in the table is the id of this server itself.
-		 * Successor of that id is this server. So returns this server.
-		 */
-		return thisNode;
 	}
 
 	@Override
 	public boolean isInTheTable(Node nodeToCkeck) {
 		byte[] id = nodeToCkeck.serverId.array();
-		for (FingerTableEntry fingerTableEntry : fingerTable) {
-			Node[] entrySuccessors = fingerTableEntry.getSuccessors();
-			for (Node node : entrySuccessors) {
-				if (node != null && Arrays.equals(node.serverId.array(), id)) {
-					return true;
-				}
+		int raw = getRaw(id);
+		Node[] entrySuccessors = fingerTable[raw].getSuccessors();
+		for (Node node : entrySuccessors) {
+			if (node == null) {
+				break;
+			}
+			if (Arrays.equals(node.serverId.array(), id)) {
+				return true;
 			}
 		}
 		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
@@ -363,6 +350,25 @@ public class ChordTable implements RoutingHandler {
 		} else {
 			return false;
 		}
+	}
+
+	private int getRaw(byte[] id) {
+		BigInteger offset = getOffset(id);
+		byte[] val = offset.toByteArray();
+		int l = val.length;
+		if (l > 20) {
+			val = Arrays.copyOfRange(val, val.length - 20, val.length);
+		} else if (l < 20) {
+			val = Arrays.copyOf(val, 20);
+		}
+		for (int i = 0; i < 20; i++) {
+			for (int j = 7; j >= 0; j--) {
+				if ((val[i] & (1 << j)) != 0) {
+					return (TABLE_SIZE - (i * 8 + (8 - j)));
+				}
+			}
+		}
+		return -1;
 	}
 
 	/**

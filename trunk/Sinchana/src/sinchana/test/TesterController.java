@@ -174,7 +174,7 @@ public class TesterController {
 		this.totalCountAccumilated = 0;
 		int numOfTestServers = testServers.size();
 		while (numOfMsgs > 0) {
-			String val = new BigInteger(160, random).toString(CONFIGURATIONS.NUMBER_BASE);
+			String val = new BigInteger(160, random).toString(16);
 			byte[] mid = Hash.generateId(val);
 			int tid = (int) (Math.random() * numOfTestServers);
 			try {
@@ -202,7 +202,7 @@ public class TesterController {
 	}
 
 	public void printTableInfo(String idText) {
-		BigInteger id = new BigInteger(idText, CONFIGURATIONS.NUMBER_BASE);
+		BigInteger id = new BigInteger(idText, 16);
 		Collection<Tester> testers = testServers.values();
 		for (Tester tester : testers) {
 			if (id.compareTo(new BigInteger(1, tester.getServerId())) == 0) {
