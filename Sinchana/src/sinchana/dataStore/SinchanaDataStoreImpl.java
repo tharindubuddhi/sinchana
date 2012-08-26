@@ -11,7 +11,9 @@ public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 
 	private final ConcurrentHashMap<String, byte[]> dataMap = new ConcurrentHashMap<String, byte[]>();
 	private final SinchanaServer server;
-
+    public static long startStoreTime, lastTime,startRetrieveTime;
+	public static int storeSuccessCount, lastCount,storeFailureCount, retrieveSuccessCount, retrieveFailureCount;
+    
 	public SinchanaDataStoreImpl(SinchanaServer ss) {
 		this.server = ss;
 	}
@@ -19,6 +21,14 @@ public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 	@Override
 	public boolean store(byte[] key, byte[] data) {
 		dataMap.put(new String(key), data);
+        storeSuccessCount++;
+        if ((storeSuccessCount) % 1000 == 0) {
+            long nowTime = System.currentTimeMillis();
+            long tp = ((storeSuccessCount-lastCount)*1000)/(nowTime-lastTime);
+			System.out.println("success count: " + storeSuccessCount + "\ttime: " + (nowTime-startStoreTime)+" throughput: "+tp);
+            lastCount = storeSuccessCount;
+            lastTime = nowTime;
+		}
 		return true;
 	}
 
