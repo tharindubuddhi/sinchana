@@ -4,6 +4,7 @@
  */
 package sinchana.test;
 
+import sinchana.test.examples.HelloService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.thrift.TException;
