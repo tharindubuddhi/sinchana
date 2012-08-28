@@ -45,7 +45,7 @@ public class ThriftServerImpl implements DHTServer.Iface {
 	}
 
 	@Override
-	public ByteBuffer getService(ByteBuffer reference, ByteBuffer data) throws TException {
+	public ByteBuffer invokeService(ByteBuffer reference, ByteBuffer data) throws TException {
 		try {
 			return ByteBuffer.wrap(server.getClientHandler().addRequest(reference.array(), data.array(),
 					MessageType.GET_SERVICE, -1, null).data);
@@ -82,7 +82,7 @@ public class ThriftServerImpl implements DHTServer.Iface {
 	}
 
 	@Override
-	public ByteBuffer request(ByteBuffer destination, ByteBuffer message) throws TException {
+	public ByteBuffer sendRequest(ByteBuffer destination, ByteBuffer message) throws TException {
 		try {
 			return ByteBuffer.wrap(server.getClientHandler().addRequest(destination.array(), message.array(),
 					MessageType.REQUEST, -1, null).data);
