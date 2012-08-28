@@ -33,17 +33,17 @@ public class DHTServer {
 
     public int transfer(Message message) throws org.apache.thrift.TException;
 
-    public ByteBuffer discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException;
+    public Response discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException;
 
-    public ByteBuffer invokeService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException;
+    public Response invokeService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException;
 
-    public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException;
+    public Response publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException;
 
-    public boolean removeData(ByteBuffer dataKey) throws org.apache.thrift.TException;
+    public Response removeData(ByteBuffer dataKey) throws org.apache.thrift.TException;
 
-    public ByteBuffer getData(ByteBuffer dataKey) throws org.apache.thrift.TException;
+    public Response getData(ByteBuffer dataKey) throws org.apache.thrift.TException;
 
-    public ByteBuffer sendRequest(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException;
+    public Response sendRequest(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException;
 
     public void ping() throws org.apache.thrift.TException;
 
@@ -112,7 +112,7 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "transfer failed: unknown result");
     }
 
-    public ByteBuffer discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException
+    public Response discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException
     {
       send_discoverService(serviceKey);
       return recv_discoverService();
@@ -125,7 +125,7 @@ public class DHTServer {
       sendBase("discoverService", args);
     }
 
-    public ByteBuffer recv_discoverService() throws org.apache.thrift.TException
+    public Response recv_discoverService() throws org.apache.thrift.TException
     {
       discoverService_result result = new discoverService_result();
       receiveBase(result, "discoverService");
@@ -135,7 +135,7 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "discoverService failed: unknown result");
     }
 
-    public ByteBuffer invokeService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
+    public Response invokeService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
     {
       send_invokeService(reference, data);
       return recv_invokeService();
@@ -149,7 +149,7 @@ public class DHTServer {
       sendBase("invokeService", args);
     }
 
-    public ByteBuffer recv_invokeService() throws org.apache.thrift.TException
+    public Response recv_invokeService() throws org.apache.thrift.TException
     {
       invokeService_result result = new invokeService_result();
       receiveBase(result, "invokeService");
@@ -159,7 +159,7 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "invokeService failed: unknown result");
     }
 
-    public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException
+    public Response publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException
     {
       send_publishData(dataKey, data);
       return recv_publishData();
@@ -173,7 +173,7 @@ public class DHTServer {
       sendBase("publishData", args);
     }
 
-    public boolean recv_publishData() throws org.apache.thrift.TException
+    public Response recv_publishData() throws org.apache.thrift.TException
     {
       publishData_result result = new publishData_result();
       receiveBase(result, "publishData");
@@ -183,7 +183,7 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "publishData failed: unknown result");
     }
 
-    public boolean removeData(ByteBuffer dataKey) throws org.apache.thrift.TException
+    public Response removeData(ByteBuffer dataKey) throws org.apache.thrift.TException
     {
       send_removeData(dataKey);
       return recv_removeData();
@@ -196,7 +196,7 @@ public class DHTServer {
       sendBase("removeData", args);
     }
 
-    public boolean recv_removeData() throws org.apache.thrift.TException
+    public Response recv_removeData() throws org.apache.thrift.TException
     {
       removeData_result result = new removeData_result();
       receiveBase(result, "removeData");
@@ -206,7 +206,7 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "removeData failed: unknown result");
     }
 
-    public ByteBuffer getData(ByteBuffer dataKey) throws org.apache.thrift.TException
+    public Response getData(ByteBuffer dataKey) throws org.apache.thrift.TException
     {
       send_getData(dataKey);
       return recv_getData();
@@ -219,7 +219,7 @@ public class DHTServer {
       sendBase("getData", args);
     }
 
-    public ByteBuffer recv_getData() throws org.apache.thrift.TException
+    public Response recv_getData() throws org.apache.thrift.TException
     {
       getData_result result = new getData_result();
       receiveBase(result, "getData");
@@ -229,7 +229,7 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getData failed: unknown result");
     }
 
-    public ByteBuffer sendRequest(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
+    public Response sendRequest(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
     {
       send_sendRequest(destination, message);
       return recv_sendRequest();
@@ -243,7 +243,7 @@ public class DHTServer {
       sendBase("sendRequest", args);
     }
 
-    public ByteBuffer recv_sendRequest() throws org.apache.thrift.TException
+    public Response recv_sendRequest() throws org.apache.thrift.TException
     {
       sendRequest_result result = new sendRequest_result();
       receiveBase(result, "sendRequest");
@@ -344,7 +344,7 @@ public class DHTServer {
         prot.writeMessageEnd();
       }
 
-      public ByteBuffer getResult() throws org.apache.thrift.TException {
+      public Response getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -379,7 +379,7 @@ public class DHTServer {
         prot.writeMessageEnd();
       }
 
-      public ByteBuffer getResult() throws org.apache.thrift.TException {
+      public Response getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -414,7 +414,7 @@ public class DHTServer {
         prot.writeMessageEnd();
       }
 
-      public boolean getResult() throws org.apache.thrift.TException {
+      public Response getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -446,7 +446,7 @@ public class DHTServer {
         prot.writeMessageEnd();
       }
 
-      public boolean getResult() throws org.apache.thrift.TException {
+      public Response getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -478,7 +478,7 @@ public class DHTServer {
         prot.writeMessageEnd();
       }
 
-      public ByteBuffer getResult() throws org.apache.thrift.TException {
+      public Response getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -513,7 +513,7 @@ public class DHTServer {
         prot.writeMessageEnd();
       }
 
-      public ByteBuffer getResult() throws org.apache.thrift.TException {
+      public Response getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -637,7 +637,6 @@ public class DHTServer {
       protected publishData_result getResult(I iface, publishData_args args) throws org.apache.thrift.TException {
         publishData_result result = new publishData_result();
         result.success = iface.publishData(args.dataKey, args.data);
-        result.setSuccessIsSet(true);
         return result;
       }
     }
@@ -654,7 +653,6 @@ public class DHTServer {
       protected removeData_result getResult(I iface, removeData_args args) throws org.apache.thrift.TException {
         removeData_result result = new removeData_result();
         result.success = iface.removeData(args.dataKey);
-        result.setSuccessIsSet(true);
         return result;
       }
     }
@@ -1781,7 +1779,7 @@ public class DHTServer {
   public static class discoverService_result implements org.apache.thrift.TBase<discoverService_result, discoverService_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("discoverService_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -1789,7 +1787,7 @@ public class DHTServer {
       schemes.put(TupleScheme.class, new discoverService_resultTupleSchemeFactory());
     }
 
-    public ByteBuffer success; // required
+    public Response success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -1854,7 +1852,7 @@ public class DHTServer {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Response.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(discoverService_result.class, metaDataMap);
     }
@@ -1863,7 +1861,7 @@ public class DHTServer {
     }
 
     public discoverService_result(
-      ByteBuffer success)
+      Response success)
     {
       this();
       this.success = success;
@@ -1874,8 +1872,7 @@ public class DHTServer {
      */
     public discoverService_result(discoverService_result other) {
       if (other.isSetSuccess()) {
-        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
-;
+        this.success = new Response(other.success);
       }
     }
 
@@ -1888,21 +1885,11 @@ public class DHTServer {
       this.success = null;
     }
 
-    public byte[] getSuccess() {
-      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
-      return success == null ? null : success.array();
+    public Response getSuccess() {
+      return this.success;
     }
 
-    public ByteBuffer bufferForSuccess() {
-      return success;
-    }
-
-    public discoverService_result setSuccess(byte[] success) {
-      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
-      return this;
-    }
-
-    public discoverService_result setSuccess(ByteBuffer success) {
+    public discoverService_result setSuccess(Response success) {
       this.success = success;
       return this;
     }
@@ -1928,7 +1915,7 @@ public class DHTServer {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((ByteBuffer)value);
+          setSuccess((Response)value);
         }
         break;
 
@@ -2029,7 +2016,7 @@ public class DHTServer {
       if (this.success == null) {
         sb.append("null");
       } else {
-        org.apache.thrift.TBaseHelper.toString(this.success, sb);
+        sb.append(this.success);
       }
       first = false;
       sb.append(")");
@@ -2075,8 +2062,9 @@ public class DHTServer {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.success = iprot.readBinary();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new Response();
+                struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -2099,7 +2087,7 @@ public class DHTServer {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -2125,7 +2113,7 @@ public class DHTServer {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
         }
       }
 
@@ -2134,7 +2122,8 @@ public class DHTServer {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBinary();
+          struct.success = new Response();
+          struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }
       }
@@ -2620,7 +2609,7 @@ public class DHTServer {
   public static class invokeService_result implements org.apache.thrift.TBase<invokeService_result, invokeService_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("invokeService_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -2628,7 +2617,7 @@ public class DHTServer {
       schemes.put(TupleScheme.class, new invokeService_resultTupleSchemeFactory());
     }
 
-    public ByteBuffer success; // required
+    public Response success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -2693,7 +2682,7 @@ public class DHTServer {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Response.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(invokeService_result.class, metaDataMap);
     }
@@ -2702,7 +2691,7 @@ public class DHTServer {
     }
 
     public invokeService_result(
-      ByteBuffer success)
+      Response success)
     {
       this();
       this.success = success;
@@ -2713,8 +2702,7 @@ public class DHTServer {
      */
     public invokeService_result(invokeService_result other) {
       if (other.isSetSuccess()) {
-        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
-;
+        this.success = new Response(other.success);
       }
     }
 
@@ -2727,21 +2715,11 @@ public class DHTServer {
       this.success = null;
     }
 
-    public byte[] getSuccess() {
-      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
-      return success == null ? null : success.array();
+    public Response getSuccess() {
+      return this.success;
     }
 
-    public ByteBuffer bufferForSuccess() {
-      return success;
-    }
-
-    public invokeService_result setSuccess(byte[] success) {
-      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
-      return this;
-    }
-
-    public invokeService_result setSuccess(ByteBuffer success) {
+    public invokeService_result setSuccess(Response success) {
       this.success = success;
       return this;
     }
@@ -2767,7 +2745,7 @@ public class DHTServer {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((ByteBuffer)value);
+          setSuccess((Response)value);
         }
         break;
 
@@ -2868,7 +2846,7 @@ public class DHTServer {
       if (this.success == null) {
         sb.append("null");
       } else {
-        org.apache.thrift.TBaseHelper.toString(this.success, sb);
+        sb.append(this.success);
       }
       first = false;
       sb.append(")");
@@ -2914,8 +2892,9 @@ public class DHTServer {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.success = iprot.readBinary();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new Response();
+                struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -2938,7 +2917,7 @@ public class DHTServer {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -2964,7 +2943,7 @@ public class DHTServer {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
         }
       }
 
@@ -2973,7 +2952,8 @@ public class DHTServer {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBinary();
+          struct.success = new Response();
+          struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }
       }
@@ -3459,7 +3439,7 @@ public class DHTServer {
   public static class publishData_result implements org.apache.thrift.TBase<publishData_result, publishData_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("publishData_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -3467,7 +3447,7 @@ public class DHTServer {
       schemes.put(TupleScheme.class, new publishData_resultTupleSchemeFactory());
     }
 
-    public boolean success; // required
+    public Response success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -3528,13 +3508,11 @@ public class DHTServer {
     }
 
     // isset id assignments
-    private static final int __SUCCESS_ISSET_ID = 0;
-    private BitSet __isset_bit_vector = new BitSet(1);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Response.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(publishData_result.class, metaDataMap);
     }
@@ -3543,20 +3521,19 @@ public class DHTServer {
     }
 
     public publishData_result(
-      boolean success)
+      Response success)
     {
       this();
       this.success = success;
-      setSuccessIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public publishData_result(publishData_result other) {
-      __isset_bit_vector.clear();
-      __isset_bit_vector.or(other.__isset_bit_vector);
-      this.success = other.success;
+      if (other.isSetSuccess()) {
+        this.success = new Response(other.success);
+      }
     }
 
     public publishData_result deepCopy() {
@@ -3565,31 +3542,31 @@ public class DHTServer {
 
     @Override
     public void clear() {
-      setSuccessIsSet(false);
-      this.success = false;
+      this.success = null;
     }
 
-    public boolean isSuccess() {
+    public Response getSuccess() {
       return this.success;
     }
 
-    public publishData_result setSuccess(boolean success) {
+    public publishData_result setSuccess(Response success) {
       this.success = success;
-      setSuccessIsSet(true);
       return this;
     }
 
     public void unsetSuccess() {
-      __isset_bit_vector.clear(__SUCCESS_ISSET_ID);
+      this.success = null;
     }
 
     /** Returns true if field success is set (has been assigned a value) and false otherwise */
     public boolean isSetSuccess() {
-      return __isset_bit_vector.get(__SUCCESS_ISSET_ID);
+      return this.success != null;
     }
 
     public void setSuccessIsSet(boolean value) {
-      __isset_bit_vector.set(__SUCCESS_ISSET_ID, value);
+      if (!value) {
+        this.success = null;
+      }
     }
 
     public void setFieldValue(_Fields field, Object value) {
@@ -3598,7 +3575,7 @@ public class DHTServer {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Boolean)value);
+          setSuccess((Response)value);
         }
         break;
 
@@ -3608,7 +3585,7 @@ public class DHTServer {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case SUCCESS:
-        return Boolean.valueOf(isSuccess());
+        return getSuccess();
 
       }
       throw new IllegalStateException();
@@ -3640,12 +3617,12 @@ public class DHTServer {
       if (that == null)
         return false;
 
-      boolean this_present_success = true;
-      boolean that_present_success = true;
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
       if (this_present_success || that_present_success) {
         if (!(this_present_success && that_present_success))
           return false;
-        if (this.success != that.success)
+        if (!this.success.equals(that.success))
           return false;
       }
 
@@ -3696,7 +3673,11 @@ public class DHTServer {
       boolean first = true;
 
       sb.append("success:");
-      sb.append(this.success);
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
       first = false;
       sb.append(")");
       return sb.toString();
@@ -3741,8 +3722,9 @@ public class DHTServer {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
-                struct.success = iprot.readBool();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new Response();
+                struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -3763,9 +3745,11 @@ public class DHTServer {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-        oprot.writeBool(struct.success);
-        oprot.writeFieldEnd();
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          struct.success.write(oprot);
+          oprot.writeFieldEnd();
+        }
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -3789,7 +3773,7 @@ public class DHTServer {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBool(struct.success);
+          struct.success.write(oprot);
         }
       }
 
@@ -3798,7 +3782,8 @@ public class DHTServer {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBool();
+          struct.success = new Response();
+          struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }
       }
@@ -4173,7 +4158,7 @@ public class DHTServer {
   public static class removeData_result implements org.apache.thrift.TBase<removeData_result, removeData_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("removeData_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -4181,7 +4166,7 @@ public class DHTServer {
       schemes.put(TupleScheme.class, new removeData_resultTupleSchemeFactory());
     }
 
-    public boolean success; // required
+    public Response success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -4242,13 +4227,11 @@ public class DHTServer {
     }
 
     // isset id assignments
-    private static final int __SUCCESS_ISSET_ID = 0;
-    private BitSet __isset_bit_vector = new BitSet(1);
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Response.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(removeData_result.class, metaDataMap);
     }
@@ -4257,20 +4240,19 @@ public class DHTServer {
     }
 
     public removeData_result(
-      boolean success)
+      Response success)
     {
       this();
       this.success = success;
-      setSuccessIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public removeData_result(removeData_result other) {
-      __isset_bit_vector.clear();
-      __isset_bit_vector.or(other.__isset_bit_vector);
-      this.success = other.success;
+      if (other.isSetSuccess()) {
+        this.success = new Response(other.success);
+      }
     }
 
     public removeData_result deepCopy() {
@@ -4279,31 +4261,31 @@ public class DHTServer {
 
     @Override
     public void clear() {
-      setSuccessIsSet(false);
-      this.success = false;
+      this.success = null;
     }
 
-    public boolean isSuccess() {
+    public Response getSuccess() {
       return this.success;
     }
 
-    public removeData_result setSuccess(boolean success) {
+    public removeData_result setSuccess(Response success) {
       this.success = success;
-      setSuccessIsSet(true);
       return this;
     }
 
     public void unsetSuccess() {
-      __isset_bit_vector.clear(__SUCCESS_ISSET_ID);
+      this.success = null;
     }
 
     /** Returns true if field success is set (has been assigned a value) and false otherwise */
     public boolean isSetSuccess() {
-      return __isset_bit_vector.get(__SUCCESS_ISSET_ID);
+      return this.success != null;
     }
 
     public void setSuccessIsSet(boolean value) {
-      __isset_bit_vector.set(__SUCCESS_ISSET_ID, value);
+      if (!value) {
+        this.success = null;
+      }
     }
 
     public void setFieldValue(_Fields field, Object value) {
@@ -4312,7 +4294,7 @@ public class DHTServer {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Boolean)value);
+          setSuccess((Response)value);
         }
         break;
 
@@ -4322,7 +4304,7 @@ public class DHTServer {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case SUCCESS:
-        return Boolean.valueOf(isSuccess());
+        return getSuccess();
 
       }
       throw new IllegalStateException();
@@ -4354,12 +4336,12 @@ public class DHTServer {
       if (that == null)
         return false;
 
-      boolean this_present_success = true;
-      boolean that_present_success = true;
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
       if (this_present_success || that_present_success) {
         if (!(this_present_success && that_present_success))
           return false;
-        if (this.success != that.success)
+        if (!this.success.equals(that.success))
           return false;
       }
 
@@ -4410,7 +4392,11 @@ public class DHTServer {
       boolean first = true;
 
       sb.append("success:");
-      sb.append(this.success);
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
       first = false;
       sb.append(")");
       return sb.toString();
@@ -4455,8 +4441,9 @@ public class DHTServer {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
-                struct.success = iprot.readBool();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new Response();
+                struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -4477,9 +4464,11 @@ public class DHTServer {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-        oprot.writeBool(struct.success);
-        oprot.writeFieldEnd();
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          struct.success.write(oprot);
+          oprot.writeFieldEnd();
+        }
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -4503,7 +4492,7 @@ public class DHTServer {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBool(struct.success);
+          struct.success.write(oprot);
         }
       }
 
@@ -4512,7 +4501,8 @@ public class DHTServer {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBool();
+          struct.success = new Response();
+          struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }
       }
@@ -4887,7 +4877,7 @@ public class DHTServer {
   public static class getData_result implements org.apache.thrift.TBase<getData_result, getData_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getData_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -4895,7 +4885,7 @@ public class DHTServer {
       schemes.put(TupleScheme.class, new getData_resultTupleSchemeFactory());
     }
 
-    public ByteBuffer success; // required
+    public Response success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -4960,7 +4950,7 @@ public class DHTServer {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Response.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getData_result.class, metaDataMap);
     }
@@ -4969,7 +4959,7 @@ public class DHTServer {
     }
 
     public getData_result(
-      ByteBuffer success)
+      Response success)
     {
       this();
       this.success = success;
@@ -4980,8 +4970,7 @@ public class DHTServer {
      */
     public getData_result(getData_result other) {
       if (other.isSetSuccess()) {
-        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
-;
+        this.success = new Response(other.success);
       }
     }
 
@@ -4994,21 +4983,11 @@ public class DHTServer {
       this.success = null;
     }
 
-    public byte[] getSuccess() {
-      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
-      return success == null ? null : success.array();
+    public Response getSuccess() {
+      return this.success;
     }
 
-    public ByteBuffer bufferForSuccess() {
-      return success;
-    }
-
-    public getData_result setSuccess(byte[] success) {
-      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
-      return this;
-    }
-
-    public getData_result setSuccess(ByteBuffer success) {
+    public getData_result setSuccess(Response success) {
       this.success = success;
       return this;
     }
@@ -5034,7 +5013,7 @@ public class DHTServer {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((ByteBuffer)value);
+          setSuccess((Response)value);
         }
         break;
 
@@ -5135,7 +5114,7 @@ public class DHTServer {
       if (this.success == null) {
         sb.append("null");
       } else {
-        org.apache.thrift.TBaseHelper.toString(this.success, sb);
+        sb.append(this.success);
       }
       first = false;
       sb.append(")");
@@ -5181,8 +5160,9 @@ public class DHTServer {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.success = iprot.readBinary();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new Response();
+                struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -5205,7 +5185,7 @@ public class DHTServer {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -5231,7 +5211,7 @@ public class DHTServer {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
         }
       }
 
@@ -5240,7 +5220,8 @@ public class DHTServer {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBinary();
+          struct.success = new Response();
+          struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }
       }
@@ -5726,7 +5707,7 @@ public class DHTServer {
   public static class sendRequest_result implements org.apache.thrift.TBase<sendRequest_result, sendRequest_result._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("sendRequest_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -5734,7 +5715,7 @@ public class DHTServer {
       schemes.put(TupleScheme.class, new sendRequest_resultTupleSchemeFactory());
     }
 
-    public ByteBuffer success; // required
+    public Response success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -5799,7 +5780,7 @@ public class DHTServer {
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Response.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(sendRequest_result.class, metaDataMap);
     }
@@ -5808,7 +5789,7 @@ public class DHTServer {
     }
 
     public sendRequest_result(
-      ByteBuffer success)
+      Response success)
     {
       this();
       this.success = success;
@@ -5819,8 +5800,7 @@ public class DHTServer {
      */
     public sendRequest_result(sendRequest_result other) {
       if (other.isSetSuccess()) {
-        this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
-;
+        this.success = new Response(other.success);
       }
     }
 
@@ -5833,21 +5813,11 @@ public class DHTServer {
       this.success = null;
     }
 
-    public byte[] getSuccess() {
-      setSuccess(org.apache.thrift.TBaseHelper.rightSize(success));
-      return success == null ? null : success.array();
+    public Response getSuccess() {
+      return this.success;
     }
 
-    public ByteBuffer bufferForSuccess() {
-      return success;
-    }
-
-    public sendRequest_result setSuccess(byte[] success) {
-      setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
-      return this;
-    }
-
-    public sendRequest_result setSuccess(ByteBuffer success) {
+    public sendRequest_result setSuccess(Response success) {
       this.success = success;
       return this;
     }
@@ -5873,7 +5843,7 @@ public class DHTServer {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((ByteBuffer)value);
+          setSuccess((Response)value);
         }
         break;
 
@@ -5974,7 +5944,7 @@ public class DHTServer {
       if (this.success == null) {
         sb.append("null");
       } else {
-        org.apache.thrift.TBaseHelper.toString(this.success, sb);
+        sb.append(this.success);
       }
       first = false;
       sb.append(")");
@@ -6020,8 +5990,9 @@ public class DHTServer {
           }
           switch (schemeField.id) {
             case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.success = iprot.readBinary();
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new Response();
+                struct.success.read(iprot);
                 struct.setSuccessIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -6044,7 +6015,7 @@ public class DHTServer {
         oprot.writeStructBegin(STRUCT_DESC);
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -6070,7 +6041,7 @@ public class DHTServer {
         }
         oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
-          oprot.writeBinary(struct.success);
+          struct.success.write(oprot);
         }
       }
 
@@ -6079,7 +6050,8 @@ public class DHTServer {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
-          struct.success = iprot.readBinary();
+          struct.success = new Response();
+          struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }
       }

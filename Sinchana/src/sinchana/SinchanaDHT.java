@@ -33,109 +33,171 @@
  ************************************************************************************/
 package sinchana;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
 import sinchana.dataStore.SinchanaDataCallback;
-import sinchana.dataStore.SinchanaDataStoreImpl;
 import sinchana.dataStore.SinchanaDataStoreInterface;
+import sinchana.exceptions.SinchanaInvalidArgumentException;
+import sinchana.exceptions.SinchanaTimeOutException;
 import sinchana.service.SinchanaServiceCallback;
 import sinchana.service.SinchanaServiceInterface;
-import sinchana.service.SinchanaServiceStore;
-import sinchana.exceptions.SinchanaInvalidArgumentException;
-import sinchana.exceptions.SinchanaInvalidRoutingAlgorithmException;
-import sinchana.exceptions.SinchanaJoinException;
-import sinchana.exceptions.SinchanaTimeOutException;
-import sinchana.routing.chord.ChordTable;
-import sinchana.routing.pastry.PastryTable;
-import sinchana.routing.tapastry.TapestryTable;
-import sinchana.thrift.Message;
-import sinchana.thrift.MessageType;
-import sinchana.thrift.Node;
-import sinchana.util.tools.ByteArrays;
-import sinchana.util.tools.Hash;
 
 /**
  *
  * @author S.A.H.S.Subasinghe
  */
-public class SinchanaServer implements SinchanaDHT{
+public interface SinchanaDHT {
 
 	/**
-	 * Size of the Sinchana ring which is equal to 2^160.
+	 * Number of the maximum opened connections in the connection pool.
 	 */
-	public static final BigInteger GRID_SIZE = new BigInteger("2", 16).pow(160);
-	private final IOHandler iOHandler;
-	private final RoutingHandler routingHandler;
-	private final MessageHandler messageHandler;
-	private final ConnectionPool connectionPool;
-	private final ClientHandler clientHandler;
-	private final SinchanaServiceStore sinchanaServiceStore;
-	private final Node node;
-	private final String serverIdAsString;
-	private final Semaphore joinLock = new Semaphore(0);
-	private boolean joined = false;
-	private SinchanaRequestCallback sinchanaRequestCallback = null;
-	private SinchanaTestInterface sinchanaTestInterface = null;
-	private SinchanaDataStoreInterface sinchanaDataStoreInterface = new SinchanaDataStoreImpl(this);
-
+	public static final int NUM_OF_MAX_OPENED_CONNECTION = 24;
 	/**
-	 * SinchanaServer constructor.
-	 * @param localAddress url of the server in [host address]:[port id] format.
+	 * Number of maximum nodes kept in the connection pool. This includes opened, 
+	 * closed and failed connections.
 	 */
-	public SinchanaServer(String localAddress, String routingAlgorithm) throws SinchanaInvalidRoutingAlgorithmException {
-		this.node = new Node(ByteBuffer.wrap(Hash.generateId(localAddress)), localAddress);
-		this.serverIdAsString = ByteArrays.idToReadableString(node.serverId);
-		this.iOHandler = new IOHandler(this);
-		this.messageHandler = new MessageHandler(this);
-		this.connectionPool = new ConnectionPool(this);
-		this.clientHandler = new ClientHandler(this);
-		this.sinchanaServiceStore = new SinchanaServiceStore();
-		if (SinchanaDHT.CHORD.equals(routingAlgorithm)) {
-			this.routingHandler = new ChordTable(this);
-		} else if (SinchanaDHT.TAPESTRY.equals(routingAlgorithm)) {
-			this.routingHandler = new TapestryTable(this);
-		} else if (SinchanaDHT.PASTRY.equals(routingAlgorithm)) {
-			this.routingHandler = new PastryTable(this);
-		} else {
-			throw new SinchanaInvalidRoutingAlgorithmException(SinchanaDHT.ERROR_MSG_INVALID_ROUTING_ALGORITHM);
-		}
-		System.out.println(this.serverIdAsString + " @ " + localAddress + " " + routingAlgorithm);
-	}
-
+	public static final int NODE_POOL_SIZE = 240;
+	/**
+	 * Life time of a message. At each hop, a message's life time is reduced by one.
+	 * When it reaches zero, message is discarded to prevent going on infinite loops.
+	 */
+	public static final int REQUEST_MESSAGE_LIFETIME = 160;
+	/**
+	 * Life time of a join message. At each hop, a message's life time is reduced by one.
+	 * When it reaches zero, message is discarded to prevent going on infinite loops.
+	 */
+	public static final int JOIN_MESSAGE_LIFETIME = 1024;
+	/**
+	 * The size of the input messages buffer.
+	 */
+	public static final int INPUT_MESSAGE_BUFFER_SIZE = 8192;
+	/**
+	 * Number of threads that is used to send out going Thrift messages.
+	 */
+	public static final int NUMBER_OF_OUTPUT_MESSAGE_QUEUE_THREADS = 3;
+	/**
+	 * Time out for optimizing routing table in Seconds. If no update operation is performed 
+	 * within this time out, optimize functions will be called.  
+	 */
+	public static final int ROUTING_OPTIMIZATION_TIME_OUT = 5;
+	/**
+	 * Number of max send tries. If the other node is busy and not accepting the 
+	 * message, it will retry to send it until this limit is exceeded.
+	 */
+	public static final int NUM_OF_MAX_SEND_RETRIES = 3;
+	/**
+	 * Number of max connect tries. If a connection to other node is unable to establish, 
+	 * it will retry to connect it until this limit is exceeded. If the limit is exceeded, 
+	 * the node is considered 'failed'.
+	 */
+	public static final int NUM_OF_MAX_CONNECT_RETRIES = 3;
+	/**
+	 * Time out to re-accept a failed node in Seconds. If a failed node tried to contact this node,
+	 * it will be rejected until this time out is exceeded.
+	 */
+	public static final long FAILED_REACCEPT_TIME_OUT = 120;
+	/**
+	 * Time out to retry the join procedure in Seconds. If the node is not accepted to the ring, 
+	 * it will resend the 'JOIN' message after this time out.
+	 */
+	public static final int JOIN_RETRY_TIME_OUT = 10; //Seconds
+	/**
+	 * Number of maximum join retries. A <code>SinchanaJoinException</code> will be thrown 
+	 * if this limit is exceeded
+	 */
+	public static final int MAX_JOIN_RETRIES = 6;
+	/**
+	 * Default time out for requests in Seconds. If the response for a client request is 
+	 * not received within this time out, <code>SinchanaTimeOutException> will be thrown. 
+	 */
+	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 120;
+	/**
+	 * Test ring separator.
+	 */
+	public static final String TEST_RING_SEPARATOR = " > ";
+	/**
+	 * Chord routing algorithm
+	 */
+	public static final String CHORD = "CHORD";
+	/**
+	 * Tapestry routing algorithm
+	 */
+	public static final String TAPESTRY = "TAPESTRY";
+	/**
+	 * Pastry routing algorithm
+	 */
+	public static final String PASTRY = "PASTRY";
+	/**
+	 * Error message to indicate a join failure because of the maximum number of join retries is exceeded.
+	 */
+	public static final String ERROR_MSG_JOIN_FAILED = "Join failed. Maximum number of retries exceeded!";
+	/**
+	 * Error message to indicate the service which is required is not found (on service remove).
+	 */
+	public static final String ERROR_MSG_NO_SUCH_SERVICE_FOUND = "No such service found in this server!";
+	/**
+	 * Error message to indicate an invalid address length. The length of an address should be exactly 20 bytes.
+	 */
+	public static final String ERROR_MSG_INVALID_ADDRESS_LENGTH = "Destination address should be exactly 20 byte length.";
+	/**
+	 * Error message to indicate null arguments.
+	 */
+	public static final String ERROR_MSG_NULL_ARGUMENTS = "Arguments cannot be null!";
+	/**
+	 * Error message to indicate initializing with an invalid routing algorithm.
+	 */
+	public static final String ERROR_MSG_INVALID_ROUTING_ALGORITHM = "Invalid routing algorithm! Use '" 
+			+ CHORD + "', '" + PASTRY + "' or '" + TAPESTRY + ".";
+	/**
+	 * Error message to indicate a termination of a message because it's life time is expired. 
+	 */
+	public static final byte[] ERROR_MSG_LIFE_TIME_EXPIRED = "Messaage is terminated as lifetime expired!".getBytes();
+	/**
+	 * Error message to indicate a termination of a message because the maximum number of send retries is exceeded.
+	 */
+	public static final byte[] ERROR_MSG_MAX_SEND_RETRIES_EXCEEDED = "Messaage is terminated as maximum number of retries is exceeded!".getBytes();
+	/**
+	 * Error message to indicate that the response handler for the request is not found.
+	 */
+	public static final byte[] ERROR_MSG_RESPONSE_HANDLER_NOT_FOUND = "Response handler not found".getBytes();
+	/**
+	 * Error message to indicate that the service handler for the service invocation is not found.
+	 */
+	public static final byte[] ERROR_MSG_SERVICE_HANDLER_NOT_FOUND = "Service handler not found".getBytes();
+	/**
+	 * Error message to indicate that the data store handler for the data store operation is not found.
+	 */
+	public static final byte[] ERROR_MSG_DATA_STORE_HANDLER_NOT_FOUND = "Data handler not found".getBytes();
+	/**
+	 * Error message to indicate a join failure because of the join re-acceptance time out is not over.
+	 */
+	public static final byte[] ERROR_MSG_JOIN_REACCEPTANCE = "You have to wait...".getBytes();
+	/**
+	 * Error message to indicate a termination of a request because the time out is exceeded.
+	 */
+	public static final byte[] ERROR_MSG_TIMED_OUT = "Timed out!".getBytes();
+	/**
+	 * Service tag which is used to separate service keys from data keys. This tag will be
+	 * appended to each service key automatically, before publishing the service.
+	 */
+	public static final byte[] SERVICE_TAG = "-@-SINCHANA_SERVICE".getBytes();
+	
 	/**
 	 * Starts the server. Thread is blocked until the Thrift server is ready.
 	 * @throws TTransportException if the Thrift server has encountered a problem while starting on the given address and the port id.
 	 * @throws InterruptedException if the thread is interrupted before the thrift server is ready.
 	 */
-	@Override
-	public void startServer() throws TTransportException, InterruptedException {
-		this.routingHandler.init();
-		System.out.println(this.serverIdAsString + ": Starting on " + this.node.address);
-		this.iOHandler.startServer();
-		System.out.println(this.serverIdAsString + ": Started on " + this.node.address);
-	}
-
+	public abstract void startServer() throws TTransportException, InterruptedException;
 	/**
 	 * Stops the server.
 	 */
-	@Override
-	public void stopServer() {
-		iOHandler.stopServer();
-	}
-
+	public void stopServer();
 	/**
 	 * Returns whether the server is running or not.
 	 * @return <code>true</code> if the Thrift server is serving. <code>false</code> otherwise.
 	 */
-	@Override
-	public boolean isRunning() {
-		return iOHandler.isRunning();
-	}
-
+	public boolean isRunning();
 	/**
 	 * Join the ring by connecting to the Sinchana server in the given address. Thread is blocked until the join is completed.
 	 * @param remoteNodeAddress address of the remote Sinchana server in [host name]:[port id] format. Passing <code>null</code> or
@@ -143,150 +205,44 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws TException if a problem encountered while connecting to the remote server.
 	 * @throws InterruptedException if the thread is interrupted before the join is completed.
 	 */
-	@Override
-	public void join(String remoteNodeAddress) throws TException, InterruptedException {
-		Message msg = new Message(MessageType.JOIN, this.node, SinchanaDHT.JOIN_MESSAGE_LIFETIME);
-		if (remoteNodeAddress != null && !remoteNodeAddress.equals(this.node.address)) {
-			Node remoteNode = new Node(ByteBuffer.wrap(Hash.generateId(remoteNodeAddress)), remoteNodeAddress);
-			msg.setDestination(remoteNode);
-			int joinAttempt = 0;
-			while (!joined) {
-				if (++joinAttempt > SinchanaDHT.MAX_JOIN_RETRIES) {
-					throw new SinchanaJoinException(SinchanaDHT.ERROR_MSG_JOIN_FAILED);
-				}
-				System.out.println(this.serverIdAsString + ": Attempt " + joinAttempt + ": Connecting to " + remoteNodeAddress);
-				this.iOHandler.directSend(msg);
-				joinLock.tryAcquire(SinchanaDHT.JOIN_RETRY_TIME_OUT, TimeUnit.SECONDS);
-			}
-		} else {
-			msg.setStation(this.node);
-			msg.setSuccess(true);
-			messageHandler.queueMessage(msg);
-		}
-	}
-
+	public void join(String remoteNodeAddress) throws TException, InterruptedException;
 	/**
 	 * Initiates the ring as the root node.
 	 */
-	@Override
-	public void join() {
-		Message msg = new Message(MessageType.JOIN, this.node, SinchanaDHT.JOIN_MESSAGE_LIFETIME);
-		msg.setStation(this.node);
-		msg.setSuccess(true);
-		messageHandler.queueMessage(msg);
-	}
-
-	void setJoined(boolean joined, byte[] status) {
-		if (joined) {
-			this.joined = joined;
-			joinLock.release();
-		} else {
-			System.out.println(new String(status));
-		}
-	}
-
+	public void join();
 	/**
 	 * Returns whether this server has joined to a ring or not.
 	 * @return <code>true</code> if the server has joined a ring. <code>false</code> otherwise.
 	 */
-	@Override
-	public boolean isJoined() {
-		return joined;
-	}
-
+	public boolean isJoined();
 	/**
 	 * Prints routing table information in console.
 	 */
-	@Override
-	public void printTableInfo() {
-		routingHandler.printInfo();
-	}
-
-	/**
-	 * 
-	 * @param src
-	 */
-	@Override
-	public void registerSinchanaRequestCallback(SinchanaRequestCallback src) {
-		this.sinchanaRequestCallback = src;
-	}
-
-	/**
-	 * 
-	 * @param sinchanaTestInterface
-	 */
-	@Override
-	public void registerSinchanaTestInterface(SinchanaTestInterface sinchanaTestInterface) {
-		this.sinchanaTestInterface = sinchanaTestInterface;
-	}
-
-	/**
-	 * 
-	 * @param sinchanaDataStoreInterface
-	 */
-	@Override
-	public void registerSinchanaStoreInterface(SinchanaDataStoreInterface sinchanaDataStoreInterface) {
-		this.sinchanaDataStoreInterface = sinchanaDataStoreInterface;
-	}
-
-	MessageHandler getMessageHandler() {
-		return messageHandler;
-	}
-
-	public IOHandler getIOHandler() {
-		return iOHandler;
-	}
-
-	RoutingHandler getRoutingHandler() {
-		return routingHandler;
-	}
-
-	public ConnectionPool getConnectionPool() {
-		return connectionPool;
-	}
-
-	ClientHandler getClientHandler() {
-		return clientHandler;
-	}
-
-	SinchanaServiceStore getSinchanaServiceStore() {
-		return sinchanaServiceStore;
-	}
-
-	SinchanaDataStoreInterface getSinchanaDataStoreInterface() {
-		return sinchanaDataStoreInterface;
-	}
-
-	SinchanaTestInterface getSinchanaTestInterface() {
-		return sinchanaTestInterface;
-	}
-
-	SinchanaRequestCallback getSinchanaRequestCallback() {
-		return sinchanaRequestCallback;
-	}
-
-	public Node getNode() {
-		return node;
-	}
-
+	public void printTableInfo();
 	/**
 	 * Returns server id in hex string format.
 	 * @return server id.
 	 */
-	public String getServerIdAsString() {
-		return serverIdAsString;
-	}
-
+	public String getServerIdAsString();
+	/**
+	 * 
+	 * @param sinchanaRequestCallback
+	 */
+	public void registerSinchanaRequestCallback(SinchanaRequestCallback sinchanaRequestCallback);
+	/**
+	 * 
+	 * @param sinchanaTestInterface
+	 */
+	public void registerSinchanaTestInterface(SinchanaTestInterface sinchanaTestInterface);
+	/**
+	 * 
+	 * @param sinchanaDataStoreInterface
+	 */
+	public void registerSinchanaStoreInterface(SinchanaDataStoreInterface sinchanaDataStoreInterface);
 	/**
 	 * Tests the ring. If the ring is completed, it will be printed on console.
 	 */
-	@Override
-	public void testRing() {
-		Message message = new Message(MessageType.TEST_RING, this.node, 1024);
-		message.setStation(this.node);
-		this.getMessageHandler().queueMessage(message);
-	}
-
+	public void testRing();
 	/**
 	 * Sends a synchronous request to the given destination. It will be received by the successor of that destination. 
 	 * The thread is blocked until the response is received or time out occurs. 
@@ -297,15 +253,8 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the response is received.
 	 * @throws SinchanaInvalidArgumentException  If the destination id has a length other than 20 bytes.
 	 */
-	@Override
 	public byte[] sendRequest(byte[] destination, byte[] message) 
-			throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException {
-		if (destination.length != 20) {
-			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_INVALID_ADDRESS_LENGTH);
-		}
-		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, -1, null).data;
-	}
-
+			throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException;
 	/**
 	 * Sends a synchronous request to the given destination. It will be received by the successor of that destination. 
 	 * The thread is blocked until the response is received or time out occurs. 
@@ -318,15 +267,8 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the response is received.
 	 * @throws SinchanaInvalidArgumentException If the destination id has a length other than 20 bytes.
 	 */
-	@Override
 	public byte[] sendRequest(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit) 
-			throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException {
-		if (destination.length != 20) {
-			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_INVALID_ADDRESS_LENGTH);
-		}
-		return this.clientHandler.addRequest(destination, message, MessageType.REQUEST, timeOut, timeUnit).data;
-	}
-
+			throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException;
 	/**
 	 * Sends an asynchronous request to the given destination. It will be received by the successor of that destination.
 	 * The thread is blocked until the request is queued to send.
@@ -336,15 +278,8 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the request is queued.
 	 * @throws SinchanaInvalidArgumentException If the destination id has a length other than 20 bytes.
 	 */
-	@Override
 	public void sendRequest(byte[] destination, byte[] message, SinchanaResponseCallback callBack) 
-			throws InterruptedException, SinchanaInvalidArgumentException {
-		if (destination.length != 20) {
-			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_INVALID_ADDRESS_LENGTH);
-		}
-		this.clientHandler.addRequest(destination, message, MessageType.REQUEST, callBack);
-	}
-
+			throws InterruptedException, SinchanaInvalidArgumentException;
 	/**
 	 * Stores a given key-value pair synchronously. The thread is blocked until the task is completed.
 	 * @param key Data key
@@ -353,11 +288,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
-	public boolean storeData(byte[] key, byte[] data) throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, -1, null).success;
-	}
-
+	public boolean storeData(byte[] key, byte[] data) throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Stores a given key-value pair synchronously. The thread is blocked until the task is completed.
 	 * @param key Data key
@@ -368,12 +299,8 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
 	public boolean storeData(byte[] key, byte[] data, long timeOut, TimeUnit timeUnit) 
-			throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, timeOut, timeUnit).success;
-	}
-
+			throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Stores a given key-value pair asynchronously. The thread is blocked until the task is queued to send.
 	 * @param key Data key
@@ -381,11 +308,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @param callBack SinchanaDataCallback to handle responses. Pass <code>null</code> if no response is expected.
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 */
-	@Override
-	public void storeData(byte[] key, byte[] data, SinchanaDataCallback callBack) throws InterruptedException {
-		this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, callBack);
-	}
-
+	public void storeData(byte[] key, byte[] data, SinchanaDataCallback callBack) throws InterruptedException;
 	/**
 	 * Retrieves value for a given key synchronously. The thread is blocked until the task is completed.
 	 * @param key Data key to retrieve
@@ -393,11 +316,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
-	public byte[] getData(byte[] key) throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, -1, null).data;
-	}
-
+	public byte[] getData(byte[] key) throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Retrieves value for a given key synchronously. The thread is blocked until the task is completed.
 	 * @param key Data key to retrieve
@@ -407,22 +326,14 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
-	public byte[] getData(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(key, null, MessageType.GET_DATA, timeOut, timeUnit).data;
-	}
-
+	public byte[] getData(byte[] key, long timeOut, TimeUnit timeUnit) throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Retrieves value for a given key asynchronously. The thread is blocked until the task is queued.
 	 * @param key Data key to retrieve
 	 * @param callBack SinchanaDataCallback to handle responses. Pass <code>null</code> if no response is expected.
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 */
-	@Override
-	public void getData(byte[] key, SinchanaDataCallback callBack) throws InterruptedException {
-		this.clientHandler.addRequest(key, null, MessageType.GET_DATA, callBack);
-	}
-
+	public void getData(byte[] key, SinchanaDataCallback callBack) throws InterruptedException;
 	/**
 	 * Deletes value for a given key synchronously. The thread is blocked until the task is completed.
 	 * @param key Data key to delete
@@ -430,11 +341,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
-	public boolean deleteData(byte[] key) throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, -1, null).success;
-	}
-
+	public boolean deleteData(byte[] key) throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Deletes value for a given key synchronously. The thread is blocked until the task is completed.
 	 * @param key Data key to delete
@@ -444,23 +351,15 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
 	public boolean deleteData(byte[] key, long timeOut, TimeUnit timeUnit) 
-			throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, timeOut, timeUnit).success;
-	}
-
+			throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Deletes value for a given key asynchronously. The thread is blocked until the task is queued.
 	 * @param key Data key to delete
 	 * @param callBack SinchanaDataCallback to handle responses. Pass <code>null</code> if no response is expected.
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 */
-	@Override
-	public void deleteData(byte[] key, SinchanaDataCallback callBack) throws InterruptedException {
-		this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, callBack);
-	}
-
+	public void deleteData(byte[] key, SinchanaDataCallback callBack) throws InterruptedException;
 	/**
 	 * Invokes a service given by the references synchronously. The thread is blocked until the task is completed.
 	 * @param reference 
@@ -469,11 +368,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
-	public byte[] invokeService(byte[] reference, byte[] data) throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, -1, null).data;
-	}
-
+	public byte[] invokeService(byte[] reference, byte[] data) throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Invokes a service given by the references synchronously. The thread is blocked until the task is completed.
 	 * @param reference 
@@ -484,12 +379,8 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
 	public byte[] invokeService(byte[] reference, byte[] data, long timeOut, TimeUnit timeUnit) 
-			throws InterruptedException, SinchanaTimeOutException {
-		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, timeOut, timeUnit).data;
-	}
-
+			throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Invokes a service given by the references synchronously. The thread is blocked until the task is queued.
 	 * @param reference 
@@ -497,11 +388,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @param callBack SinchanaServiceCallback to handle responses. Pass <code>null</code> if no response is expected.
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 */
-	@Override
-	public void invokeService(byte[] reference, byte[] data, SinchanaServiceCallback callBack) throws InterruptedException {
-		this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, callBack);
-	}
-
+	public void invokeService(byte[] reference, byte[] data, SinchanaServiceCallback callBack) throws InterruptedException;
 	/**
 	 * Discovers the reference for a given service key synchronously. The thread is blocked until the task is completed.
 	 * @param key Service key to discover
@@ -509,12 +396,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
-	public byte[] discoverService(byte[] key) throws InterruptedException, SinchanaTimeOutException {
-		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
-		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, -1, null).data;
-	}
-
+	public byte[] discoverService(byte[] key) throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Discovers the reference for a given service key synchronously. The thread is blocked until the task is completed.
 	 * @param key Service key to discover
@@ -524,25 +406,15 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is completed.
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
-	@Override
 	public byte[] discoverService(byte[] key, long timeOut, TimeUnit timeUnit) 
-			throws InterruptedException, SinchanaTimeOutException {
-		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
-		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, timeOut, timeUnit).data;
-	}
-
+			throws InterruptedException, SinchanaTimeOutException;
 	/**
 	 * Discovers the reference for a given service key asynchronously. The thread is blocked until the task is queued.
 	 * @param key Service key to discover
 	 * @param callBack SinchanaServiceCallback to handle responses. Pass <code>null</code> if no response is expected.
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 */
-	@Override
-	public void discoverService(byte[] key, SinchanaServiceCallback callBack) throws InterruptedException {
-		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
-		this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, callBack);
-	}
-
+	public void discoverService(byte[] key, SinchanaServiceCallback callBack) throws InterruptedException;
 	/**
 	 * Publish the service asynchronously. The thread is blocked until the task is queued to send.
 	 * @param key service key
@@ -550,35 +422,14 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 * @throws SinchanaInvalidArgumentException If the SinchanaServiceInterface is null
 	 */
-	@Override
 	public void publishService(byte[] key, SinchanaServiceInterface sinchanaServiceInterface) 
-			throws InterruptedException, SinchanaInvalidArgumentException {
-		if (sinchanaServiceInterface == null) {
-			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_NULL_ARGUMENTS);
-		}
-		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
-		byte[] formattedReference = ByteArrays.arrayConcat(this.node.serverId.array(), formattedKey);
-		boolean success = this.sinchanaServiceStore.publishService(formattedKey, sinchanaServiceInterface);
-		if (success) {
-			this.clientHandler.addRequest(formattedKey, formattedReference, MessageType.STORE_DATA, sinchanaServiceInterface);
-		} else {
-			sinchanaServiceInterface.isPublished(key, false);
-		}
-	}
-
+			throws InterruptedException, SinchanaInvalidArgumentException;
 	/**
 	 * Removes the service asynchronously. The thread is blocked until the task is queued to send.
 	 * @param key service key
 	 * @throws InterruptedException If the thread is interrupted before the task is queued.
 	 * @throws SinchanaInvalidArgumentException If the SinchanaServiceInterface is null
 	 */
-	@Override
-	public void removeService(byte[] key) throws InterruptedException, SinchanaInvalidArgumentException {
-		SinchanaServiceInterface ssi = this.sinchanaServiceStore.get(key);
-		if (ssi == null) {
-			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_NO_SUCH_SERVICE_FOUND);
-		}
-		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
-		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi);
-	}
+	public void removeService(byte[] key) throws InterruptedException, SinchanaInvalidArgumentException;
+	
 }

@@ -5,6 +5,11 @@ struct Node {
   2: string address
 }
 
+struct Response {
+  1: required bool success,
+  2: optional binary data
+}
+
 enum MessageType {
     STORE_DATA,
     DELETE_DATA,
@@ -44,11 +49,11 @@ struct Message {
 
 service DHTServer {
     i32 transfer(1: Message message);
-    binary discoverService(1: binary serviceKey);
-    binary getService(1: binary reference, 2: binary data);
-    bool publishData(1: binary dataKey, 2: binary data);
-    bool removeData(1: binary dataKey);
-    binary getData(1: binary dataKey);
-    binary request(1: binary destination, 2: binary message);
+    Response discoverService(1: binary serviceKey);
+    Response invokeService(1: binary reference, 2: binary data);
+    Response publishData(1: binary dataKey, 2: binary data);
+    Response removeData(1: binary dataKey);
+    Response getData(1: binary dataKey);
+    Response sendRequest(1: binary destination, 2: binary message);
     void ping();
 }

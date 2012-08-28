@@ -14,7 +14,7 @@ import sinchana.SinchanaRequestCallback;
 import sinchana.SinchanaTestInterface;
 import sinchana.util.logging.Logger;
 import java.util.concurrent.Semaphore;
-import sinchana.CONFIGURATIONS;
+import sinchana.SinchanaDHT;
 import sinchana.SinchanaResponseCallback;
 import sinchana.util.tools.Hash;
 
@@ -45,7 +45,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			remoteNodeAddress = address + ":8000";
 			this.testId = testId;
 			this.testerController = tc;
-			server = new SinchanaServer(address + ":" + portId, CONFIGURATIONS.CHORD);
+			server = new SinchanaServer(address + ":" + portId, SinchanaDHT.CHORD);
 			server.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
 
 				@Override
@@ -262,7 +262,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	public synchronized void setMessageQueueSize(int size) {
 		tempMaxInputMessageQueueSize = Math.max(size, tempMaxInputMessageQueueSize);
 		maxInputMessageQueueSize = tempMaxInputMessageQueueSize;
-		inputMessageQueueFull = size >= CONFIGURATIONS.INPUT_MESSAGE_BUFFER_SIZE - 1;
+		inputMessageQueueFull = size >= SinchanaDHT.INPUT_MESSAGE_BUFFER_SIZE - 1;
 		avarageInputMessageQueueSize += size;
 		inputMessageQueueTimesCount++;
 	}

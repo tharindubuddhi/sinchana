@@ -1,7 +1,36 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+/************************************************************************************
+
+ * Sinchana Distributed Hash table 
+
+ * Copyright (C) 2012 Sinchana DHT - Department of Computer Science &               
+ * Engineering, University of Moratuwa, Sri Lanka. Permission is hereby 
+ * granted, free of charge, to any person obtaining a copy of this 
+ * software and associated documentation files of Sinchana DHT, to deal 
+ * in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+
+ * Neither the name of University of Moratuwa, Department of Computer Science 
+ * & Engineering nor the names of its contributors may be used to endorse or 
+ * promote products derived from this software without specific prior written 
+ * permission.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ * SOFTWARE.                                                                    
+ ************************************************************************************/
 package sinchana.routing.pastry;
 
 import java.math.BigInteger;
@@ -15,7 +44,7 @@ import sinchana.thrift.Node;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import sinchana.CONFIGURATIONS;
+import sinchana.SinchanaDHT;
 import sinchana.util.tools.ByteArrays;
 
 /**
@@ -36,7 +65,7 @@ public class PastryTable implements RoutingHandler {
 	private final byte[] serverId;
 	private final BigInteger serverIdAsBigInt;
 	private final Node thisNode;
-	private final Node[][][] fingerTable = new Node[TABLE_SIZE][TABLE_WIDTH][NUMBER_OF_TABLE_ENTRIES];
+	private final Node[][][] routingTable = new Node[TABLE_SIZE][TABLE_WIDTH][NUMBER_OF_TABLE_ENTRIES];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
 
@@ -49,7 +78,7 @@ public class PastryTable implements RoutingHandler {
 
 			@Override
 			public void run() {
-				if (++timeOutCount >= CONFIGURATIONS.ROUTING_OPTIMIZATION_TIME_OUT) {
+				if (++timeOutCount >= SinchanaDHT.ROUTING_OPTIMIZATION_TIME_OUT) {
 					timeOutCount = 0;
 					optimize();
 				}
@@ -63,11 +92,11 @@ public class PastryTable implements RoutingHandler {
 	}
 
 	private void initFingerTable() {
-		synchronized (fingerTable) {
+		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
 				for (int j = 0; j < TABLE_WIDTH; j++) {
 					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-						fingerTable[i][j][k] = null;
+						routingTable[i][j][k] = null;
 					}
 				}
 			}
@@ -86,7 +115,7 @@ public class PastryTable implements RoutingHandler {
 
 	@Override
 	public void triggerOptimize() {
-		timeOutCount = CONFIGURATIONS.ROUTING_OPTIMIZATION_TIME_OUT;
+		timeOutCount = SinchanaDHT.ROUTING_OPTIMIZATION_TIME_OUT;
 	}
 
 	private void optimize() {
@@ -130,53 +159,53 @@ public class PastryTable implements RoutingHandler {
 		if (nodeFromLeafSet != null) {
 			return nodeFromLeafSet;
 		}
-		int raw = getRaw(this.serverId, destination);
-		if (raw == -1) {
+		int row = getRow(this.serverId, destination);
+		if (row == -1) {
 			return thisNode;
 		}
-		int column = getColumn(destination, raw);
+		int column = getColumn(destination, row);
 
-		synchronized (fingerTable) {
-			for (Node node : fingerTable[raw][column]) {
+		synchronized (routingTable) {
+			for (Node node : routingTable[row][column]) {
 				if (node != null) {
 					return node;
 				}
 			}
 
-			int tColumn, iRaw, iColumn;
+			int tColumn, iRow, iColumn;
 
-			iRaw = raw;
+			iRow = row;
 			iColumn = column;
-			tColumn = getColumn(this.serverId, raw);
+			tColumn = getColumn(this.serverId, row);
 			boolean traverseDown = column < tColumn;
-			if (raw == 0) {
+			if (row == 0) {
 				traverseDown = false;
 			}
-			if (raw == TABLE_SIZE - 1) {
+			if (row == TABLE_SIZE - 1) {
 				traverseDown = true;
 			}
 
 			while (true) {
-				for (Node node : fingerTable[raw][column]) {
+				for (Node node : routingTable[row][column]) {
 					if (node != null) {
 						return node;
 					}
 				}
 
-				tColumn = getColumn(this.serverId, raw);
+				tColumn = getColumn(this.serverId, row);
 
 				if (traverseDown && tColumn == column) {
-					raw--;
-					traverseDown = raw != 0;
+					row--;
+					traverseDown = row != 0;
 					column = -1;
 				} else if (!traverseDown && column == TABLE_WIDTH - 1) {
-					raw++;
-					traverseDown = raw >= TABLE_SIZE - 1;
-					column = getColumn(this.serverId, raw);
+					row++;
+					traverseDown = row >= TABLE_SIZE - 1;
+					column = getColumn(this.serverId, row);
 				}
 
 				column = (column + 1) % TABLE_WIDTH;
-				if (iRaw == raw && iColumn == column) {
+				if (iRow == row && iColumn == column) {
 					return thisNode;
 				}
 			}
@@ -186,13 +215,13 @@ public class PastryTable implements RoutingHandler {
 	@Override
 	public boolean isInTheTable(Node nodeToCkeck) {
 		byte[] id = nodeToCkeck.serverId.array();
-		int raw = getRaw(this.serverId, id);
-		int column = getColumn(id, raw);
+		int row = getRow(this.serverId, id);
+		int column = getColumn(id, row);
 		for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
-			if (fingerTable[raw][column][i] == null) {
+			if (routingTable[row][column][i] == null) {
 				break;
 			}
-			if (Arrays.equals(fingerTable[raw][column][i].serverId.array(), id)) {
+			if (Arrays.equals(routingTable[row][column][i].serverId.array(), id)) {
 				return true;
 			}
 		}
@@ -219,12 +248,12 @@ public class PastryTable implements RoutingHandler {
 	public Set<Node> getNeighbourSet() {
 		//initializes an empty thisNode set.
 		Set<Node> neighbourSet = new HashSet<Node>();
-		synchronized (fingerTable) {
+		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
 				for (int j = 0; j < TABLE_WIDTH; j++) {
 					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-						if (fingerTable[i][j][k] != null) {
-							neighbourSet.add(fingerTable[i][j][k]);
+						if (routingTable[i][j][k] != null) {
+							neighbourSet.add(routingTable[i][j][k]);
 						}
 					}
 				}
@@ -326,14 +355,14 @@ public class PastryTable implements RoutingHandler {
 				}
 			}
 		}
-		int raw = getRaw(this.serverId, node.serverId.array());
-		int column = getColumn(node.serverId.array(), raw);
-		synchronized (fingerTable) {
+		int row = getRow(this.serverId, node.serverId.array());
+		int column = getColumn(node.serverId.array(), row);
+		synchronized (routingTable) {
 			for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
-				if (fingerTable[raw][column][i] != null && Arrays.equals(fingerTable[raw][column][i].serverId.array(), node.serverId.array())) {
+				if (routingTable[row][column][i] != null && Arrays.equals(routingTable[row][column][i].serverId.array(), node.serverId.array())) {
 					break;
-				} else if (fingerTable[raw][column][i] == null) {
-					fingerTable[raw][column][i] = node.deepCopy();
+				} else if (routingTable[row][column][i] == null) {
+					routingTable[row][column][i] = node.deepCopy();
 					updatedTable = true;
 					break;
 				}
@@ -377,7 +406,7 @@ public class PastryTable implements RoutingHandler {
 		return ZERO;
 	}
 
-	private int getRaw(byte[] id, byte[] newId) {
+	private int getRow(byte[] id, byte[] newId) {
 		int x1, x2;
 		for (int i = 0; i < 20; i++) {
 			x1 = id[i];
@@ -391,9 +420,9 @@ public class PastryTable implements RoutingHandler {
 		return -1;
 	}
 
-	private int getColumn(byte[] id, int raw) {
-		int val = (id[20 - (raw * BASE_POWER / 8) - 1] + 256) % 256;
-		val = (int) (val / Math.pow(TABLE_WIDTH, raw % (8 / BASE_POWER)));
+	private int getColumn(byte[] id, int row) {
+		int val = (id[20 - (row * BASE_POWER / 8) - 1] + 256) % 256;
+		val = (int) (val / Math.pow(TABLE_WIDTH, row % (8 / BASE_POWER)));
 		return val % TABLE_WIDTH;
 	}
 
@@ -402,13 +431,13 @@ public class PastryTable implements RoutingHandler {
 		final String spaces = "****************************************";
 		System.out.println("--------------" + this.server.getServerIdAsString() + "--------------");
 		System.out.println("Routing Table");
-		synchronized (fingerTable) {
+		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
 				for (int j = 0; j < TABLE_WIDTH; j++) {
 					System.out.print(" |");
 					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-						if (fingerTable[i][j][k] != null) {
-							System.out.print(" " + ByteArrays.idToReadableString(fingerTable[i][j][k].serverId));
+						if (routingTable[i][j][k] != null) {
+							System.out.print(" " + ByteArrays.idToReadableString(routingTable[i][j][k].serverId));
 						} else {
 							System.out.print(" " + spaces);
 						}
