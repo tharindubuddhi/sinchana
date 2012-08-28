@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Random;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
-import sinchana.CONFIGURATIONS;
+import sinchana.SinchanaDHT;
 import sinchana.SinchanaRequestCallback;
 import sinchana.SinchanaResponseCallback;
 import sinchana.SinchanaServer;
@@ -46,7 +46,7 @@ public class RequestResponseExample {
 	public static void main(String[] args) throws TTransportException, InterruptedException, TException, SinchanaInvalidRoutingAlgorithmException {
 
 		for (int i = 0; i < servers.length; i++) {
-			servers[i] = new SinchanaServer(localAddress + ":" + (port + i), CONFIGURATIONS.PASTRY);
+			servers[i] = new SinchanaServer(localAddress + ":" + (port + i), SinchanaDHT.PASTRY);
 			servers[i].registerSinchanaRequestCallback(requestCallback);
 			servers[i].startServer();
 			servers[i].join(localAddress + ":" + port);

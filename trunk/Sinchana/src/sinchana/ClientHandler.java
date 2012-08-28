@@ -70,7 +70,7 @@ public class ClientHandler {
 				Collection<ClientData> values = clientsMap.values();
 				long currentTimeMillis = System.currentTimeMillis();
 				for (ClientData cd : values) {
-					if (cd.time + CONFIGURATIONS.ASYNCHRONOUS_REQUEST_TIME_OUT * 1000 < currentTimeMillis) {
+					if (cd.time + SinchanaDHT.ASYNCHRONOUS_REQUEST_TIME_OUT * 1000 < currentTimeMillis) {
 						ClientData clientData = clientsMap.remove(cd.key);
 						if (clientData != null) {
 							clientData.resolved = false;
@@ -78,7 +78,7 @@ public class ClientHandler {
 								clientData.success = false;
 								clientData.lock.release();
 							} else {
-								clientData.sinchanaCallBackHandler.error(CONFIGURATIONS.ERROR_MSG_TIMED_OUT);
+								clientData.sinchanaCallBackHandler.error(SinchanaDHT.ERROR_MSG_TIMED_OUT);
 							}
 						}
 					}
@@ -99,7 +99,7 @@ public class ClientHandler {
 						clientData.lock.release();
 					} else {
 						((SinchanaServiceCallback) clientData.sinchanaCallBackHandler).serviceResponse(
-								Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
+								Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 								message.isSuccess(), message.getData());
 					}
 					break;
@@ -114,7 +114,7 @@ public class ClientHandler {
 							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).response(clientData.dataKey, message.getData());
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceCallback) {
 							((SinchanaServiceCallback) clientData.sinchanaCallBackHandler).serviceFound(
-									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
+									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 									message.isSuccess(), message.getData());
 						}
 					}
@@ -129,7 +129,7 @@ public class ClientHandler {
 							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).isStored(clientData.dataKey, message.success);
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceInterface) {
 							((SinchanaServiceInterface) clientData.sinchanaCallBackHandler).isPublished(
-									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
+									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 									message.success);
 						}
 					}
@@ -146,11 +146,11 @@ public class ClientHandler {
 							if (message.success) {
 								boolean success = this.server.getSinchanaServiceStore().removeService(clientData.dataKey);
 								((SinchanaServiceInterface) clientData.sinchanaCallBackHandler).isRemoved(
-										Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
+										Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 										success);
 							} else {
 								((SinchanaServiceInterface) clientData.sinchanaCallBackHandler).isRemoved(
-										Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - CONFIGURATIONS.SERVICE_TAG.length),
+										Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 										false);
 							}
 						}
@@ -185,7 +185,7 @@ public class ClientHandler {
 	ClientData addRequest(byte[] key, byte[] data, MessageType type, long timeOut, TimeUnit timeUnit) throws SinchanaTimeOutException, InterruptedException {
 		ClientData clientData = null;
 		long requestId = -1;
-		Message message = new Message(type, thisNode, CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
+		Message message = new Message(type, thisNode, SinchanaDHT.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
 			case REQUEST:
 				message.setDestinationId(key);
@@ -237,7 +237,7 @@ public class ClientHandler {
 
 	void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBack scbh) throws InterruptedException {
 		long requestId = -1;
-		Message message = new Message(type, thisNode, CONFIGURATIONS.REQUEST_MESSAGE_LIFETIME);
+		Message message = new Message(type, thisNode, SinchanaDHT.REQUEST_MESSAGE_LIFETIME);
 		switch (message.type) {
 			case REQUEST:
 				message.setDestinationId(key);
