@@ -107,6 +107,7 @@ public class ClientHandler {
 				case RESPONSE_DATA:
 					if (clientData.waiting) {
 						clientData.data = message.getData();
+						clientData.success = message.isSuccess();
 						clientData.lock.release();
 					} else {
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
@@ -121,6 +122,7 @@ public class ClientHandler {
 				case ACKNOWLEDGE_DATA_STORE:
 					if (clientData.waiting) {
 						clientData.data = message.getData();
+						clientData.success = message.isSuccess();
 						clientData.lock.release();
 					} else {
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
@@ -135,6 +137,7 @@ public class ClientHandler {
 				case ACKNOWLEDGE_DATA_REMOVE:
 					if (clientData.waiting) {
 						clientData.data = message.getData();
+						clientData.success = message.isSuccess();
 						clientData.lock.release();
 					} else {
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
@@ -159,6 +162,7 @@ public class ClientHandler {
 					}
 					if (clientData.waiting) {
 						clientData.data = message.getData();
+						clientData.success = message.isSuccess();
 						clientData.lock.release();
 					} else {
 						((SinchanaResponseCallback) clientData.sinchanaCallBackHandler).response(message.getData());
