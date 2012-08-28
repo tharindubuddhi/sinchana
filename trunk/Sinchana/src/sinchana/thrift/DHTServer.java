@@ -35,7 +35,7 @@ public class DHTServer {
 
     public ByteBuffer discoverService(ByteBuffer serviceKey) throws org.apache.thrift.TException;
 
-    public ByteBuffer getService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException;
+    public ByteBuffer invokeService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException;
 
     public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException;
 
@@ -43,7 +43,7 @@ public class DHTServer {
 
     public ByteBuffer getData(ByteBuffer dataKey) throws org.apache.thrift.TException;
 
-    public ByteBuffer request(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException;
+    public ByteBuffer sendRequest(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException;
 
     public void ping() throws org.apache.thrift.TException;
 
@@ -55,7 +55,7 @@ public class DHTServer {
 
     public void discoverService(ByteBuffer serviceKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.discoverService_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void getService(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getService_call> resultHandler) throws org.apache.thrift.TException;
+    public void invokeService(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.invokeService_call> resultHandler) throws org.apache.thrift.TException;
 
     public void publishData(ByteBuffer dataKey, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.publishData_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -63,7 +63,7 @@ public class DHTServer {
 
     public void getData(ByteBuffer dataKey, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.getData_call> resultHandler) throws org.apache.thrift.TException;
 
-    public void request(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.request_call> resultHandler) throws org.apache.thrift.TException;
+    public void sendRequest(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.sendRequest_call> resultHandler) throws org.apache.thrift.TException;
 
     public void ping(org.apache.thrift.async.AsyncMethodCallback<AsyncClient.ping_call> resultHandler) throws org.apache.thrift.TException;
 
@@ -135,28 +135,28 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "discoverService failed: unknown result");
     }
 
-    public ByteBuffer getService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
+    public ByteBuffer invokeService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
     {
-      send_getService(reference, data);
-      return recv_getService();
+      send_invokeService(reference, data);
+      return recv_invokeService();
     }
 
-    public void send_getService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
+    public void send_invokeService(ByteBuffer reference, ByteBuffer data) throws org.apache.thrift.TException
     {
-      getService_args args = new getService_args();
+      invokeService_args args = new invokeService_args();
       args.setReference(reference);
       args.setData(data);
-      sendBase("getService", args);
+      sendBase("invokeService", args);
     }
 
-    public ByteBuffer recv_getService() throws org.apache.thrift.TException
+    public ByteBuffer recv_invokeService() throws org.apache.thrift.TException
     {
-      getService_result result = new getService_result();
-      receiveBase(result, "getService");
+      invokeService_result result = new invokeService_result();
+      receiveBase(result, "invokeService");
       if (result.isSetSuccess()) {
         return result.success;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getService failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "invokeService failed: unknown result");
     }
 
     public boolean publishData(ByteBuffer dataKey, ByteBuffer data) throws org.apache.thrift.TException
@@ -229,28 +229,28 @@ public class DHTServer {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getData failed: unknown result");
     }
 
-    public ByteBuffer request(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
+    public ByteBuffer sendRequest(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
     {
-      send_request(destination, message);
-      return recv_request();
+      send_sendRequest(destination, message);
+      return recv_sendRequest();
     }
 
-    public void send_request(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
+    public void send_sendRequest(ByteBuffer destination, ByteBuffer message) throws org.apache.thrift.TException
     {
-      request_args args = new request_args();
+      sendRequest_args args = new sendRequest_args();
       args.setDestination(destination);
       args.setMessage(message);
-      sendBase("request", args);
+      sendBase("sendRequest", args);
     }
 
-    public ByteBuffer recv_request() throws org.apache.thrift.TException
+    public ByteBuffer recv_sendRequest() throws org.apache.thrift.TException
     {
-      request_result result = new request_result();
-      receiveBase(result, "request");
+      sendRequest_result result = new sendRequest_result();
+      receiveBase(result, "sendRequest");
       if (result.isSetSuccess()) {
         return result.success;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "request failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "sendRequest failed: unknown result");
     }
 
     public void ping() throws org.apache.thrift.TException
@@ -354,25 +354,25 @@ public class DHTServer {
       }
     }
 
-    public void getService(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<getService_call> resultHandler) throws org.apache.thrift.TException {
+    public void invokeService(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<invokeService_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getService_call method_call = new getService_call(reference, data, resultHandler, this, ___protocolFactory, ___transport);
+      invokeService_call method_call = new invokeService_call(reference, data, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class getService_call extends org.apache.thrift.async.TAsyncMethodCall {
+    public static class invokeService_call extends org.apache.thrift.async.TAsyncMethodCall {
       private ByteBuffer reference;
       private ByteBuffer data;
-      public getService_call(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<getService_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public invokeService_call(ByteBuffer reference, ByteBuffer data, org.apache.thrift.async.AsyncMethodCallback<invokeService_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.reference = reference;
         this.data = data;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getService", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        getService_args args = new getService_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("invokeService", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        invokeService_args args = new invokeService_args();
         args.setReference(reference);
         args.setData(data);
         args.write(prot);
@@ -385,7 +385,7 @@ public class DHTServer {
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_getService();
+        return (new Client(prot)).recv_invokeService();
       }
     }
 
@@ -488,25 +488,25 @@ public class DHTServer {
       }
     }
 
-    public void request(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<request_call> resultHandler) throws org.apache.thrift.TException {
+    public void sendRequest(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<sendRequest_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      request_call method_call = new request_call(destination, message, resultHandler, this, ___protocolFactory, ___transport);
+      sendRequest_call method_call = new sendRequest_call(destination, message, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class request_call extends org.apache.thrift.async.TAsyncMethodCall {
+    public static class sendRequest_call extends org.apache.thrift.async.TAsyncMethodCall {
       private ByteBuffer destination;
       private ByteBuffer message;
-      public request_call(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<request_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public sendRequest_call(ByteBuffer destination, ByteBuffer message, org.apache.thrift.async.AsyncMethodCallback<sendRequest_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.destination = destination;
         this.message = message;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("request", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        request_args args = new request_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("sendRequest", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        sendRequest_args args = new sendRequest_args();
         args.setDestination(destination);
         args.setMessage(message);
         args.write(prot);
@@ -519,7 +519,7 @@ public class DHTServer {
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_request();
+        return (new Client(prot)).recv_sendRequest();
       }
     }
 
@@ -567,11 +567,11 @@ public class DHTServer {
     private static <I extends Iface> Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> getProcessMap(Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
       processMap.put("transfer", new transfer());
       processMap.put("discoverService", new discoverService());
-      processMap.put("getService", new getService());
+      processMap.put("invokeService", new invokeService());
       processMap.put("publishData", new publishData());
       processMap.put("removeData", new removeData());
       processMap.put("getData", new getData());
-      processMap.put("request", new request());
+      processMap.put("sendRequest", new sendRequest());
       processMap.put("ping", new ping());
       return processMap;
     }
@@ -609,18 +609,18 @@ public class DHTServer {
       }
     }
 
-    private static class getService<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getService_args> {
-      public getService() {
-        super("getService");
+    private static class invokeService<I extends Iface> extends org.apache.thrift.ProcessFunction<I, invokeService_args> {
+      public invokeService() {
+        super("invokeService");
       }
 
-      protected getService_args getEmptyArgsInstance() {
-        return new getService_args();
+      protected invokeService_args getEmptyArgsInstance() {
+        return new invokeService_args();
       }
 
-      protected getService_result getResult(I iface, getService_args args) throws org.apache.thrift.TException {
-        getService_result result = new getService_result();
-        result.success = iface.getService(args.reference, args.data);
+      protected invokeService_result getResult(I iface, invokeService_args args) throws org.apache.thrift.TException {
+        invokeService_result result = new invokeService_result();
+        result.success = iface.invokeService(args.reference, args.data);
         return result;
       }
     }
@@ -675,18 +675,18 @@ public class DHTServer {
       }
     }
 
-    private static class request<I extends Iface> extends org.apache.thrift.ProcessFunction<I, request_args> {
-      public request() {
-        super("request");
+    private static class sendRequest<I extends Iface> extends org.apache.thrift.ProcessFunction<I, sendRequest_args> {
+      public sendRequest() {
+        super("sendRequest");
       }
 
-      protected request_args getEmptyArgsInstance() {
-        return new request_args();
+      protected sendRequest_args getEmptyArgsInstance() {
+        return new sendRequest_args();
       }
 
-      protected request_result getResult(I iface, request_args args) throws org.apache.thrift.TException {
-        request_result result = new request_result();
-        result.success = iface.request(args.destination, args.message);
+      protected sendRequest_result getResult(I iface, sendRequest_args args) throws org.apache.thrift.TException {
+        sendRequest_result result = new sendRequest_result();
+        result.success = iface.sendRequest(args.destination, args.message);
         return result;
       }
     }
@@ -2142,16 +2142,16 @@ public class DHTServer {
 
   }
 
-  public static class getService_args implements org.apache.thrift.TBase<getService_args, getService_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getService_args");
+  public static class invokeService_args implements org.apache.thrift.TBase<invokeService_args, invokeService_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("invokeService_args");
 
     private static final org.apache.thrift.protocol.TField REFERENCE_FIELD_DESC = new org.apache.thrift.protocol.TField("reference", org.apache.thrift.protocol.TType.STRING, (short)1);
     private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRING, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new getService_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new getService_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new invokeService_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new invokeService_argsTupleSchemeFactory());
     }
 
     public ByteBuffer reference; // required
@@ -2227,13 +2227,13 @@ public class DHTServer {
       tmpMap.put(_Fields.DATA, new org.apache.thrift.meta_data.FieldMetaData("data", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getService_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(invokeService_args.class, metaDataMap);
     }
 
-    public getService_args() {
+    public invokeService_args() {
     }
 
-    public getService_args(
+    public invokeService_args(
       ByteBuffer reference,
       ByteBuffer data)
     {
@@ -2245,7 +2245,7 @@ public class DHTServer {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getService_args(getService_args other) {
+    public invokeService_args(invokeService_args other) {
       if (other.isSetReference()) {
         this.reference = org.apache.thrift.TBaseHelper.copyBinary(other.reference);
 ;
@@ -2256,8 +2256,8 @@ public class DHTServer {
       }
     }
 
-    public getService_args deepCopy() {
-      return new getService_args(this);
+    public invokeService_args deepCopy() {
+      return new invokeService_args(this);
     }
 
     @Override
@@ -2275,12 +2275,12 @@ public class DHTServer {
       return reference;
     }
 
-    public getService_args setReference(byte[] reference) {
+    public invokeService_args setReference(byte[] reference) {
       setReference(reference == null ? (ByteBuffer)null : ByteBuffer.wrap(reference));
       return this;
     }
 
-    public getService_args setReference(ByteBuffer reference) {
+    public invokeService_args setReference(ByteBuffer reference) {
       this.reference = reference;
       return this;
     }
@@ -2309,12 +2309,12 @@ public class DHTServer {
       return data;
     }
 
-    public getService_args setData(byte[] data) {
+    public invokeService_args setData(byte[] data) {
       setData(data == null ? (ByteBuffer)null : ByteBuffer.wrap(data));
       return this;
     }
 
-    public getService_args setData(ByteBuffer data) {
+    public invokeService_args setData(ByteBuffer data) {
       this.data = data;
       return this;
     }
@@ -2386,12 +2386,12 @@ public class DHTServer {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof getService_args)
-        return this.equals((getService_args)that);
+      if (that instanceof invokeService_args)
+        return this.equals((invokeService_args)that);
       return false;
     }
 
-    public boolean equals(getService_args that) {
+    public boolean equals(invokeService_args that) {
       if (that == null)
         return false;
 
@@ -2421,13 +2421,13 @@ public class DHTServer {
       return 0;
     }
 
-    public int compareTo(getService_args other) {
+    public int compareTo(invokeService_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      getService_args typedOther = (getService_args)other;
+      invokeService_args typedOther = (invokeService_args)other;
 
       lastComparison = Boolean.valueOf(isSetReference()).compareTo(typedOther.isSetReference());
       if (lastComparison != 0) {
@@ -2466,7 +2466,7 @@ public class DHTServer {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("getService_args(");
+      StringBuilder sb = new StringBuilder("invokeService_args(");
       boolean first = true;
 
       sb.append("reference:");
@@ -2508,15 +2508,15 @@ public class DHTServer {
       }
     }
 
-    private static class getService_argsStandardSchemeFactory implements SchemeFactory {
-      public getService_argsStandardScheme getScheme() {
-        return new getService_argsStandardScheme();
+    private static class invokeService_argsStandardSchemeFactory implements SchemeFactory {
+      public invokeService_argsStandardScheme getScheme() {
+        return new invokeService_argsStandardScheme();
       }
     }
 
-    private static class getService_argsStandardScheme extends StandardScheme<getService_args> {
+    private static class invokeService_argsStandardScheme extends StandardScheme<invokeService_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getService_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, invokeService_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -2553,7 +2553,7 @@ public class DHTServer {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getService_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, invokeService_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -2573,16 +2573,16 @@ public class DHTServer {
 
     }
 
-    private static class getService_argsTupleSchemeFactory implements SchemeFactory {
-      public getService_argsTupleScheme getScheme() {
-        return new getService_argsTupleScheme();
+    private static class invokeService_argsTupleSchemeFactory implements SchemeFactory {
+      public invokeService_argsTupleScheme getScheme() {
+        return new invokeService_argsTupleScheme();
       }
     }
 
-    private static class getService_argsTupleScheme extends TupleScheme<getService_args> {
+    private static class invokeService_argsTupleScheme extends TupleScheme<invokeService_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getService_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, invokeService_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetReference()) {
@@ -2601,7 +2601,7 @@ public class DHTServer {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getService_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, invokeService_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
@@ -2617,15 +2617,15 @@ public class DHTServer {
 
   }
 
-  public static class getService_result implements org.apache.thrift.TBase<getService_result, getService_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getService_result");
+  public static class invokeService_result implements org.apache.thrift.TBase<invokeService_result, invokeService_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("invokeService_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new getService_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new getService_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new invokeService_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new invokeService_resultTupleSchemeFactory());
     }
 
     public ByteBuffer success; // required
@@ -2695,13 +2695,13 @@ public class DHTServer {
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getService_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(invokeService_result.class, metaDataMap);
     }
 
-    public getService_result() {
+    public invokeService_result() {
     }
 
-    public getService_result(
+    public invokeService_result(
       ByteBuffer success)
     {
       this();
@@ -2711,15 +2711,15 @@ public class DHTServer {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getService_result(getService_result other) {
+    public invokeService_result(invokeService_result other) {
       if (other.isSetSuccess()) {
         this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
 ;
       }
     }
 
-    public getService_result deepCopy() {
-      return new getService_result(this);
+    public invokeService_result deepCopy() {
+      return new invokeService_result(this);
     }
 
     @Override
@@ -2736,12 +2736,12 @@ public class DHTServer {
       return success;
     }
 
-    public getService_result setSuccess(byte[] success) {
+    public invokeService_result setSuccess(byte[] success) {
       setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
       return this;
     }
 
-    public getService_result setSuccess(ByteBuffer success) {
+    public invokeService_result setSuccess(ByteBuffer success) {
       this.success = success;
       return this;
     }
@@ -2800,12 +2800,12 @@ public class DHTServer {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof getService_result)
-        return this.equals((getService_result)that);
+      if (that instanceof invokeService_result)
+        return this.equals((invokeService_result)that);
       return false;
     }
 
-    public boolean equals(getService_result that) {
+    public boolean equals(invokeService_result that) {
       if (that == null)
         return false;
 
@@ -2826,13 +2826,13 @@ public class DHTServer {
       return 0;
     }
 
-    public int compareTo(getService_result other) {
+    public int compareTo(invokeService_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      getService_result typedOther = (getService_result)other;
+      invokeService_result typedOther = (invokeService_result)other;
 
       lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
       if (lastComparison != 0) {
@@ -2861,7 +2861,7 @@ public class DHTServer {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("getService_result(");
+      StringBuilder sb = new StringBuilder("invokeService_result(");
       boolean first = true;
 
       sb.append("success:");
@@ -2895,15 +2895,15 @@ public class DHTServer {
       }
     }
 
-    private static class getService_resultStandardSchemeFactory implements SchemeFactory {
-      public getService_resultStandardScheme getScheme() {
-        return new getService_resultStandardScheme();
+    private static class invokeService_resultStandardSchemeFactory implements SchemeFactory {
+      public invokeService_resultStandardScheme getScheme() {
+        return new invokeService_resultStandardScheme();
       }
     }
 
-    private static class getService_resultStandardScheme extends StandardScheme<getService_result> {
+    private static class invokeService_resultStandardScheme extends StandardScheme<invokeService_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getService_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, invokeService_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -2932,7 +2932,7 @@ public class DHTServer {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getService_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, invokeService_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -2947,16 +2947,16 @@ public class DHTServer {
 
     }
 
-    private static class getService_resultTupleSchemeFactory implements SchemeFactory {
-      public getService_resultTupleScheme getScheme() {
-        return new getService_resultTupleScheme();
+    private static class invokeService_resultTupleSchemeFactory implements SchemeFactory {
+      public invokeService_resultTupleScheme getScheme() {
+        return new invokeService_resultTupleScheme();
       }
     }
 
-    private static class getService_resultTupleScheme extends TupleScheme<getService_result> {
+    private static class invokeService_resultTupleScheme extends TupleScheme<invokeService_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getService_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, invokeService_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetSuccess()) {
@@ -2969,7 +2969,7 @@ public class DHTServer {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getService_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, invokeService_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
@@ -5248,16 +5248,16 @@ public class DHTServer {
 
   }
 
-  public static class request_args implements org.apache.thrift.TBase<request_args, request_args._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("request_args");
+  public static class sendRequest_args implements org.apache.thrift.TBase<sendRequest_args, sendRequest_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("sendRequest_args");
 
     private static final org.apache.thrift.protocol.TField DESTINATION_FIELD_DESC = new org.apache.thrift.protocol.TField("destination", org.apache.thrift.protocol.TType.STRING, (short)1);
     private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("message", org.apache.thrift.protocol.TType.STRING, (short)2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new request_argsStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new request_argsTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new sendRequest_argsStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new sendRequest_argsTupleSchemeFactory());
     }
 
     public ByteBuffer destination; // required
@@ -5333,13 +5333,13 @@ public class DHTServer {
       tmpMap.put(_Fields.MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(request_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(sendRequest_args.class, metaDataMap);
     }
 
-    public request_args() {
+    public sendRequest_args() {
     }
 
-    public request_args(
+    public sendRequest_args(
       ByteBuffer destination,
       ByteBuffer message)
     {
@@ -5351,7 +5351,7 @@ public class DHTServer {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public request_args(request_args other) {
+    public sendRequest_args(sendRequest_args other) {
       if (other.isSetDestination()) {
         this.destination = org.apache.thrift.TBaseHelper.copyBinary(other.destination);
 ;
@@ -5362,8 +5362,8 @@ public class DHTServer {
       }
     }
 
-    public request_args deepCopy() {
-      return new request_args(this);
+    public sendRequest_args deepCopy() {
+      return new sendRequest_args(this);
     }
 
     @Override
@@ -5381,12 +5381,12 @@ public class DHTServer {
       return destination;
     }
 
-    public request_args setDestination(byte[] destination) {
+    public sendRequest_args setDestination(byte[] destination) {
       setDestination(destination == null ? (ByteBuffer)null : ByteBuffer.wrap(destination));
       return this;
     }
 
-    public request_args setDestination(ByteBuffer destination) {
+    public sendRequest_args setDestination(ByteBuffer destination) {
       this.destination = destination;
       return this;
     }
@@ -5415,12 +5415,12 @@ public class DHTServer {
       return message;
     }
 
-    public request_args setMessage(byte[] message) {
+    public sendRequest_args setMessage(byte[] message) {
       setMessage(message == null ? (ByteBuffer)null : ByteBuffer.wrap(message));
       return this;
     }
 
-    public request_args setMessage(ByteBuffer message) {
+    public sendRequest_args setMessage(ByteBuffer message) {
       this.message = message;
       return this;
     }
@@ -5492,12 +5492,12 @@ public class DHTServer {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof request_args)
-        return this.equals((request_args)that);
+      if (that instanceof sendRequest_args)
+        return this.equals((sendRequest_args)that);
       return false;
     }
 
-    public boolean equals(request_args that) {
+    public boolean equals(sendRequest_args that) {
       if (that == null)
         return false;
 
@@ -5527,13 +5527,13 @@ public class DHTServer {
       return 0;
     }
 
-    public int compareTo(request_args other) {
+    public int compareTo(sendRequest_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      request_args typedOther = (request_args)other;
+      sendRequest_args typedOther = (sendRequest_args)other;
 
       lastComparison = Boolean.valueOf(isSetDestination()).compareTo(typedOther.isSetDestination());
       if (lastComparison != 0) {
@@ -5572,7 +5572,7 @@ public class DHTServer {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("request_args(");
+      StringBuilder sb = new StringBuilder("sendRequest_args(");
       boolean first = true;
 
       sb.append("destination:");
@@ -5614,15 +5614,15 @@ public class DHTServer {
       }
     }
 
-    private static class request_argsStandardSchemeFactory implements SchemeFactory {
-      public request_argsStandardScheme getScheme() {
-        return new request_argsStandardScheme();
+    private static class sendRequest_argsStandardSchemeFactory implements SchemeFactory {
+      public sendRequest_argsStandardScheme getScheme() {
+        return new sendRequest_argsStandardScheme();
       }
     }
 
-    private static class request_argsStandardScheme extends StandardScheme<request_args> {
+    private static class sendRequest_argsStandardScheme extends StandardScheme<sendRequest_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, request_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, sendRequest_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -5659,7 +5659,7 @@ public class DHTServer {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, request_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, sendRequest_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -5679,16 +5679,16 @@ public class DHTServer {
 
     }
 
-    private static class request_argsTupleSchemeFactory implements SchemeFactory {
-      public request_argsTupleScheme getScheme() {
-        return new request_argsTupleScheme();
+    private static class sendRequest_argsTupleSchemeFactory implements SchemeFactory {
+      public sendRequest_argsTupleScheme getScheme() {
+        return new sendRequest_argsTupleScheme();
       }
     }
 
-    private static class request_argsTupleScheme extends TupleScheme<request_args> {
+    private static class sendRequest_argsTupleScheme extends TupleScheme<sendRequest_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, request_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, sendRequest_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetDestination()) {
@@ -5707,7 +5707,7 @@ public class DHTServer {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, request_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, sendRequest_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
@@ -5723,15 +5723,15 @@ public class DHTServer {
 
   }
 
-  public static class request_result implements org.apache.thrift.TBase<request_result, request_result._Fields>, java.io.Serializable, Cloneable   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("request_result");
+  public static class sendRequest_result implements org.apache.thrift.TBase<sendRequest_result, sendRequest_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("sendRequest_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRING, (short)0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
-      schemes.put(StandardScheme.class, new request_resultStandardSchemeFactory());
-      schemes.put(TupleScheme.class, new request_resultTupleSchemeFactory());
+      schemes.put(StandardScheme.class, new sendRequest_resultStandardSchemeFactory());
+      schemes.put(TupleScheme.class, new sendRequest_resultTupleSchemeFactory());
     }
 
     public ByteBuffer success; // required
@@ -5801,13 +5801,13 @@ public class DHTServer {
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING          , true)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(request_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(sendRequest_result.class, metaDataMap);
     }
 
-    public request_result() {
+    public sendRequest_result() {
     }
 
-    public request_result(
+    public sendRequest_result(
       ByteBuffer success)
     {
       this();
@@ -5817,15 +5817,15 @@ public class DHTServer {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public request_result(request_result other) {
+    public sendRequest_result(sendRequest_result other) {
       if (other.isSetSuccess()) {
         this.success = org.apache.thrift.TBaseHelper.copyBinary(other.success);
 ;
       }
     }
 
-    public request_result deepCopy() {
-      return new request_result(this);
+    public sendRequest_result deepCopy() {
+      return new sendRequest_result(this);
     }
 
     @Override
@@ -5842,12 +5842,12 @@ public class DHTServer {
       return success;
     }
 
-    public request_result setSuccess(byte[] success) {
+    public sendRequest_result setSuccess(byte[] success) {
       setSuccess(success == null ? (ByteBuffer)null : ByteBuffer.wrap(success));
       return this;
     }
 
-    public request_result setSuccess(ByteBuffer success) {
+    public sendRequest_result setSuccess(ByteBuffer success) {
       this.success = success;
       return this;
     }
@@ -5906,12 +5906,12 @@ public class DHTServer {
     public boolean equals(Object that) {
       if (that == null)
         return false;
-      if (that instanceof request_result)
-        return this.equals((request_result)that);
+      if (that instanceof sendRequest_result)
+        return this.equals((sendRequest_result)that);
       return false;
     }
 
-    public boolean equals(request_result that) {
+    public boolean equals(sendRequest_result that) {
       if (that == null)
         return false;
 
@@ -5932,13 +5932,13 @@ public class DHTServer {
       return 0;
     }
 
-    public int compareTo(request_result other) {
+    public int compareTo(sendRequest_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
 
       int lastComparison = 0;
-      request_result typedOther = (request_result)other;
+      sendRequest_result typedOther = (sendRequest_result)other;
 
       lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
       if (lastComparison != 0) {
@@ -5967,7 +5967,7 @@ public class DHTServer {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("request_result(");
+      StringBuilder sb = new StringBuilder("sendRequest_result(");
       boolean first = true;
 
       sb.append("success:");
@@ -6001,15 +6001,15 @@ public class DHTServer {
       }
     }
 
-    private static class request_resultStandardSchemeFactory implements SchemeFactory {
-      public request_resultStandardScheme getScheme() {
-        return new request_resultStandardScheme();
+    private static class sendRequest_resultStandardSchemeFactory implements SchemeFactory {
+      public sendRequest_resultStandardScheme getScheme() {
+        return new sendRequest_resultStandardScheme();
       }
     }
 
-    private static class request_resultStandardScheme extends StandardScheme<request_result> {
+    private static class sendRequest_resultStandardScheme extends StandardScheme<sendRequest_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, request_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, sendRequest_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -6038,7 +6038,7 @@ public class DHTServer {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, request_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, sendRequest_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -6053,16 +6053,16 @@ public class DHTServer {
 
     }
 
-    private static class request_resultTupleSchemeFactory implements SchemeFactory {
-      public request_resultTupleScheme getScheme() {
-        return new request_resultTupleScheme();
+    private static class sendRequest_resultTupleSchemeFactory implements SchemeFactory {
+      public sendRequest_resultTupleScheme getScheme() {
+        return new sendRequest_resultTupleScheme();
       }
     }
 
-    private static class request_resultTupleScheme extends TupleScheme<request_result> {
+    private static class sendRequest_resultTupleScheme extends TupleScheme<sendRequest_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, request_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, sendRequest_result struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetSuccess()) {
@@ -6075,7 +6075,7 @@ public class DHTServer {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, request_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, sendRequest_result struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
