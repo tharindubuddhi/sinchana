@@ -1,10 +1,38 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package sinchana.test;
+/************************************************************************************
 
-import sinchana.test.examples.HelloService;
+ * Sinchana Distributed Hash table 
+
+ * Copyright (C) 2012 Sinchana DHT - Department of Computer Science &               
+ * Engineering, University of Moratuwa, Sri Lanka. Permission is hereby 
+ * granted, free of charge, to any person obtaining a copy of this 
+ * software and associated documentation files of Sinchana DHT, to deal 
+ * in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+
+ * Neither the name of University of Moratuwa, Department of Computer Science 
+ * & Engineering nor the names of its contributors may be used to endorse or 
+ * promote products derived from this software without specific prior written 
+ * permission.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ * SOFTWARE.                                                                    
+ ************************************************************************************/
+package sinchana.test.examples.service;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.thrift.TException;
@@ -17,31 +45,34 @@ import sinchana.service.SinchanaServiceCallback;
 import sinchana.util.tools.ByteArrays;
 
 /**
- *
- * @author Hiru
+ *This class is to illustrate example of publishing and retrieving services with
+ * the Sinchana DHT.
+ * @author Hirantha Subasinghe
  */
-public class ServiceTestServer {
+public class SinchanaServiceExample {
 
 	public static void main(String[] args) throws InterruptedException, TTransportException, TException, SinchanaInvalidRoutingAlgorithmException {
+		/*Starting server one*/
 		final SinchanaDHT sinchanaServer1 = new SinchanaServer("127.0.0.1:9227", SinchanaDHT.PASTRY);
 		sinchanaServer1.startServer();
 		sinchanaServer1.join(null);
-		System.out.println("S1: " + sinchanaServer1.getServerIdAsString() + " joined the ring");
+		System.out.println("Server 1: " + sinchanaServer1.getServerIdAsString() + " joined the ring");
 
+		/*Starting server two*/
 		final SinchanaDHT sinchanaServer2 = new SinchanaServer("127.0.0.1:9228", SinchanaDHT.PASTRY);
 		sinchanaServer2.startServer();
 		sinchanaServer2.join("127.0.0.1:9227");
-		System.out.println("S2: " + sinchanaServer2.getServerIdAsString() + " joined the ring");
+		System.out.println("Server 2: " + sinchanaServer2.getServerIdAsString() + " joined the ring");
 
+		/*Starting server three*/
 		final SinchanaDHT sinchanaServer3 = new SinchanaServer("127.0.0.1:9229", SinchanaDHT.PASTRY);
 		sinchanaServer3.startServer();
 		sinchanaServer3.join("127.0.0.1:9227");
-		System.out.println("S3: " + sinchanaServer3.getServerIdAsString() + " joined the ring");
+		System.out.println("Server 3: " + sinchanaServer3.getServerIdAsString() + " joined the ring");
 
-		sinchanaServer3.testRing();
 
 		sinchanaServer2.publishService("HelloService".getBytes(), new HelloService());
-		sinchanaServer2.publishService("GreetingsService".getBytes(), new HelloService());
+		sinchanaServer2.publishService("TimeService".getBytes(), new TimeService());
 
 		Thread.sleep(2000);
 		System.out.println("proceed...");
@@ -61,9 +92,9 @@ public class ServiceTestServer {
 			}
 		} catch (SinchanaTimeOutException ste) {
 			System.out.println(ste.getMessage());
-		} 
+		}
 		try {
-			reference = sinchanaServer3.discoverService("GreetingsService".getBytes());
+			reference = sinchanaServer3.discoverService("TimeService".getBytes());
 			if (reference != null) {
 				System.out.println("Found at " + ByteArrays.toReadableString(reference));
 				resp = sinchanaServer3.invokeService(reference, "Sinchana".getBytes());
@@ -77,7 +108,7 @@ public class ServiceTestServer {
 			}
 		} catch (SinchanaTimeOutException ste) {
 			System.out.println(ste.getMessage());
-		} 
+		}
 		SinchanaServiceCallback ssh = new SinchanaServiceCallback() {
 
 			@Override
@@ -87,7 +118,7 @@ public class ServiceTestServer {
 					try {
 						sinchanaServer3.invokeService(data, "Sinchana".getBytes(), this);
 					} catch (InterruptedException ex) {
-						Logger.getLogger(ServiceTestServer.class.getName()).log(Level.SEVERE, null, ex);
+						Logger.getLogger(SinchanaServiceExample.class.getName()).log(Level.SEVERE, null, ex);
 					}
 				} else {
 					System.out.println(new String(key) + " is not found");
