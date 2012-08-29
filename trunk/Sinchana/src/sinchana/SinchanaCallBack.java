@@ -34,10 +34,14 @@
 package sinchana;
 
 /**
- *
- * @author Hiru
+ *This interface is extended by all the callback interfaces.
+ * @author Hirantha Subasinghe
  */
 public interface SinchanaCallBack {
 
+	/**
+	 * This method is called when an error has occurred.
+	 * @param error byte array error.
+	 */
 	public abstract void error(byte[] error);
 }

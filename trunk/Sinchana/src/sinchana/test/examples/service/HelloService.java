@@ -31,43 +31,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
  * SOFTWARE.                                                                    
  ************************************************************************************/
-package sinchana.service;
-
-import sinchana.SinchanaCallBack;
+package sinchana.test.examples.service;
 
 /**
- *This interface is to be implemented by any class that provide services.
+ *This class is an example service implementation.
  * @author Hirantha Subasinghe
  */
-public interface SinchanaServiceInterface extends SinchanaCallBack {
+public class HelloService implements sinchana.service.SinchanaServiceInterface {
 
-	/**
-	 * This method will be called when the service is invoked. The 
-	 * service key and the data to be processed are passed as arguments. Output 
-	 * from data processing is returned as a byte array
-	 * @param serviceKey byte array service key
-	 * @param data byte array data. This can be <code>null</code>.
-	 * @return byte array response to be sent back to the requester. Return 
-	 * <code>null</code> if nothing to be sent back.
-	 */
-	public abstract byte[] process(byte[] serviceKey, byte[] data);
+	@Override
+	public byte[] process(byte[] serviceKey, byte[] data) {
+		return ("Hi " + new String(data) + ", Greetings from " + new String(serviceKey)).getBytes();
+	}
 
-	/**
-	 * This method will be called when service is published. The service key and 
-	 * the state will be passed as arguments.
-	 * @param serviceKey byte array service key.
-	 * @param success <code>true</code> if the service is published successfully, 
-	 * <code>false</code> otherwise.
-	 */
-	public abstract void isPublished(byte[] serviceKey, Boolean success);
+	@Override
+	public void isPublished(byte[] serviceKey, Boolean success) {
+		System.out.println(new String(serviceKey) + " is published");
+	}
 
-	/**
-	 * This method will be called when service is removed. The service key and 
-	 * the state will be passed as arguments.
-	 * @param serviceKey byte array service key.
-	 * @param success <code>true</code> if the service is removed successfully, 
-	 * <code>false</code> otherwise.
-	 */
-	public abstract void isRemoved(byte[] serviceKey, Boolean success);
-    
+	@Override
+	public void isRemoved(byte[] serviceKey, Boolean success) {
+		System.out.println(new String(serviceKey) + " is removed");
+	}
+
+	@Override
+	public void error(byte[] error) {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 }
