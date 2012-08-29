@@ -26,11 +26,26 @@ import sinchana.util.tools.Hash;
  */
 public class TesterController {
 
-	public static final boolean USE_REMOTE_CACHE_SERVER = false;
-	public static final boolean CLEAR_CACHE_SERVER = true;
-	public static final int ROUND_TRIP_TIME = 0;
-	public static final boolean DO_LOG = false;
-	public static final long WATCH_TIME_OUT = 5 * 1000; //milliseconds.
+    /**
+     * 
+     */
+    public static final boolean USE_REMOTE_CACHE_SERVER = false;
+    /**
+     * 
+     */
+    public static final boolean CLEAR_CACHE_SERVER = true;
+    /**
+     * 
+     */
+    public static final int ROUND_TRIP_TIME = 0;
+    /**
+     * 
+     */
+    public static final boolean DO_LOG = false;
+    /**
+     * 
+     */
+    public static final long WATCH_TIME_OUT = 5 * 1000; //milliseconds.
 	private final Map<Integer, Tester> testServers = new HashMap<Integer, Tester>();
 	private final ControllerUI cui = new ControllerUI(this);
 	private final Timer timer = new Timer();
@@ -125,7 +140,8 @@ public class TesterController {
 
 	/**
 	 * 
-	 * @param numOfTesters
+     * @param portRange 
+     * @param numOfTesters
 	 */
 	public void startNodeSet(int portRange, int numOfTesters) {
 		Tester tester;
@@ -154,13 +170,17 @@ public class TesterController {
 
 	/**
 	 * 
-	 * @param numOfAutoTesters
+     * @param numOfTestMessages 
 	 */
 	public void startAutoTest(long numOfTestMessages) {
 		numOfTestMsg = (int) numOfTestMessages;
 	}
 
-	public void test(int numOfTestMessages) {
+    /**
+     * 
+     * @param numOfTestMessages
+     */
+    public void test(int numOfTestMessages) {
 		int amount = numOfTestMessages / testServers.size();
 		Collection<Tester> testers = testServers.values();
 		for (Tester tester : testers) {
@@ -168,7 +188,11 @@ public class TesterController {
 		}
 	}
 
-	public void testWithOneThread(int numOfMsgs) {
+    /**
+     * 
+     * @param numOfMsgs
+     */
+    public void testWithOneThread(int numOfMsgs) {
 		this.totalCountAccumilated = 0;
 		int numOfTestServers = testServers.size();
 		while (numOfMsgs > 0) {
@@ -199,7 +223,11 @@ public class TesterController {
 		}
 	}
 
-	public void printTableInfo(String idText) {
+    /**
+     * 
+     * @param idText
+     */
+    public void printTableInfo(String idText) {
 		BigInteger id = new BigInteger(idText, 16);
 		Collection<Tester> testers = testServers.values();
 		for (Tester tester : testers) {
@@ -220,25 +248,17 @@ public class TesterController {
 		cui.setStatus(completedCount + " of " + numOfTestingNodes + " are stable...");
 	}
 
-	public void storeData(int noOfData) {
+    /**
+     * 
+     * @param noOfData the amount of data want to be stored
+     */
+    public void storeData(int noOfData) {
 
-		dataArray = new String[noOfData];
-		datakeyArray = new String[noOfData];
-
-		for (int i = 0; i < noOfData; i++) {
-			dataArray[i] = DATA_TAG + dataID;
-			datakeyArray[i] = KEY_TAG + dataID;
-			dataID++;
-		}
+		createData(noOfData);
 		dataHandlerobject.startStoreTime = System.currentTimeMillis();
 		dataHandlerobject.storeSuccessCount = 0;
 		dataHandlerobject.storeFailureCount = 0;
         dataHandlerobject.FailureCount = 0;
-//        SinchanaDataStoreImpl dataimpl = (SinchanaDataStoreImpl) testServers.get(storeNodeID).getServer().getSinchanaDataStoreInterface();  
-//        SinchanaDataStoreImpl.storeSuccessCount = 0;
-//        SinchanaDataStoreImpl.lastCount=0;
-//        SinchanaDataStoreImpl.startStoreTime = System.currentTimeMillis();
-//        SinchanaDataStoreImpl.lastTime = System.currentTimeMillis();
 		for (int i = 0; i < dataArray.length; i++) {
 			             
                 try {
@@ -249,17 +269,36 @@ public class TesterController {
 			
 		}
 	}
+    
+    public void createData(int noOfData){
+        dataArray = new String[noOfData];
+		datakeyArray = new String[noOfData];
+
+		for (int i = 0; i < noOfData; i++) {
+			dataArray[i] = DATA_TAG + dataID;
+			datakeyArray[i] = KEY_TAG + dataID;
+			dataID++;
+		}
+    }
 	String[] dataArray = null;
 	String[] datakeyArray = null;
 	int dataID = 1;
 	int storeNodeID = 5, retrieveNodeID = 7;
+    int noOfData = 0;
 	SinchanaDataHandlerImpl dataHandlerobject = new SinchanaDataHandlerImpl();
 	long startRetrieveTime = 0;
 	private static final String DATA_TAG = "data ";
 	private static final String KEY_TAG = "key ";
-    int retrieveTimeOut = 3000;
+    int retrieveTimePeriod = 3000;
     
-	public void retrieveData() {
+    /**
+     * the method retrieve the stored data
+     */
+    public void retrieveData(int noOfData) {
+        this.noOfData = noOfData;
+        if(dataArray==null){
+            createData(this.noOfData);
+        }
 		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
 		dataHandlerobject.retrieveSuccessCount = 0;
 		dataHandlerobject.FailureCount = 0;
@@ -275,6 +314,9 @@ public class TesterController {
 		}
 	}
     
+    /**
+     * 
+     */
     public void retrieveDataContinous() {
        dataHandlerobject.retrieveContinous = true;
        dataHandlerobject.totalCount = 0;
@@ -282,21 +324,25 @@ public class TesterController {
 
             @Override
             public void run() {               
-                retrieveData();
+                retrieveData(noOfData);
             }
-        }, 2000, retrieveTimeOut);
+        }, 2000, retrieveTimePeriod);
        timer.scheduleAtFixedRate(new TimerTask() {
 
             @Override
             public void run() {
                 int diff = dataHandlerobject.totalCount-dataHandlerobject.newCount;
-                System.out.println("retrieve count per "+(retrieveTimeOut/1000)+" seconds: "+diff);   
+                System.out.println("retrieve count per "+(retrieveTimePeriod/1000)+" seconds: "+diff);   
                 dataHandlerobject.newCount = dataHandlerobject.totalCount;
             }
-        }, 0, retrieveTimeOut);
+        }, 0, retrieveTimePeriod);
 	}
 
-	public void removeData(int randomAmount) {
+    /**
+     * 
+     * @param randomAmount
+     */
+    public void removeData(int randomAmount) {
 	}
 
 	/**
@@ -304,7 +350,8 @@ public class TesterController {
 	 * @param nodeIdsString
 	 * @param typesString
 	 * @param classIdsString
-	 * @param locationsString
+     * @param locationsString
+     * @param containTextString  
 	 */
 	public void printLogs(String nodeIdsString, String typesString, String classIdsString,
 			String locationsString, String containTextString) {
@@ -362,12 +409,18 @@ public class TesterController {
 	private long prevTime = System.currentTimeMillis();
 	private long totalCountAccumilated = 0;
 
-	public static synchronized void incTotalCount() {
+    /**
+     * 
+     */
+    public static synchronized void incTotalCount() {
 		totalCount++;
 	}
 	private static int totalCount = 0;
 
-	public static synchronized void incErrorCount() {
+    /**
+     * 
+     */
+    public static synchronized void incErrorCount() {
 		errorCount++;
 	}
 	private static int errorCount = 0;
