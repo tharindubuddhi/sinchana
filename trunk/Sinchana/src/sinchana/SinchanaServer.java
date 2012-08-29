@@ -253,7 +253,7 @@ public class SinchanaServer implements SinchanaDHT{
 		return sinchanaServiceStore;
 	}
 
-	SinchanaDataStoreInterface getSinchanaDataStoreInterface() {
+	public SinchanaDataStoreInterface getSinchanaDataStoreInterface() {
 		return sinchanaDataStoreInterface;
 	}
 

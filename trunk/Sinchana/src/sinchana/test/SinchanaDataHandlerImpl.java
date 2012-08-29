@@ -8,7 +8,7 @@ import sinchana.dataStore.SinchanaDataCallback;
 
 /**
  *
- * @author DELL
+ * @author Tharindu Jayasinghe
  */
 public class SinchanaDataHandlerImpl implements SinchanaDataCallback {
 

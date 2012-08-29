@@ -111,7 +111,7 @@ public interface SinchanaDHT {
 	 * Default time out for requests in Seconds. If the response for a client request is 
 	 * not received within this time out, <code>SinchanaTimeOutException> will be thrown. 
 	 */
-	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 120;
+	public static final long ASYNCHRONOUS_REQUEST_TIME_OUT = 10;
 	/**
 	 * Test ring separator.
 	 */
