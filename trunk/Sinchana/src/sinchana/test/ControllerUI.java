@@ -350,7 +350,7 @@ private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
 }//GEN-LAST:event_storeButtonActionPerformed
 	
 private void retrieveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_retrieveButtonActionPerformed
-	testerController.retrieveData();
+	testerController.retrieveData(Integer.parseInt(dataCountTextField.getText()));
 }//GEN-LAST:event_retrieveButtonActionPerformed
 	
 private void dataRemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataRemoveButtonActionPerformed
