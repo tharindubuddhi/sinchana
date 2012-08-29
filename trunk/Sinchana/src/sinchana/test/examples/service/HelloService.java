@@ -56,6 +56,6 @@ public class HelloService implements sinchana.service.SinchanaServiceInterface {
 
 	@Override
 	public void error(byte[] error) {
-		throw new UnsupportedOperationException("Not supported yet.");
+		System.out.println("Error with Hello Service: " + new String(error));
 	}
 }
