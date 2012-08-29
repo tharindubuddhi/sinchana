@@ -4,8 +4,7 @@
  */
 package sinchana.service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -13,7 +12,7 @@ import java.util.Map;
  */
 public class SinchanaServiceStore {
 
-	private Map<String, SinchanaServiceInterface> services = new HashMap<String, SinchanaServiceInterface>();
+	private ConcurrentHashMap<String, SinchanaServiceInterface> services = new ConcurrentHashMap<String, SinchanaServiceInterface>();
 
 	public SinchanaServiceInterface get(byte[] key) {
 		return services.get(new String(key));

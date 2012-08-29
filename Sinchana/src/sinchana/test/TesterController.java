@@ -9,15 +9,17 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sinchana.dataStore.SinchanaDataStoreImpl;
+import sinchana.SinchanaResponseCallback;
+import sinchana.dataStore.SinchanaDataCallback;
 import sinchana.exceptions.SinchanaInvalidArgumentException;
 import sinchana.exceptions.SinchanaTimeOutException;
+import sinchana.service.SinchanaServiceCallback;
+import sinchana.test.examples.service.HelloService;
 import sinchana.util.tools.Hash;
 
 /**
@@ -54,10 +56,9 @@ public class TesterController {
 	 * 
 	 * @param args
 	 */
-    
 	public static void main(String[] args) {
 //        Uncomment when you have a proxy network and you need to connect to internet
-        
+
 //		Properties props = System.getProperties();
 //        props.put("http.proxyHost", "cache.mrt.ac.lk");
 //        props.put("http.proxyPort", "3128");
@@ -75,7 +76,7 @@ public class TesterController {
 					totalResolves, totalResolvesViaPredecessors,
 					maxInputMessageQueueSize, totalLifeTime, numOfTestMsgs;
 			long newTime, oldTime = System.currentTimeMillis();
-			int numOfFullInputBuffs;
+			int numOfFullInputBuffs, timerCount = 0, timeOut = 10;
 			byte[] maxTester = TAG_NOT_AVAILABLE.getBytes();
 
 			@Override
@@ -106,7 +107,7 @@ public class TesterController {
 				}
 				newTime = System.currentTimeMillis();
 				if (completedCount != 0) {
-					cui.setStat(TAG_INCOMING_MSGS + (totalMessageIncome / completedCount)
+					cui.setStat(TAG_INCOMING_MSGS + totalMessageIncome
 							+ TAG_MAX_INCOMING_BUFFER_SIZE + maxInputMessageQueueSize
 							+ TAG_TOTAL_RESOLVES + totalResolves
 							+ TAG_ROUTED_VIA_PREDECESSORS + (totalResolves != 0 ? totalResolvesViaPredecessors * 100 / totalResolves : TAG_NOT_AVAILABLE)
@@ -115,6 +116,12 @@ public class TesterController {
 							+ TAG_NUM_OF_FULL_BUFFERS + numOfFullInputBuffs
 							+ TAG_REMAINING_MSGS + numOfTestMsgs);
 				}
+				if (++timerCount >= timeOut) {
+					timerCount = 0;
+					System.out.println("In last " + timeOut + " Seconds\tTotal resolves: " + totalCount + "\tErrors: " + errorCount);
+					totalCount = 0;
+					errorCount = 0;
+				}
 				oldTime = newTime;
 			}
 		}, 1000, 1000);
@@ -122,11 +129,22 @@ public class TesterController {
 
 			@Override
 			public void run() {
-				if (numOfTestMsg > 0) {
-					test(numOfTestMsg / 100);
+				if (sendContinuously && numOfRequest > 0) {
+					switch (testCaseSelection) {
+						case MESSAGE_TESTING:
+							testMessages(numOfRequest / 10);
+							break;
+						case DATA_STORE_TESTING:
+							getData(numOfRequest / 10);
+							break;
+						case SERVICE_TESTING:
+							invokeServiceMethod(numOfRequest / 10);
+							break;
+					}
+
 				}
 			}
-		}, 1000, 10);
+		}, 1000, 100);
 	}
 	private static final String TAG_INCOMING_MSGS = "   IC: ";
 	private static final String TAG_MAX_INCOMING_BUFFER_SIZE = "   MI: ";
@@ -166,51 +184,6 @@ public class TesterController {
 	}
 	private int numOfTestingNodes = 0;
 	private int completedCount = 0;
-	private int numOfTestMsg = 0;
-
-	/**
-	 * 
-     * @param numOfTestMessages 
-	 */
-	public void startAutoTest(long numOfTestMessages) {
-		numOfTestMsg = (int) numOfTestMessages;
-	}
-
-    /**
-     * 
-     * @param numOfTestMessages
-     */
-    public void test(int numOfTestMessages) {
-		int amount = numOfTestMessages / testServers.size();
-		Collection<Tester> testers = testServers.values();
-		for (Tester tester : testers) {
-			tester.startTest(amount);
-		}
-	}
-
-    /**
-     * 
-     * @param numOfMsgs
-     */
-    public void testWithOneThread(int numOfMsgs) {
-		this.totalCountAccumilated = 0;
-		int numOfTestServers = testServers.size();
-		while (numOfMsgs > 0) {
-			String val = new BigInteger(160, random).toString(16);
-			byte[] mid = Hash.generateId(val);
-			int tid = (int) (Math.random() * numOfTestServers);
-			try {
-				testServers.get(tid).getServer().sendRequest(mid, MESSAGE, null);
-			} catch (InterruptedException ex) {
-				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (SinchanaInvalidArgumentException ex) {
-				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
-			}
-			numOfMsgs--;
-		}
-	}
-	private final Random random = new Random();
-	private final byte[] MESSAGE = "Hi, Sinchana".getBytes();
 
 	/**
 	 * 
@@ -246,103 +219,6 @@ public class TesterController {
 	public synchronized void incrementCompletedCount(int id) {
 		completedCount++;
 		cui.setStatus(completedCount + " of " + numOfTestingNodes + " are stable...");
-	}
-
-    /**
-     * 
-     * @param noOfData the amount of data want to be stored
-     */
-    public void storeData(int noOfData) {
-
-		createData(noOfData);
-		dataHandlerobject.startStoreTime = System.currentTimeMillis();
-		dataHandlerobject.storeSuccessCount = 0;
-		dataHandlerobject.storeFailureCount = 0;
-        dataHandlerobject.FailureCount = 0;
-		for (int i = 0; i < dataArray.length; i++) {
-			             
-                try {
-                    testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(),dataHandlerobject);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
-                } 
-			
-		}
-	}
-    
-    public void createData(int noOfData){
-        dataArray = new String[noOfData];
-		datakeyArray = new String[noOfData];
-
-		for (int i = 0; i < noOfData; i++) {
-			dataArray[i] = DATA_TAG + dataID;
-			datakeyArray[i] = KEY_TAG + dataID;
-			dataID++;
-		}
-    }
-	String[] dataArray = null;
-	String[] datakeyArray = null;
-	int dataID = 1;
-	int storeNodeID = 5, retrieveNodeID = 7;
-    int noOfData = 0;
-	SinchanaDataHandlerImpl dataHandlerobject = new SinchanaDataHandlerImpl();
-	long startRetrieveTime = 0;
-	private static final String DATA_TAG = "data ";
-	private static final String KEY_TAG = "key ";
-    int retrieveTimePeriod = 3000;
-    
-    /**
-     * the method retrieve the stored data
-     */
-    public void retrieveData(int noOfData) {
-        this.noOfData = noOfData;
-        if(dataArray==null){
-            createData(this.noOfData);
-        }
-		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
-		dataHandlerobject.retrieveSuccessCount = 0;
-		dataHandlerobject.FailureCount = 0;
-		for (int i = 0; i < datakeyArray.length; i++) {
-			try {
-                
-				testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(), dataHandlerobject);
-
-
-			} catch (InterruptedException ex) {
-				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
-			}
-		}
-	}
-    
-    /**
-     * 
-     */
-    public void retrieveDataContinous() {
-       dataHandlerobject.retrieveContinous = true;
-       dataHandlerobject.totalCount = 0;
-       timer.scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {               
-                retrieveData(noOfData);
-            }
-        }, 2000, retrieveTimePeriod);
-       timer.scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {
-                int diff = dataHandlerobject.totalCount-dataHandlerobject.newCount;
-                System.out.println("retrieve count per "+(retrieveTimePeriod/1000)+" seconds: "+diff);   
-                dataHandlerobject.newCount = dataHandlerobject.totalCount;
-            }
-        }, 0, retrieveTimePeriod);
-	}
-
-    /**
-     * 
-     * @param randomAmount
-     */
-    public void removeData(int randomAmount) {
 	}
 
 	/**
@@ -386,42 +262,244 @@ public class TesterController {
 	}
 	private static final String FILTER_SPLITTER = " ";
 
-	void resetAndWatch() {
-		timer.scheduleAtFixedRate(new TimerTask() {
+	void setSelection(int selection) {
+		numOfRequest = 0;
+		sendContinuously = false;
+		testCaseSelection = selection;
+	}
+	public static final int MESSAGE_TESTING = 1;
+	public static final int DATA_STORE_TESTING = 2;
+	public static final int SERVICE_TESTING = 3;
+	public int testCaseSelection = 1;
 
-			@Override
-			public void run() {
-				long time = System.currentTimeMillis();
-				long tc = 0;
-				Collection<Tester> testers = testServers.values();
-				for (Tester tester : testers) {
-					tc += tester.getCount();
-//					System.out.println(tester.getServerIdAsString() + ": " + c);
-				}
-				totalCountAccumilated += tc;
-				System.out.println(time - prevTime + "ms\t\tcount: " + tc
-						+ "\t\tacumilated count: " + totalCountAccumilated + "\t\tthroughput: " + (tc * 1000 / (time - prevTime)));
-				prevTime = time;
+	void publishService() {
+		try {
+			testServers.get(0).getServer().publishService(serviceKey, helloService);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (SinchanaInvalidArgumentException ex) {
+			Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+	private byte[] serviceKey = "HelloService".getBytes();
+	private byte[] serviceData = "Hi, Sinchana".getBytes();
+	private HelloService helloService = new HelloService();
+
+	void removeService() {
+		try {
+			testServers.get(0).getServer().removeService(serviceKey);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (SinchanaInvalidArgumentException ex) {
+			Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
+	void invokeServiceMethod(int numOfInvoke) {
+		try {
+			int numOfTestServers = testServers.size();
+			byte[] reference = testServers.get(0).getServer().discoverService(serviceKey);
+			if (reference == null) {
+				System.out.println(new String(serviceKey) + " is not found");
+				return;
 			}
-		}, 0, WATCH_TIME_OUT);
+			while (numOfInvoke > 0) {
+				int tid = (int) (Math.random() * numOfTestServers);
+				testServers.get(tid).getServer().invokeService(reference, serviceData, ssc);
+				numOfInvoke--;
+			}
+		} catch (InterruptedException ex) {
+			Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (SinchanaTimeOutException ex) {
+			Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+		}
 	}
-    
-	private long prevTime = System.currentTimeMillis();
-	private long totalCountAccumilated = 0;
+	private SinchanaServiceCallback ssc = new SinchanaServiceCallback() {
 
-    /**
-     * 
-     */
-    public static synchronized void incTotalCount() {
-		totalCount++;
+		@Override
+		public void serviceFound(byte[] key, boolean success, byte[] data) {
+//			System.out.println("");
+		}
+
+		@Override
+		public void serviceResponse(byte[] key, boolean success, byte[] data) {
+			totalCount++;
+		}
+
+		@Override
+		public void error(byte[] error) {
+			totalCount++;
+			errorCount++;
+		}
+	};
+
+	void sendMsgs(int numOfMsgs) {
+		this.sendContinuously = false;
+		this.numOfRequest = 0;
+		totalCount = 0;
+		errorCount = 0;
+		testMessages(numOfMsgs);
 	}
+
+	void sendMsgsContinuously(int numOfMsgs) {
+		this.sendContinuously = true;
+		this.numOfRequest = numOfMsgs;
+		totalCount = 0;
+		errorCount = 0;
+	}
+
+	void retrieveData(int numOfMsgs) {
+		this.sendContinuously = false;
+		this.numOfRequest = numOfMsgs;
+		totalCount = 0;
+		errorCount = 0;
+		getData(numOfMsgs);
+	}
+
+	void retrieveDataContinuously(int numOfMsgs) {
+		this.sendContinuously = true;
+		this.numOfRequest = numOfMsgs;
+		totalCount = 0;
+		errorCount = 0;
+	}
+
+	void invokeService(int numOfMsgs) {
+		this.sendContinuously = false;
+		this.numOfRequest = numOfMsgs;
+		totalCount = 0;
+		errorCount = 0;
+		invokeServiceMethod(numOfMsgs);
+	}
+
+	void invokeServiceContinuously(int numOfMsgs) {
+		this.sendContinuously = true;
+		this.numOfRequest = numOfMsgs;
+		totalCount = 0;
+		errorCount = 0;
+	}
+	private boolean sendContinuously = false;
+	private int numOfRequest;
 	private static int totalCount = 0;
-
-    /**
-     * 
-     */
-    public static synchronized void incErrorCount() {
-		errorCount++;
-	}
 	private static int errorCount = 0;
+
+	public void testMessages(int numOfMsgs) {
+		int numOfTestServers = testServers.size();
+		while (numOfMsgs > 0) {
+			String val = new BigInteger(160, random).toString(16);
+			byte[] mid = Hash.generateId(val);
+			int tid = (int) (Math.random() * numOfTestServers);
+			try {
+				testServers.get(tid).getServer().sendRequest(mid, MESSAGE, src);
+			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (SinchanaInvalidArgumentException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			numOfMsgs--;
+		}
+	}
+	private final Random random = new Random();
+	private final byte[] MESSAGE = "Hi, Sinchana".getBytes();
+	private SinchanaResponseCallback src = new SinchanaResponseCallback() {
+
+		@Override
+		public synchronized void response(byte[] message) {
+			totalCount++;
+		}
+
+		@Override
+		public synchronized void error(byte[] error) {
+			totalCount++;
+			errorCount++;
+		}
+	};
+
+	public void storeData(int noOfData) {
+		totalCount = 0;
+		errorCount = 0;
+		dataArray = new String[noOfData];
+		datakeyArray = new String[noOfData];
+		int numOfTestServers = testServers.size();
+
+		for (int i = 0; i < noOfData; i++) {
+			dataArray[i] = DATA_TAG + dataID;
+			datakeyArray[i] = KEY_TAG + dataID;
+			dataID++;
+		}
+		for (int i = 0; i < dataArray.length; i++) {
+			try {
+				int tid = (int) (Math.random() * numOfTestServers);
+				testServers.get(tid).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(), sdc);
+			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+
+		}
+	}
+
+	public void removeData(int numOfDataToRemove) {
+		totalCount = 0;
+		errorCount = 0;
+		if (dataArray == null || datakeyArray == null) {
+			return;
+		}
+		int numOfTotalData = dataArray.length;
+		int numOfTestServers = testServers.size();
+		while (numOfDataToRemove > 0) {
+			int randomDataId = (int) (Math.random() * numOfTotalData);
+			int tid = (int) (Math.random() * numOfTestServers);
+			try {
+				testServers.get(tid).getServer().deleteData(datakeyArray[randomDataId].getBytes(), sdc);
+			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			numOfDataToRemove--;
+		}
+	}
+
+	public void getData(int numOfDataToRetrieve) {
+		if (dataArray == null || datakeyArray == null) {
+			return;
+		}
+		int numOfTotalData = dataArray.length;
+		int numOfTestServers = testServers.size();
+		while (numOfDataToRetrieve > 0) {
+			int randomDataId = (int) (Math.random() * numOfTotalData);
+			int tid = (int) (Math.random() * numOfTestServers);
+			try {
+				testServers.get(tid).getServer().getData(datakeyArray[randomDataId].getBytes(), sdc);
+			} catch (InterruptedException ex) {
+				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			numOfDataToRetrieve--;
+		}
+	}
+	private String[] dataArray = null;
+	private String[] datakeyArray = null;
+	private int dataID = 0;
+	private static final String DATA_TAG = "data ";
+	private static final String KEY_TAG = "key ";
+	private SinchanaDataCallback sdc = new SinchanaDataCallback() {
+
+		@Override
+		public synchronized void isStored(byte[] key, boolean success) {
+			totalCount++;
+		}
+
+		@Override
+		public synchronized void isRemoved(byte[] key, boolean success) {
+			totalCount++;
+		}
+
+		@Override
+		public synchronized void response(byte[] key, byte[] data) {
+			totalCount++;
+		}
+
+		@Override
+		public synchronized void error(byte[] error) {
+			totalCount++;
+			errorCount++;
+		}
+	};
 }

@@ -91,25 +91,26 @@ public class ClientHandler {
 		ClientData clientData = clientsMap.remove(message.getId());
 		if (clientData != null) {
 			clientData.resolved = true;
-			switch (message.type) {
-				case RESPONSE_SERVICE:
-					if (clientData.waiting) {
-						clientData.data = message.getData();
-						clientData.success = message.isSuccess();
-						clientData.lock.release();
-					} else {
+			if (clientData.waiting) {
+				clientData.success = message.isSuccess();
+				clientData.data = message.isSetData() ? message.getData() : null;
+				clientData.error = message.isSetError() ? message.getError() : null;
+				clientData.lock.release();
+			} else {
+				switch (message.type) {
+					case RESPONSE_SERVICE:
+						if (server.getSinchanaTestInterface() != null) {
+							server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
+						}
 						((SinchanaServiceCallback) clientData.sinchanaCallBackHandler).serviceResponse(
 								Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 								message.isSuccess(), message.getData());
-					}
-					break;
+						break;
 
-				case RESPONSE_DATA:
-					if (clientData.waiting) {
-						clientData.data = message.getData();
-						clientData.success = message.isSuccess();
-						clientData.lock.release();
-					} else {
+					case RESPONSE_DATA:
+						if (server.getSinchanaTestInterface() != null) {
+							server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
+						}
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
 							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).response(clientData.dataKey, message.getData());
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceCallback) {
@@ -117,14 +118,8 @@ public class ClientHandler {
 									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 									message.isSuccess(), message.getData());
 						}
-					}
-					break;
-				case ACKNOWLEDGE_DATA_STORE:
-					if (clientData.waiting) {
-						clientData.data = message.getData();
-						clientData.success = message.isSuccess();
-						clientData.lock.release();
-					} else {
+						break;
+					case ACKNOWLEDGE_DATA_STORE:
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
 							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).isStored(clientData.dataKey, message.success);
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceInterface) {
@@ -132,14 +127,8 @@ public class ClientHandler {
 									Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 									message.success);
 						}
-					}
-					break;
-				case ACKNOWLEDGE_DATA_REMOVE:
-					if (clientData.waiting) {
-						clientData.data = message.getData();
-						clientData.success = message.isSuccess();
-						clientData.lock.release();
-					} else {
+						break;
+					case ACKNOWLEDGE_DATA_REMOVE:
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
 							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).isRemoved(clientData.dataKey, message.success);
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceInterface) {
@@ -154,30 +143,17 @@ public class ClientHandler {
 										false);
 							}
 						}
-					}
-					break;
-				case RESPONSE:
-					if (server.getSinchanaTestInterface() != null) {
-						server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
-					}
-					if (clientData.waiting) {
-						clientData.data = message.getData();
-						clientData.success = message.isSuccess();
-						clientData.lock.release();
-					} else {
+						break;
+					case RESPONSE:
+						if (server.getSinchanaTestInterface() != null) {
+							server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
+						}
 						((SinchanaResponseCallback) clientData.sinchanaCallBackHandler).response(message.getData());
-					}
-					break;
-				case ERROR:
-					if (clientData.waiting) {
-						clientData.data = message.getData();
-						clientData.success = false;
-						clientData.error = message.getError();
-						clientData.lock.release();
-					} else {
+						break;
+					case ERROR:
 						((SinchanaCallBack) clientData.sinchanaCallBackHandler).error(message.getError());
-					}
-					break;
+						break;
+				}
 			}
 		}
 	}

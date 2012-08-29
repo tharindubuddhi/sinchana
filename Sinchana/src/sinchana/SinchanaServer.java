@@ -62,7 +62,7 @@ import sinchana.util.tools.Hash;
  *
  * @author S.A.H.S.Subasinghe
  */
-public class SinchanaServer implements SinchanaDHT{
+public class SinchanaServer implements SinchanaDHT {
 
 	/**
 	 * Size of the Sinchana ring which is equal to 2^160.
@@ -298,7 +298,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaInvalidArgumentException  If the destination id has a length other than 20 bytes.
 	 */
 	@Override
-	public byte[] sendRequest(byte[] destination, byte[] message) 
+	public byte[] sendRequest(byte[] destination, byte[] message)
 			throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException {
 		if (destination.length != 20) {
 			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_INVALID_ADDRESS_LENGTH);
@@ -319,7 +319,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaInvalidArgumentException If the destination id has a length other than 20 bytes.
 	 */
 	@Override
-	public byte[] sendRequest(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit) 
+	public byte[] sendRequest(byte[] destination, byte[] message, long timeOut, TimeUnit timeUnit)
 			throws SinchanaTimeOutException, SinchanaInvalidArgumentException, InterruptedException {
 		if (destination.length != 20) {
 			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_INVALID_ADDRESS_LENGTH);
@@ -337,7 +337,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaInvalidArgumentException If the destination id has a length other than 20 bytes.
 	 */
 	@Override
-	public void sendRequest(byte[] destination, byte[] message, SinchanaResponseCallback callBack) 
+	public void sendRequest(byte[] destination, byte[] message, SinchanaResponseCallback callBack)
 			throws InterruptedException, SinchanaInvalidArgumentException {
 		if (destination.length != 20) {
 			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_INVALID_ADDRESS_LENGTH);
@@ -369,7 +369,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
 	@Override
-	public boolean storeData(byte[] key, byte[] data, long timeOut, TimeUnit timeUnit) 
+	public boolean storeData(byte[] key, byte[] data, long timeOut, TimeUnit timeUnit)
 			throws InterruptedException, SinchanaTimeOutException {
 		return this.clientHandler.addRequest(key, data, MessageType.STORE_DATA, timeOut, timeUnit).success;
 	}
@@ -445,7 +445,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
 	@Override
-	public boolean deleteData(byte[] key, long timeOut, TimeUnit timeUnit) 
+	public boolean deleteData(byte[] key, long timeOut, TimeUnit timeUnit)
 			throws InterruptedException, SinchanaTimeOutException {
 		return this.clientHandler.addRequest(key, null, MessageType.DELETE_DATA, timeOut, timeUnit).success;
 	}
@@ -485,7 +485,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
 	@Override
-	public byte[] invokeService(byte[] reference, byte[] data, long timeOut, TimeUnit timeUnit) 
+	public byte[] invokeService(byte[] reference, byte[] data, long timeOut, TimeUnit timeUnit)
 			throws InterruptedException, SinchanaTimeOutException {
 		return this.clientHandler.addRequest(reference, data, MessageType.GET_SERVICE, timeOut, timeUnit).data;
 	}
@@ -525,7 +525,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaTimeOutException If the response is not arrived within the time out.
 	 */
 	@Override
-	public byte[] discoverService(byte[] key, long timeOut, TimeUnit timeUnit) 
+	public byte[] discoverService(byte[] key, long timeOut, TimeUnit timeUnit)
 			throws InterruptedException, SinchanaTimeOutException {
 		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
 		return this.clientHandler.addRequest(formattedKey, null, MessageType.GET_DATA, timeOut, timeUnit).data;
@@ -551,7 +551,7 @@ public class SinchanaServer implements SinchanaDHT{
 	 * @throws SinchanaInvalidArgumentException If the SinchanaServiceInterface is null
 	 */
 	@Override
-	public void publishService(byte[] key, SinchanaServiceInterface sinchanaServiceInterface) 
+	public void publishService(byte[] key, SinchanaServiceInterface sinchanaServiceInterface)
 			throws InterruptedException, SinchanaInvalidArgumentException {
 		if (sinchanaServiceInterface == null) {
 			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_NULL_ARGUMENTS);
@@ -574,11 +574,11 @@ public class SinchanaServer implements SinchanaDHT{
 	 */
 	@Override
 	public void removeService(byte[] key) throws InterruptedException, SinchanaInvalidArgumentException {
-		SinchanaServiceInterface ssi = this.sinchanaServiceStore.get(key);
+		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
+		SinchanaServiceInterface ssi = this.sinchanaServiceStore.get(formattedKey);
 		if (ssi == null) {
 			throw new SinchanaInvalidArgumentException(SinchanaDHT.ERROR_MSG_NO_SUCH_SERVICE_FOUND);
 		}
-		byte[] formattedKey = ByteArrays.arrayConcat(key, SinchanaDHT.SERVICE_TAG);
 		this.clientHandler.addRequest(formattedKey, null, MessageType.DELETE_DATA, ssi);
 	}
 }

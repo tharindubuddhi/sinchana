@@ -14,10 +14,9 @@ package sinchana.test;
  *
  * @author Hiru
  */
-public class ControllerUI extends javax.swing.JFrame implements Runnable {
-	
+public class ControllerUI extends javax.swing.JFrame {
+
 	private TesterController testerController;
-	private long startNodeThreadId = 0;
 
 	/** Creates new form ControllerUI
 	 * @param tc 
@@ -26,7 +25,23 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 		this.testerController = tc;
 		initComponents();
 		setLocationRelativeTo(null);
-		
+		testerController.setSelection(TesterController.MESSAGE_TESTING);
+		amountLabel.setText("Num of Msgs.");
+		sendButton.setText("Send Msgs.");
+		sendContinuousButton.setText("Send Continuously");
+		storeButton.setEnabled(false);
+		removeButton.setEnabled(false);
+		sendButton.setEnabled(false);
+		sendContinuousButton.setEnabled(false);
+		printTableInfoButton.setEnabled(false);
+		ringTestButton.setEnabled(false);
+		printTableInfoId.setEditable(false);
+		amountField.setEditable(false);
+		amountLabel.setEnabled(false);
+		messages.setSelected(true);
+		messages.setEnabled(false);
+		dataStore.setEnabled(false);
+		services.setEnabled(false);
 	}
 
 	/**
@@ -36,7 +51,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 	public void setStatus(String status) {
 		this.statusField.setText(status);
 	}
-	
+
 	public void setStat(String status) {
 		this.statField.setText(status);
 	}
@@ -51,26 +66,28 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
+        selectionGroup = new javax.swing.ButtonGroup();
         jPanel1 = new javax.swing.JPanel();
-        autoTestButtonPanel = new javax.swing.JPanel();
+        startPanel = new javax.swing.JPanel();
         startNodeSetButton = new javax.swing.JButton();
         portRange = new javax.swing.JTextField();
         numOfTesters = new javax.swing.JTextField();
-        sendMessagePanel = new javax.swing.JPanel();
+        testPanel = new javax.swing.JPanel();
         printTableInfoId = new javax.swing.JTextField();
         printTableInfoButton = new javax.swing.JButton();
         ringTestButton = new javax.swing.JButton();
+        selectionPanel = new javax.swing.JPanel();
+        messages = new javax.swing.JRadioButton();
+        dataStore = new javax.swing.JRadioButton();
+        services = new javax.swing.JRadioButton();
         messagePanel = new javax.swing.JPanel();
-        numOfMsgsField = new javax.swing.JTextField();
-        sendMsgButton = new javax.swing.JButton();
-        sendMsgAutoButton = new javax.swing.JButton();
-        resetAndWatchButton = new javax.swing.JButton();
+        amountLabel = new javax.swing.JLabel();
+        amountField = new javax.swing.JTextField();
+        sendButton = new javax.swing.JButton();
+        sendContinuousButton = new javax.swing.JButton();
         servicePanel = new javax.swing.JPanel();
-        egLabel = new javax.swing.JLabel();
-        dataCountTextField = new javax.swing.JTextField();
         storeButton = new javax.swing.JButton();
-        retrieveButton = new javax.swing.JButton();
-        dataRemoveButton = new javax.swing.JButton();
+        removeButton = new javax.swing.JButton();
         statPanel = new javax.swing.JPanel();
         statField = new javax.swing.JLabel();
         statusField = new javax.swing.JLabel();
@@ -91,9 +108,9 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         setTitle("Testing UI");
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        jPanel1.setLayout(new java.awt.GridLayout(5, 1, 0, 4));
+        jPanel1.setLayout(new java.awt.GridLayout(6, 1, 0, 4));
 
-        autoTestButtonPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        startPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
         startNodeSetButton.setText("Start Node Set");
         startNodeSetButton.setPreferredSize(new java.awt.Dimension(134, 24));
@@ -102,28 +119,28 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 startNodeSetButtonActionPerformed(evt);
             }
         });
-        autoTestButtonPanel.add(startNodeSetButton);
+        startPanel.add(startNodeSetButton);
 
         portRange.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
         portRange.setText("8000");
         portRange.setToolTipText("No of Testing Nodes");
         portRange.setPreferredSize(new java.awt.Dimension(96, 24));
-        autoTestButtonPanel.add(portRange);
+        startPanel.add(portRange);
 
         numOfTesters.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
         numOfTesters.setText("10");
         numOfTesters.setToolTipText("No of Testing Nodes");
         numOfTesters.setPreferredSize(new java.awt.Dimension(64, 24));
-        autoTestButtonPanel.add(numOfTesters);
+        startPanel.add(numOfTesters);
 
-        jPanel1.add(autoTestButtonPanel);
+        jPanel1.add(startPanel);
 
-        sendMessagePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        testPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
         printTableInfoId.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
         printTableInfoId.setText("701EA28FCE4761E5C6866A4EB644661547A8D15C");
-        printTableInfoId.setPreferredSize(new java.awt.Dimension(180, 24));
-        sendMessagePanel.add(printTableInfoId);
+        printTableInfoId.setPreferredSize(new java.awt.Dimension(240, 24));
+        testPanel.add(printTableInfoId);
 
         printTableInfoButton.setText("Print Table Info");
         printTableInfoButton.setPreferredSize(new java.awt.Dimension(134, 24));
@@ -132,7 +149,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 printTableInfoButtonActionPerformed(evt);
             }
         });
-        sendMessagePanel.add(printTableInfoButton);
+        testPanel.add(printTableInfoButton);
 
         ringTestButton.setText("Test Ring");
         ringTestButton.setPreferredSize(new java.awt.Dimension(134, 24));
@@ -141,62 +158,81 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
                 ringTestButtonActionPerformed(evt);
             }
         });
-        sendMessagePanel.add(ringTestButton);
+        testPanel.add(ringTestButton);
 
-        jPanel1.add(sendMessagePanel);
+        jPanel1.add(testPanel);
+
+        selectionPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+
+        selectionGroup.add(messages);
+        messages.setText("Messages");
+        messages.setPreferredSize(new java.awt.Dimension(120, 24));
+        messages.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                messagesActionPerformed(evt);
+            }
+        });
+        selectionPanel.add(messages);
+
+        selectionGroup.add(dataStore);
+        dataStore.setText("Data Store");
+        dataStore.setPreferredSize(new java.awt.Dimension(120, 24));
+        dataStore.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dataStoreActionPerformed(evt);
+            }
+        });
+        selectionPanel.add(dataStore);
+
+        selectionGroup.add(services);
+        services.setText("Services");
+        services.setPreferredSize(new java.awt.Dimension(120, 24));
+        services.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                servicesActionPerformed(evt);
+            }
+        });
+        selectionPanel.add(services);
+
+        jPanel1.add(selectionPanel);
 
         messagePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
-        numOfMsgsField.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        numOfMsgsField.setText("1000");
-        numOfMsgsField.setToolTipText("No of Testing Nodes");
-        numOfMsgsField.setPreferredSize(new java.awt.Dimension(108, 24));
-        messagePanel.add(numOfMsgsField);
+        amountLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        amountLabel.setText("Amount");
+        amountLabel.setPreferredSize(new java.awt.Dimension(96, 24));
+        messagePanel.add(amountLabel);
 
-        sendMsgButton.setText("Send Msg.");
-        sendMsgButton.setPreferredSize(new java.awt.Dimension(114, 24));
-        sendMsgButton.addActionListener(new java.awt.event.ActionListener() {
+        amountField.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
+        amountField.setText("1000");
+        amountField.setToolTipText("No of Testing Nodes");
+        amountField.setPreferredSize(new java.awt.Dimension(100, 24));
+        messagePanel.add(amountField);
+
+        sendButton.setText("Send Msg.");
+        sendButton.setPreferredSize(new java.awt.Dimension(160, 24));
+        sendButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sendMsgButtonActionPerformed(evt);
+                sendButtonActionPerformed(evt);
             }
         });
-        messagePanel.add(sendMsgButton);
+        messagePanel.add(sendButton);
 
-        sendMsgAutoButton.setText("Send Continuous");
-        sendMsgAutoButton.setPreferredSize(new java.awt.Dimension(134, 24));
-        sendMsgAutoButton.addActionListener(new java.awt.event.ActionListener() {
+        sendContinuousButton.setText("Send Continuous");
+        sendContinuousButton.setPreferredSize(new java.awt.Dimension(160, 24));
+        sendContinuousButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sendMsgAutoButtonActionPerformed(evt);
+                sendContinuousButtonActionPerformed(evt);
             }
         });
-        messagePanel.add(sendMsgAutoButton);
-
-        resetAndWatchButton.setText("Reset & Watch");
-        resetAndWatchButton.setPreferredSize(new java.awt.Dimension(134, 24));
-        resetAndWatchButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                resetAndWatchButtonActionPerformed(evt);
-            }
-        });
-        messagePanel.add(resetAndWatchButton);
+        messagePanel.add(sendContinuousButton);
 
         jPanel1.add(messagePanel);
 
         servicePanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
-        egLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        egLabel.setText("No.of Data");
-        egLabel.setPreferredSize(new java.awt.Dimension(60, 24));
-        servicePanel.add(egLabel);
-
-        dataCountTextField.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
-        dataCountTextField.setText("10000");
-        dataCountTextField.setToolTipText("No of Auto Testing Nodes");
-        dataCountTextField.setPreferredSize(new java.awt.Dimension(70, 24));
-        servicePanel.add(dataCountTextField);
-
         storeButton.setText("Store");
-        storeButton.setPreferredSize(new java.awt.Dimension(65, 24));
+        storeButton.setPreferredSize(new java.awt.Dimension(180, 24));
         storeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 storeButtonActionPerformed(evt);
@@ -204,21 +240,14 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         });
         servicePanel.add(storeButton);
 
-        retrieveButton.setText("Retrieve");
-        retrieveButton.addActionListener(new java.awt.event.ActionListener() {
+        removeButton.setText("Remove");
+        removeButton.setPreferredSize(new java.awt.Dimension(180, 24));
+        removeButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                retrieveButtonActionPerformed(evt);
+                removeButtonActionPerformed(evt);
             }
         });
-        servicePanel.add(retrieveButton);
-
-        dataRemoveButton.setText("Retrieve Continous");
-        dataRemoveButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                dataRemoveButtonActionPerformed(evt);
-            }
-        });
-        servicePanel.add(dataRemoveButton);
+        servicePanel.add(removeButton);
 
         jPanel1.add(servicePanel);
 
@@ -273,11 +302,6 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         logClass.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
         logClass.setText("7");
         logClass.setPreferredSize(new java.awt.Dimension(32, 20));
-        logClass.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                logClassActionPerformed(evt);
-            }
-        });
         loggerControlPanel.add(logClass);
 
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -319,72 +343,130 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
 private void printTableInfoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printTableInfoButtonActionPerformed
 	testerController.printTableInfo(this.printTableInfoId.getText());
 }//GEN-LAST:event_printTableInfoButtonActionPerformed
-	
+
 private void startNodeSetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNodeSetButtonActionPerformed
-	Thread thread = new Thread(this);
-	this.startNodeThreadId = thread.getId();
-	thread.start();
-	this.ringTestButton.setEnabled(true);
+	testerController.startNodeSet(Integer.parseInt(this.portRange.getText()),
+			Integer.parseInt(this.numOfTesters.getText()));
+	sendButton.setEnabled(true);
+	sendContinuousButton.setEnabled(true);
+	printTableInfoButton.setEnabled(true);
+	ringTestButton.setEnabled(true);
+	printTableInfoId.setEditable(true);
+	amountField.setEditable(true);
+	amountLabel.setEnabled(true);
+	messages.setEnabled(true);
+	dataStore.setEnabled(true);
+	services.setEnabled(true);
 }//GEN-LAST:event_startNodeSetButtonActionPerformed
-	
+
 private void ringTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ringTestButtonActionPerformed
-	
 	testerController.startRingTest();
-	
 }//GEN-LAST:event_ringTestButtonActionPerformed
-	
+
 private void printLogButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printLogButtonActionPerformed
-	
 	testerController.printLogs(
 			this.logNodeID.getText(),
 			this.logType.getText(),
 			this.logClass.getText(),
 			this.logLocation.getText(),
 			this.contatain.getText());
-	
 }//GEN-LAST:event_printLogButtonActionPerformed
-	
+
 private void storeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_storeButtonActionPerformed
-	testerController.storeData(Integer.parseInt(dataCountTextField.getText()));
-	
+	switch (testerController.testCaseSelection) {
+		case TesterController.MESSAGE_TESTING:
+			break;
+		case TesterController.DATA_STORE_TESTING:
+			testerController.storeData(Integer.parseInt(amountField.getText()));
+			break;
+		case TesterController.SERVICE_TESTING:
+			testerController.publishService();
+			break;
+	}
 }//GEN-LAST:event_storeButtonActionPerformed
-	
-private void retrieveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_retrieveButtonActionPerformed
-	testerController.retrieveData(Integer.parseInt(dataCountTextField.getText()));
-}//GEN-LAST:event_retrieveButtonActionPerformed
-	
-private void dataRemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataRemoveButtonActionPerformed
-	testerController.retrieveDataContinous();
-}//GEN-LAST:event_dataRemoveButtonActionPerformed
-	
-private void logClassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logClassActionPerformed
-// TODO add your handling code here:
-}//GEN-LAST:event_logClassActionPerformed
-	
-private void resetAndWatchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetAndWatchButtonActionPerformed
-	
-	resetAndWatchButton.setEnabled(false);
-	testerController.resetAndWatch();
-}//GEN-LAST:event_resetAndWatchButtonActionPerformed
-	
-private void sendMsgButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgButtonActionPerformed
-	
-	testerController.testWithOneThread(Integer.parseInt(this.numOfMsgsField.getText()));
-}//GEN-LAST:event_sendMsgButtonActionPerformed
-	
-private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMsgAutoButtonActionPerformed
-	
-	testerController.startAutoTest(Long.parseLong(this.numOfMsgsField.getText()));
-}//GEN-LAST:event_sendMsgAutoButtonActionPerformed
+
+private void removeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeButtonActionPerformed
+	switch (testerController.testCaseSelection) {
+		case TesterController.MESSAGE_TESTING:
+			break;
+		case TesterController.DATA_STORE_TESTING:
+			testerController.removeData(Integer.parseInt(amountField.getText()));
+			break;
+		case TesterController.SERVICE_TESTING:
+			testerController.removeService();
+			break;
+	}
+}//GEN-LAST:event_removeButtonActionPerformed
+
+private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
+	switch (testerController.testCaseSelection) {
+		case TesterController.MESSAGE_TESTING:
+			testerController.sendMsgs(Integer.parseInt(amountField.getText()));
+			break;
+		case TesterController.DATA_STORE_TESTING:
+			testerController.retrieveData(Integer.parseInt(amountField.getText()));
+			break;
+		case TesterController.SERVICE_TESTING:
+			testerController.invokeService(Integer.parseInt(amountField.getText()));
+			break;
+	}
+}//GEN-LAST:event_sendButtonActionPerformed
+
+private void sendContinuousButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendContinuousButtonActionPerformed
+	switch (testerController.testCaseSelection) {
+		case TesterController.MESSAGE_TESTING:
+			testerController.sendMsgsContinuously(Integer.parseInt(amountField.getText()));
+			break;
+		case TesterController.DATA_STORE_TESTING:
+			testerController.retrieveDataContinuously(Integer.parseInt(amountField.getText()));
+			break;
+		case TesterController.SERVICE_TESTING:
+			testerController.invokeServiceContinuously(Integer.parseInt(amountField.getText()));
+			break;
+	}
+}//GEN-LAST:event_sendContinuousButtonActionPerformed
+
+private void messagesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_messagesActionPerformed
+
+	testerController.setSelection(TesterController.MESSAGE_TESTING);
+	amountLabel.setText("Num of Msgs.");
+	sendButton.setText("Send Msgs.");
+	sendContinuousButton.setText("Send Continuously");
+	storeButton.setEnabled(false);
+	removeButton.setEnabled(false);
+}//GEN-LAST:event_messagesActionPerformed
+
+private void dataStoreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataStoreActionPerformed
+
+	testerController.setSelection(TesterController.DATA_STORE_TESTING);
+	amountLabel.setText("Num of Data");
+	sendButton.setText("Retrieve");
+	sendContinuousButton.setText("Retrieve Continuously");
+	storeButton.setText("Store Data");
+	storeButton.setEnabled(true);
+	removeButton.setText("Remove Data");
+	removeButton.setEnabled(true);
+}//GEN-LAST:event_dataStoreActionPerformed
+
+private void servicesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_servicesActionPerformed
+
+	testerController.setSelection(TesterController.SERVICE_TESTING);
+	amountLabel.setText("Num of Invokes");
+	sendButton.setText("Invoke Service");
+	sendContinuousButton.setText("Invoke Continuously");
+	storeButton.setText("Publish Service");
+	storeButton.setEnabled(true);
+	removeButton.setText("Remove Service");
+	removeButton.setEnabled(true);
+}//GEN-LAST:event_servicesActionPerformed
 	/**
 	 * @param args the command line arguments
 	 */
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel autoTestButtonPanel;
+    private javax.swing.JTextField amountField;
+    private javax.swing.JLabel amountLabel;
     private javax.swing.JTextField contatain;
-    private javax.swing.JTextField dataCountTextField;
-    private javax.swing.JButton dataRemoveButton;
-    private javax.swing.JLabel egLabel;
+    private javax.swing.JRadioButton dataStore;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -397,31 +479,26 @@ private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {/
     private javax.swing.JTextField logType;
     private javax.swing.JPanel loggerControlPanel;
     private javax.swing.JPanel messagePanel;
-    private javax.swing.JTextField numOfMsgsField;
+    private javax.swing.JRadioButton messages;
     private javax.swing.JTextField numOfTesters;
     private javax.swing.JTextField portRange;
     private javax.swing.JButton printLogButton;
     private javax.swing.JButton printTableInfoButton;
     private javax.swing.JTextField printTableInfoId;
-    private javax.swing.JButton resetAndWatchButton;
-    private javax.swing.JButton retrieveButton;
+    private javax.swing.JButton removeButton;
     private javax.swing.JButton ringTestButton;
-    private javax.swing.JPanel sendMessagePanel;
-    private javax.swing.JButton sendMsgAutoButton;
-    private javax.swing.JButton sendMsgButton;
+    private javax.swing.ButtonGroup selectionGroup;
+    private javax.swing.JPanel selectionPanel;
+    private javax.swing.JButton sendButton;
+    private javax.swing.JButton sendContinuousButton;
     private javax.swing.JPanel servicePanel;
+    private javax.swing.JRadioButton services;
     private javax.swing.JButton startNodeSetButton;
+    private javax.swing.JPanel startPanel;
     private javax.swing.JLabel statField;
     private javax.swing.JPanel statPanel;
     private javax.swing.JLabel statusField;
     private javax.swing.JButton storeButton;
+    private javax.swing.JPanel testPanel;
     // End of variables declaration//GEN-END:variables
-
-	@Override
-	public void run() {
-		if (Thread.currentThread().getId() == this.startNodeThreadId) {
-			testerController.startNodeSet(Integer.parseInt(this.portRange.getText()),
-					Integer.parseInt(this.numOfTesters.getText()));
-		}
-	}
 }

@@ -51,7 +51,8 @@ import sinchana.util.tools.ByteArrays;
  */
 public class SinchanaServiceExample {
 
-	public static void main(String[] args) throws InterruptedException, TTransportException, TException, SinchanaInvalidRoutingAlgorithmException {
+	public static void main(String[] args) throws InterruptedException, 
+			TTransportException, TException, SinchanaInvalidRoutingAlgorithmException {
 		/*Starting server one*/
 		final SinchanaDHT sinchanaServer1 = new SinchanaServer("127.0.0.1:9227", SinchanaDHT.PASTRY);
 		sinchanaServer1.startServer();
@@ -70,17 +71,22 @@ public class SinchanaServiceExample {
 		sinchanaServer3.join("127.0.0.1:9227");
 		System.out.println("Server 3: " + sinchanaServer3.getServerIdAsString() + " joined the ring");
 
-
+		/*Publishing 'HelloService' in second server*/
 		sinchanaServer2.publishService("HelloService".getBytes(), new HelloService());
+		/*Publishing 'TimeService' in second server*/
 		sinchanaServer2.publishService("TimeService".getBytes(), new TimeService());
 
-		Thread.sleep(2000);
+		/*Give some time to make sure that services are published*/
+		Thread.sleep(1000);
+		/*Proceeding to next step*/
 		System.out.println("proceed...");
 		byte[] reference, resp;
 		try {
+			/*discovering 'HelloService' synchronously*/
 			reference = sinchanaServer3.discoverService("HelloService".getBytes());
 			if (reference != null) {
 				System.out.println("Found at " + ByteArrays.toReadableString(reference));
+				/*invoking 'HelloService' synchronously*/
 				resp = sinchanaServer3.invokeService(reference, "Sinchana".getBytes());
 				if (resp != null) {
 					System.out.println("resp: " + new String(resp));
@@ -94,9 +100,11 @@ public class SinchanaServiceExample {
 			System.out.println(ste.getMessage());
 		}
 		try {
+			/*discovering 'TimeService' synchronously*/
 			reference = sinchanaServer3.discoverService("TimeService".getBytes());
 			if (reference != null) {
 				System.out.println("Found at " + ByteArrays.toReadableString(reference));
+				/*invoking 'TimeService' synchronously*/
 				resp = sinchanaServer3.invokeService(reference, "Sinchana".getBytes());
 				if (resp != null) {
 					System.out.println("resp: " + new String(resp));
@@ -116,6 +124,7 @@ public class SinchanaServiceExample {
 				if (success) {
 					System.out.println(new String(key) + " is found at " + new String(data));
 					try {
+						/*invoking 'HelloService' asynchronously*/
 						sinchanaServer3.invokeService(data, "Sinchana".getBytes(), this);
 					} catch (InterruptedException ex) {
 						Logger.getLogger(SinchanaServiceExample.class.getName()).log(Level.SEVERE, null, ex);
@@ -135,6 +144,7 @@ public class SinchanaServiceExample {
 				System.out.println("Error: " + new String(error));
 			}
 		};
+		/*discovering 'HelloService' asynchronously*/
 		sinchanaServer3.discoverService("HelloService".getBytes(), ssh);
 		System.out.println("done :)");
 	}
