@@ -70,7 +70,6 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         dataCountTextField = new javax.swing.JTextField();
         storeButton = new javax.swing.JButton();
         retrieveButton = new javax.swing.JButton();
-        removeAmountTextField = new javax.swing.JTextField();
         dataRemoveButton = new javax.swing.JButton();
         statPanel = new javax.swing.JPanel();
         statField = new javax.swing.JLabel();
@@ -213,12 +212,7 @@ public class ControllerUI extends javax.swing.JFrame implements Runnable {
         });
         servicePanel.add(retrieveButton);
 
-        removeAmountTextField.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        removeAmountTextField.setText("20");
-        removeAmountTextField.setPreferredSize(new java.awt.Dimension(32, 24));
-        servicePanel.add(removeAmountTextField);
-
-        dataRemoveButton.setText("Remove");
+        dataRemoveButton.setText("Retrieve Continous");
         dataRemoveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 dataRemoveButtonActionPerformed(evt);
@@ -360,7 +354,7 @@ private void retrieveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GE
 }//GEN-LAST:event_retrieveButtonActionPerformed
 	
 private void dataRemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataRemoveButtonActionPerformed
-	testerController.removeData(Integer.parseInt(removeAmountTextField.getText()));
+	testerController.retrieveDataContinous();
 }//GEN-LAST:event_dataRemoveButtonActionPerformed
 	
 private void logClassActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logClassActionPerformed
@@ -409,7 +403,6 @@ private void sendMsgAutoButtonActionPerformed(java.awt.event.ActionEvent evt) {/
     private javax.swing.JButton printLogButton;
     private javax.swing.JButton printTableInfoButton;
     private javax.swing.JTextField printTableInfoId;
-    private javax.swing.JTextField removeAmountTextField;
     private javax.swing.JButton resetAndWatchButton;
     private javax.swing.JButton retrieveButton;
     private javax.swing.JButton ringTestButton;

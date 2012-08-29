@@ -230,23 +230,22 @@ public class TesterController {
 			datakeyArray[i] = KEY_TAG + dataID;
 			dataID++;
 		}
-//		dataHandlerobject.startStoreTime = System.currentTimeMillis();
-//		dataHandlerobject.storeSuccessCount = 0;
-//		dataHandlerobject.storeFailureCount = 0;
-        //SinchanaDataStoreImpl dataimpl = (SinchanaDataStoreImpl) testServers.get(storeNodeID).getServer().getSinchanaDataStoreInterface();  
-        SinchanaDataStoreImpl.storeSuccessCount = 0;
-        SinchanaDataStoreImpl.lastCount=0;
-        SinchanaDataStoreImpl.startStoreTime = System.currentTimeMillis();
-        SinchanaDataStoreImpl.lastTime = System.currentTimeMillis();
+		dataHandlerobject.startStoreTime = System.currentTimeMillis();
+		dataHandlerobject.storeSuccessCount = 0;
+		dataHandlerobject.storeFailureCount = 0;
+        dataHandlerobject.FailureCount = 0;
+//        SinchanaDataStoreImpl dataimpl = (SinchanaDataStoreImpl) testServers.get(storeNodeID).getServer().getSinchanaDataStoreInterface();  
+//        SinchanaDataStoreImpl.storeSuccessCount = 0;
+//        SinchanaDataStoreImpl.lastCount=0;
+//        SinchanaDataStoreImpl.startStoreTime = System.currentTimeMillis();
+//        SinchanaDataStoreImpl.lastTime = System.currentTimeMillis();
 		for (int i = 0; i < dataArray.length; i++) {
 			             
                 try {
-                    testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes());
+                    testServers.get(storeNodeID).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(),dataHandlerobject);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (SinchanaTimeOutException ex) {
-                    Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                } 
 			
 		}
 	}
@@ -258,12 +257,12 @@ public class TesterController {
 	long startRetrieveTime = 0;
 	private static final String DATA_TAG = "data ";
 	private static final String KEY_TAG = "key ";
-
+    int retrieveTimeOut = 2000;
     
 	public void retrieveData() {
 		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
 		dataHandlerobject.retrieveSuccessCount = 0;
-		dataHandlerobject.retrieveFailureCount = 0;
+		dataHandlerobject.FailureCount = 0;
 		for (int i = 0; i < datakeyArray.length; i++) {
 			try {
 				testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(), dataHandlerobject);
@@ -273,6 +272,18 @@ public class TesterController {
 				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 			}
 		}
+	}
+    
+    public void retrieveDataContinous() {
+        dataHandlerobject.retrieveContinous = true;
+       timer.scheduleAtFixedRate(new TimerTask() {
+
+            @Override
+            public void run() {
+                System.out.println("retrieve count per 2 seconds: "+dataHandlerobject.retrieveSuccessCount);
+                retrieveData();
+            }
+        }, 0, retrieveTimeOut);
 	}
 
 	public void removeData(int randomAmount) {
@@ -337,6 +348,7 @@ public class TesterController {
 			}
 		}, 0, WATCH_TIME_OUT);
 	}
+    
 	private long prevTime = System.currentTimeMillis();
 	private long totalCountAccumilated = 0;
 

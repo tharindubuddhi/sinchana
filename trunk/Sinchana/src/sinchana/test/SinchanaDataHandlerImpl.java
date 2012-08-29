@@ -13,8 +13,8 @@ import sinchana.dataStore.SinchanaDataCallback;
 public class SinchanaDataHandlerImpl implements SinchanaDataCallback {
 
 	public long startStoreTime, startRetrieveTime;
-	public int storeSuccessCount, storeFailureCount, retrieveSuccessCount, retrieveFailureCount;
-
+	public int storeSuccessCount, storeFailureCount, retrieveSuccessCount, FailureCount;
+    public boolean retrieveContinous = false;
 	@Override
 	public void isStored(byte[] key, boolean success) {
 		if (success) {
@@ -23,8 +23,8 @@ public class SinchanaDataHandlerImpl implements SinchanaDataCallback {
 			storeFailureCount++;
 		}
 		if ((storeSuccessCount + storeFailureCount) % 100 == 0) {
-			System.out.println("success/failure: " + storeSuccessCount + "/" + storeFailureCount
-					+ "\ttotal: " + (storeSuccessCount + storeFailureCount)
+			System.out.println("success/failure: " + storeSuccessCount + "/" + (storeFailureCount+FailureCount)
+					+ "\ttotal: " + (storeSuccessCount + storeFailureCount+FailureCount)
 					+ "\ttime: " + (System.currentTimeMillis() - startStoreTime));
 		}
 	}
@@ -37,20 +37,19 @@ public class SinchanaDataHandlerImpl implements SinchanaDataCallback {
 	@Override
 	public void response(byte[] key, byte[] data) {
 		retrieveSuccessCount++;
-		System.out.println("response: " + new String(data)
+        if(!retrieveContinous){
+            System.out.println("retrieved : " + (data==null?data:new String(data))
 				+ "\tcount: " + retrieveSuccessCount
 				+ "\ttime: " + (System.currentTimeMillis() - startRetrieveTime));
-//        retrieveSuccessCount++;
-//        if((retrieveSuccessCount+retrieveFailureCount)%1000==0){
-//            System.out.println("");
-//        }
+        }
+		
 	}
 
 	@Override
 	public void error(byte[] error) {
-		retrieveFailureCount++;
-		System.out.println("response: " + new String(error)
-				+ "\tcount: " + retrieveFailureCount
+		FailureCount++;
+		System.out.println("response error : " + (error==null?error:new String(error))
+				+ "\tcount: " + FailureCount
 				+ "\ttime: " + (System.currentTimeMillis() - startRetrieveTime));
 	}
 }

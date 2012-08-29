@@ -31,14 +31,14 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	private long numOfTestingMessages = 0;
 	String address = null;
 	String remoteNodeAddress = address + ":8000";
-//    String remoteNodeAddress = "10.8.98.15:8000";
+//    String remoteNodeAddress = "10.8.108.3:8000";
 
 	/**
 	 * 
 	 * @param serverId
 	 * @param anotherNode
 	 * @param tc
-	 */
+	 */   
 	public Tester(int testId, int portId, TesterController tc) {
 		try {
 			address = InetAddress.getLocalHost().getHostAddress();
