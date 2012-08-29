@@ -257,7 +257,7 @@ public class TesterController {
 	long startRetrieveTime = 0;
 	private static final String DATA_TAG = "data ";
 	private static final String KEY_TAG = "key ";
-    int retrieveTimeOut = 2000;
+    int retrieveTimeOut = 3000;
     
 	public void retrieveData() {
 		dataHandlerobject.startRetrieveTime = System.currentTimeMillis();
@@ -265,6 +265,7 @@ public class TesterController {
 		dataHandlerobject.FailureCount = 0;
 		for (int i = 0; i < datakeyArray.length; i++) {
 			try {
+                
 				testServers.get(retrieveNodeID).getServer().getData(datakeyArray[i].getBytes(), dataHandlerobject);
 
 
@@ -275,13 +276,22 @@ public class TesterController {
 	}
     
     public void retrieveDataContinous() {
-        dataHandlerobject.retrieveContinous = true;
+       dataHandlerobject.retrieveContinous = true;
+       dataHandlerobject.totalCount = 0;
+       timer.scheduleAtFixedRate(new TimerTask() {
+
+            @Override
+            public void run() {               
+                retrieveData();
+            }
+        }, 2000, retrieveTimeOut);
        timer.scheduleAtFixedRate(new TimerTask() {
 
             @Override
             public void run() {
-                System.out.println("retrieve count per 2 seconds: "+dataHandlerobject.retrieveSuccessCount);
-                retrieveData();
+                int diff = dataHandlerobject.totalCount-dataHandlerobject.newCount;
+                System.out.println("retrieve count per "+(retrieveTimeOut/1000)+" seconds: "+diff);   
+                dataHandlerobject.newCount = dataHandlerobject.totalCount;
             }
         }, 0, retrieveTimeOut);
 	}

@@ -13,7 +13,7 @@ import sinchana.dataStore.SinchanaDataCallback;
 public class SinchanaDataHandlerImpl implements SinchanaDataCallback {
 
 	public long startStoreTime, startRetrieveTime;
-	public int storeSuccessCount, storeFailureCount, retrieveSuccessCount, FailureCount;
+	public int storeSuccessCount, storeFailureCount, retrieveSuccessCount, FailureCount,totalCount,newCount;
     public boolean retrieveContinous = false;
 	@Override
 	public void isStored(byte[] key, boolean success) {
@@ -36,14 +36,14 @@ public class SinchanaDataHandlerImpl implements SinchanaDataCallback {
 
 	@Override
 	public void response(byte[] key, byte[] data) {
-		retrieveSuccessCount++;
+		retrieveSuccessCount++;totalCount++;
         if(!retrieveContinous){
             System.out.println("retrieved : " + (data==null?data:new String(data))
 				+ "\tcount: " + retrieveSuccessCount
 				+ "\ttime: " + (System.currentTimeMillis() - startRetrieveTime));
-        }
-		
+        }		
 	}
+    
 
 	@Override
 	public void error(byte[] error) {
