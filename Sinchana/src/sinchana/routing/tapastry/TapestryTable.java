@@ -49,7 +49,7 @@ import sinchana.util.tools.ByteArrays;
 
 /**
  *
- * @author Hiru
+ * @author Asanka Indrajith
  */
 public class TapestryTable implements RoutingHandler {
 
@@ -65,9 +65,10 @@ public class TapestryTable implements RoutingHandler {
 	private final byte[] serverId;
 	private final BigInteger serverIdAsBigInt;
 	private final Node thisNode;
-	private final Node[][][] fingerTable = new Node[TABLE_SIZE][TABLE_WIDTH][NUMBER_OF_TABLE_ENTRIES];
+	private final Node[][][] routingTable = new Node[TABLE_SIZE][TABLE_WIDTH][NUMBER_OF_TABLE_ENTRIES];
 	private final Timer timer = new Timer();
 	private int timeOutCount = 0;
+    
 
 	public TapestryTable(SinchanaServer server) {
 		this.server = server;
@@ -88,15 +89,19 @@ public class TapestryTable implements RoutingHandler {
 
 	@Override
 	public void init() {
-		this.initFingerTable();
+		this.initRoutingTable();
 	}
-
-	private void initFingerTable() {
-		synchronized (fingerTable) {
+    
+    /**
+	 * Build routing table and successor and predecessor list.
+	 * Each routing table entry contains one primary link and two backup links.
+	 */
+	private void initRoutingTable() {
+		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
 				for (int j = 0; j < TABLE_WIDTH; j++) {
 					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-						fingerTable[i][j][k] = null;
+						routingTable[i][j][k] = null;
 					}
 				}
 			}
@@ -112,12 +117,18 @@ public class TapestryTable implements RoutingHandler {
 			}
 		}
 	}
-
+    
 	@Override
 	public void triggerOptimize() {
 		timeOutCount = SinchanaDHT.ROUTING_OPTIMIZATION_TIME_OUT;
 	}
-
+    
+    /**
+	 * Update routing table entries from successors and predecessors.
+     * periodically send messages to successors and predecessors 
+     * ask information about their routing tables and update its routing table.
+	 * 
+	 */
 	private void optimize() {
 		Message msg = new Message(MessageType.DISCOVER_NEIGHBORS, thisNode, 2);
 		msg.setFailedNodeSet(server.getConnectionPool().getFailedNodes());
@@ -160,9 +171,10 @@ public class TapestryTable implements RoutingHandler {
 			return thisNode;
 		}
 		int column = getColumn(destination, row);
-
-		synchronized (fingerTable) {
-			for (Node node : fingerTable[row][column]) {
+        
+        /* if routing table has an entry matching dgreatest common prefix with the destination returns it.*/
+		synchronized (routingTable) {
+			for (Node node : routingTable[row][column]) {
 				if (node != null) {
 					return node;
 				}
@@ -177,12 +189,15 @@ public class TapestryTable implements RoutingHandler {
 			if (row == 0) {
 				traverseDown = false;
 			}
+            
+           /* travels down if server node id is stored in a larger column number */
 			if (row == TABLE_SIZE - 1) {
 				traverseDown = true;
 			}
-
+            
+            /* travels down in the routing table untill find a match. if a match was not find travels up and find.*/
 			while (true) {
-				for (Node node : fingerTable[row][column]) {
+				for (Node node : routingTable[row][column]) {
 					if (node != null) {
 						return node;
 					}
@@ -199,7 +214,8 @@ public class TapestryTable implements RoutingHandler {
 					traverseDown = row >= TABLE_SIZE - 1;
 					column = getColumn(this.serverId, row);
 				}
-
+                
+                /* case where node responsible for the destination is this node.*/
 				column = (column + 1) % TABLE_WIDTH;
 				if (iRow == row && iColumn == column) {
 					return thisNode;
@@ -211,16 +227,20 @@ public class TapestryTable implements RoutingHandler {
 	@Override
 	public boolean isInTheTable(Node nodeToCkeck) {
 		byte[] id = nodeToCkeck.serverId.array();
+        
+        /* check whether the node is in routing table. */
 		for (int i = 0; i < TABLE_SIZE; i++) {
 			for (int j = 0; j < TABLE_WIDTH; j++) {
 				for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-					if (fingerTable[i][j][k] != null
-							&& Arrays.equals(fingerTable[i][j][k].serverId.array(), id)) {
+					if (routingTable[i][j][k] != null
+							&& Arrays.equals(routingTable[i][j][k].serverId.array(), id)) {
 						return true;
 					}
 				}
 			}
 		}
+        
+        /* check whether the node is within predessesors. */
 		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 			if (predecessors[i] == null) {
 				break;
@@ -229,6 +249,8 @@ public class TapestryTable implements RoutingHandler {
 				return true;
 			}
 		}
+        
+        /* check whether the node is within successors. */
 		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 			if (successors[i] == null) {
 				break;
@@ -242,20 +264,22 @@ public class TapestryTable implements RoutingHandler {
 	
 	@Override
 	public Set<Node> getNeighbourSet() {
-		//initializes an empty thisNode set.
+        
+		/*initializes an empty thisNode set. */
 		Set<Node> neighbourSet = new HashSet<Node>();
-		synchronized (fingerTable) {
+		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
 				for (int j = 0; j < TABLE_WIDTH; j++) {
 					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-						if (fingerTable[i][j][k] != null) {
-							neighbourSet.add(fingerTable[i][j][k]);
+						if (routingTable[i][j][k] != null) {
+							neighbourSet.add(routingTable[i][j][k]);
 						}
 					}
 				}
 			}
 		}
-		//adds the predecessors & the successors.
+        
+		/*adds the predecessors & the successors. */
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (predecessors[i] != null) {
@@ -270,12 +294,13 @@ public class TapestryTable implements RoutingHandler {
 				}
 			}
 		}
-		//returns the thisNode set.
+		
 		return neighbourSet;
 	}
 
 	@Override
 	public boolean updateTable(Node node, boolean add) {
+        
 		if (Arrays.equals(node.serverId.array(), this.serverId)) {
 			return false;
 		}
@@ -290,16 +315,27 @@ public class TapestryTable implements RoutingHandler {
 		}
 		return updated;
 	}
-
+    
+    /**
+	 * Add new node to the routing table and to predecessors or successors.
+     * Returns whether the node is added into the routing table or to the to predecessors or successors or not.
+     * @param node	Node that to added to from routing table and successors and predecessors.
+	 * @return <code>true</code> the node is added into the routing table or to the to 
+     * predecessors or successors. <code>false</code> otherwise.
+	 * 
+	 */
 	private boolean addNode(Node node) {
 		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
 		BigInteger successorOffset, pointerOffset, tempNodeOffset, newNodeOffset = getOffset(node.serverId.array());
 		Node tempNodeToUpdate;
+        
 		synchronized (successors) {
+            
 			pointerOffset = ZERO;
 			tempNodeOffset = newNodeOffset;
 			tempNodeToUpdate = node;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+                
 				/**
 				 * Checks whether the new thisNode should be set as the successors or not. 
 				 * if successors is the server itself (successorOffset == 0) or if the new thisNode 
@@ -326,14 +362,17 @@ public class TapestryTable implements RoutingHandler {
 			}
 		}
 		synchronized (predecessors) {
+            
 			pointerOffset = SinchanaServer.GRID_SIZE;
 			tempNodeOffset = newNodeOffset;
 			tempNodeToUpdate = node;
+            
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+                
 				/**
 				 * Checks whether the new thisNode should be set as the predecessors or not. 
 				 * if predecessors is the server itself (predecessorOffset == 0) or if the new thisNode 
-				 * is not the server it self (newNodeOffset != 0) and it predecesses 
+				 * is not the server it self (newNodeOffset != 0) and it predecessors 
 				 * the server than the existing predecessors (predecessorOffset < newNodeOffset), 
 				 * the new thisNode will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
@@ -357,12 +396,13 @@ public class TapestryTable implements RoutingHandler {
 		}
 		int row = getRow(this.serverId, node.serverId.array());
 		int column = getColumn(node.serverId.array(), row);
-		synchronized (fingerTable) {
+        
+		synchronized (routingTable) {
 			for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
-				if (fingerTable[row][column][i] != null && Arrays.equals(fingerTable[row][column][i].serverId.array(), node.serverId.array())) {
+				if (routingTable[row][column][i] != null && Arrays.equals(routingTable[row][column][i].serverId.array(), node.serverId.array())) {
 					break;
-				} else if (fingerTable[row][column][i] == null) {
-					fingerTable[row][column][i] = node.deepCopy();
+				} else if (routingTable[row][column][i] == null) {
+					routingTable[row][column][i] = node.deepCopy();
 					updatedTable = true;
 					break;
 				}
@@ -370,13 +410,21 @@ public class TapestryTable implements RoutingHandler {
 		}
 		return updatedPredecessors || updatedSuccessors || updatedTable;
 	}
-
+    
+    /**
+	 * Remove a node from the routing table and neighbor set
+     * Returns whether the node is removed from the routing table and neighbor set.
+     * @param nodeToRemove	Node that to be removed from routing table and successors and predecessors.
+	 * @return <code>true</code> node is removed from the routing table and neighbor set. <code>false</code> otherwise.
+	 */
 	private boolean removeNode(Node nodeToRemove) {
+        
 		Set<Node> neighbourSet = getNeighbourSet();
 		if (neighbourSet.contains(nodeToRemove)) {
 			neighbourSet.remove(nodeToRemove);
-			//reset the predecessors, successors and finger table entries.
-			initFingerTable();
+            
+			/*reset the predecessors, successors and finger table entries.*/
+			initRoutingTable();
 			for (Node node : neighbourSet) {
 				addNode(node);
 			}
@@ -393,6 +441,7 @@ public class TapestryTable implements RoutingHandler {
 	 * @return		Offset of the id relative to this server.
 	 */
 	private BigInteger getOffset(byte[] id) {
+        
 		for (int i = 0; i < 20; i++) {
 			if ((this.serverId[i] + 256) % 256 > (id[i] + 256) % 256) {
 				return SinchanaServer.GRID_SIZE.add(new BigInteger(1, id)).subtract(serverIdAsBigInt);
@@ -402,39 +451,62 @@ public class TapestryTable implements RoutingHandler {
 		}
 		return ZERO;
 	}
-
+    /**
+	 * Match two Id to find the largest common prefix and calculate row number 
+     * where the new node/destination node must be inserted in the routing table.
+	 * 
+	 * @param id	Id of this node.
+     * @param id	Id of the new node.
+	 * @return		row number of the routing table.
+	 */
+    
 	private int getRow(byte[] id, byte[] newId) {
+        
 		int x1, x2;
 		for (int i = 0; i < 20; i++) {
 			x1 = id[i];
 			x2 = newId[i];
+            
+            /* check every bit for in every byte in the byte array to get the greatest common prefix match. */
 			for (int j = 7; j >= 0; j--) {
 				if ((x1 & (1 << j)) != (x2 & (1 << j))) {
 					return ((8 / BASE_POWER) * (20 - i) - ((8 / BASE_POWER) - (int) (j / BASE_POWER)));
+                    // 2 * (20 - 0) - 2 - (int) (j / 4))
 				}
 			}
 		}
 		return -1;
 	}
-
+    
+     /**
+	 *Returns the column number for a given row number and Server Id.
+	 * 
+	 * @param id	Id of this node.
+     * @param row	row number of the routing table.
+	 * @return		column number of the routing table.
+	 */
 	private int getColumn(byte[] id, int row) {
+        
 		int val = (id[20 - (row * BASE_POWER / 8) - 1] + 256) % 256;
+        
+        /* find the next digit of the destination address that need to be match. */
 		val = (int) (val / Math.pow(TABLE_WIDTH, row % (8 / BASE_POWER)));
 		return val % TABLE_WIDTH;
 	}
 
 	@Override
 	public void printInfo() {
+        
 		final String spaces = "****************************************";
 		System.out.println("--------------" + this.server.getServerIdAsString() + "--------------");
 		System.out.println("Routing Table");
-		synchronized (fingerTable) {
+		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
 				for (int j = 0; j < TABLE_WIDTH; j++) {
 					System.out.print(" |");
 					for (int k = 0; k < NUMBER_OF_TABLE_ENTRIES; k++) {
-						if (fingerTable[i][j][k] != null) {
-							System.out.print(" " + ByteArrays.idToReadableString(fingerTable[i][j][k].serverId));
+						if (routingTable[i][j][k] != null) {
+							System.out.print(" " + ByteArrays.idToReadableString(routingTable[i][j][k].serverId));
 						} else {
 							System.out.print(" " + spaces);
 						}
