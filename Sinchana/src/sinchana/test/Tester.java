@@ -46,7 +46,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 			//169.254.67.199
 			this.testId = testId;
 			this.testerController = tc;
-			server = new SinchanaServer(address + ":" + portId, SinchanaDHT.CHORD);
+			server = new SinchanaServer(address + ":" + portId, SinchanaDHT.PASTRY);
 			server.registerSinchanaRequestCallback(new SinchanaRequestCallback() {
 
 				@Override

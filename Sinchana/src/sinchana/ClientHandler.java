@@ -55,14 +55,19 @@ import sinchana.util.tools.Hash;
  */
 public class ClientHandler {
 
+	/*Sinchana Server instance*/
 	private final SinchanaServer server;
+	/*Node info*/
 	private final Node thisNode;
+	/*Client request-id map*/
 	private final ConcurrentHashMap<Long, ClientData> clientsMap = new ConcurrentHashMap<Long, ClientData>();
 	private final Timer timer = new Timer();
 
 	ClientHandler(SinchanaServer svr) {
 		this.server = svr;
 		this.thisNode = server.getNode();
+		/*Schedule a task to the timer with 1 second period. At each second, request-id map
+		is checked and old but not resolved requests are discarded.*/
 		timer.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
@@ -76,6 +81,7 @@ public class ClientHandler {
 							clientData.resolved = false;
 							if (clientData.waiting) {
 								clientData.success = false;
+								clientData.error = SinchanaDHT.ERROR_MSG_TIMED_OUT;
 								clientData.lock.release();
 							} else {
 								clientData.sinchanaCallBackHandler.error(SinchanaDHT.ERROR_MSG_TIMED_OUT);
@@ -87,30 +93,35 @@ public class ClientHandler {
 		}, 1000, 1000);
 	}
 
+	/*
+	 * This method maps the responses' ids with the requests' ids.
+	 */
 	void setResponse(Message message) {
 		ClientData clientData = clientsMap.remove(message.getId());
 		if (clientData != null) {
+			/*Updating test data*/
+			if (server.getSinchanaTestInterface() != null) {
+				server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
+			}
 			clientData.resolved = true;
 			if (clientData.waiting) {
+				/*If the request is an asynchronous one*/
 				clientData.success = message.isSuccess();
 				clientData.data = message.isSetData() ? message.getData() : null;
 				clientData.error = message.isSetError() ? message.getError() : null;
+				/*Release the thread by releasing the semaphore*/
 				clientData.lock.release();
 			} else {
+				/*If the request is synchronous*/
 				switch (message.type) {
 					case RESPONSE_SERVICE:
-						if (server.getSinchanaTestInterface() != null) {
-							server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
-						}
 						((SinchanaServiceCallback) clientData.sinchanaCallBackHandler).serviceResponse(
 								Arrays.copyOf(clientData.dataKey, clientData.dataKey.length - SinchanaDHT.SERVICE_TAG.length),
 								message.isSuccess(), message.getData());
 						break;
-
 					case RESPONSE_DATA:
-						if (server.getSinchanaTestInterface() != null) {
-							server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
-						}
+						/*Data store request can be bother data requests and service requests. 
+						 * They are separated by looking at the type of the callback*/
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
 							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).response(clientData.dataKey, message.getData());
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceCallback) {
@@ -132,6 +143,7 @@ public class ClientHandler {
 						if (clientData.sinchanaCallBackHandler instanceof SinchanaDataCallback) {
 							((SinchanaDataCallback) clientData.sinchanaCallBackHandler).isRemoved(clientData.dataKey, message.success);
 						} else if (clientData.sinchanaCallBackHandler instanceof SinchanaServiceInterface) {
+							/*Service removel should be followed by local service remove*/
 							if (message.success) {
 								boolean success = this.server.getSinchanaServiceStore().removeService(clientData.dataKey);
 								((SinchanaServiceInterface) clientData.sinchanaCallBackHandler).isRemoved(
@@ -145,9 +157,6 @@ public class ClientHandler {
 						}
 						break;
 					case RESPONSE:
-						if (server.getSinchanaTestInterface() != null) {
-							server.getSinchanaTestInterface().incRequestCount(message.lifetime, message.routedViaPredecessors);
-						}
 						((SinchanaResponseCallback) clientData.sinchanaCallBackHandler).response(message.getData());
 						break;
 					case ERROR:
@@ -158,35 +167,21 @@ public class ClientHandler {
 		}
 	}
 
+	/*
+	 * Adds a synchronous request
+	 */
 	ClientData addRequest(byte[] key, byte[] data, MessageType type, long timeOut, TimeUnit timeUnit) throws SinchanaTimeOutException, InterruptedException {
-		ClientData clientData = null;
 		long requestId = -1;
-		Message message = new Message(type, thisNode, SinchanaDHT.REQUEST_MESSAGE_LIFETIME);
-		switch (message.type) {
-			case REQUEST:
-				message.setDestinationId(key);
-				message.setKey(key);
-				break;
-			case GET_SERVICE:
-				message.setDestinationId(Arrays.copyOf(key, 20));
-				message.setKey(Arrays.copyOfRange(key, 20, key.length));
-				break;
-			case GET_DATA:
-			case STORE_DATA:
-			case DELETE_DATA:
-				message.setDestinationId(Hash.generateId(new String(key)));
-				message.setKey(key);
-				break;
-		}
-		message.setData(data);
-		message.setStation(thisNode);
-
+		/*Obtains the message*/
+		Message message = generateMessage(type, key, data);
 		requestId = System.currentTimeMillis();
-		clientData = new ClientData();
+		/*creating a client data object*/
+		ClientData clientData = new ClientData();
 		clientData.time = requestId;
 		clientData.dataKey = key;
 		clientData.waiting = true;
 		clientData.sinchanaCallBackHandler = null;
+		/*Checks availability and adds to the request-id map*/
 		while (clientsMap.putIfAbsent(requestId, clientData) != null) {
 			requestId++;
 		}
@@ -194,7 +189,9 @@ public class ClientHandler {
 		message.setResponseExpected(true);
 		message.setId(requestId);
 		try {
+			/*Adding request to the message queue*/
 			server.getMessageHandler().addRequest(message);
+			/*wait*/
 			if (timeOut != -1) {
 				clientData.lock.tryAcquire(timeOut, timeUnit);
 			} else {
@@ -203,6 +200,7 @@ public class ClientHandler {
 		} catch (InterruptedException ex) {
 			throw ex;
 		} finally {
+			/*Remove the request from the request-id map*/
 			clientsMap.remove(requestId);
 		}
 		if (!clientData.resolved) {
@@ -211,27 +209,15 @@ public class ClientHandler {
 		return clientData;
 	}
 
+	/*
+	 * Adds an asynchronous request
+	 */
 	void addRequest(byte[] key, byte[] data, MessageType type, SinchanaCallBack scbh) throws InterruptedException {
 		long requestId = -1;
-		Message message = new Message(type, thisNode, SinchanaDHT.REQUEST_MESSAGE_LIFETIME);
-		switch (message.type) {
-			case REQUEST:
-				message.setDestinationId(key);
-				message.setKey(key);
-				break;
-			case GET_SERVICE:
-				message.setDestinationId(Arrays.copyOf(key, 20));
-				message.setKey(Arrays.copyOfRange(key, 20, key.length));
-				break;
-			case GET_DATA:
-			case STORE_DATA:
-			case DELETE_DATA:
-				message.setDestinationId(Hash.generateId(new String(key)));
-				message.setKey(key);
-				break;
-		}
-		message.setData(data);
-		message.setStation(thisNode);
+		/*Obtains the message*/
+		Message message = generateMessage(type, key, data);
+		/*if callback is null, that means it does not expect a response, otherwise, 
+		 * it's expecting a response, so creating a client data object*/
 		if (scbh != null) {
 			requestId = System.currentTimeMillis();
 			ClientData clientData = new ClientData();
@@ -239,6 +225,7 @@ public class ClientHandler {
 			clientData.dataKey = key;
 			clientData.waiting = false;
 			clientData.sinchanaCallBackHandler = scbh;
+			/*Checks availability and adds to the request-id map*/
 			while (clientsMap.putIfAbsent(requestId, clientData) != null) {
 				requestId++;
 			}
@@ -248,9 +235,44 @@ public class ClientHandler {
 		} else {
 			message.setResponseExpected(false);
 		}
+		/*Adding request to the message queue*/
 		server.getMessageHandler().addRequest(message);
 	}
 
+	/*
+	 * Generates a message for the request.
+	 */
+	private Message generateMessage(MessageType type, byte[] key, byte[] data) {
+		Message message = new Message(type, thisNode, SinchanaDHT.REQUEST_MESSAGE_LIFETIME);
+		switch (message.type) {
+			case REQUEST:
+				/*key is set as the destination id and target key*/
+				message.setDestinationId(key);
+				message.setKey(key);
+				break;
+			case GET_SERVICE:
+				/*key and destination id is extracted from the reference key*/
+				message.setDestinationId(Arrays.copyOf(key, 20));
+				message.setKey(Arrays.copyOfRange(key, 20, key.length));
+				break;
+			case GET_DATA:
+			case STORE_DATA:
+			case DELETE_DATA:
+				/*the hash value is used as the destination id*/
+				message.setDestinationId(Hash.generateId(new String(key)));
+				message.setKey(key);
+				break;
+		}
+		if (data != null) {
+			message.setData(data);
+		}
+		message.setStation(thisNode);
+		return message;
+	}
+
+	/*
+	 * This inner class is used to store iformation about requests.
+	 */
 	class ClientData {
 
 		long key;
