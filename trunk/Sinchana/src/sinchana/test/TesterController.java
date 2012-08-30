@@ -448,6 +448,7 @@ public class TesterController {
 		datakeyArray = new String[noOfData];
 		int numOfTestServers = testServers.size();
 
+		dataID = 0;
 		for (int i = 0; i < noOfData; i++) {
 			dataArray[i] = DATA_TAG + dataID;
 			datakeyArray[i] = KEY_TAG + dataID;
