@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import sinchana.SinchanaServer;
 
 /**
- *
+ *The class is the data store implementation which default used by the sinchana server
  * @author Tharindu Jayasinghe
  */
 public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {

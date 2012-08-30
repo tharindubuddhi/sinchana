@@ -36,7 +36,8 @@ package sinchana.dataStore;
 import sinchana.SinchanaCallBack;
 
 /**
- *
+ *This class gives the method to all the data call backs which 
+ * needs to be called at the requested node
  * @author Tharindu Jayasinghe
  */
 public interface SinchanaDataCallback extends SinchanaCallBack {
