@@ -83,7 +83,6 @@ public class ThriftClient {
         System.out.println("connected....");
     }
 
-    
     /** the method send a message to a random picked node id
      * @param messageText the message content to be sent to a random destination
      */
@@ -95,7 +94,10 @@ public class ThriftClient {
         byte[] message = messageText.getBytes();
         try {
             response = client.sendRequest(ByteBuffer.wrap(destination), ByteBuffer.wrap(message));
-            System.out.println(new String(response.getData()));
+            if (response != null) {
+                System.out.println(new String(response.getData()));
+            }
+
         } catch (TException ex) {
             Logger.getLogger(ThriftClient.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -112,10 +114,12 @@ public class ThriftClient {
         byte[] dataValue = data.getBytes();
         try {
             response = client.publishData(ByteBuffer.wrap(dataKey), ByteBuffer.wrap(dataValue));
-            if (response.success) {
-                System.out.println(data + " stored success.");
-            } else {
-                System.out.println(data + " storing failed");
+            if (response != null) {
+                if (response.success) {
+                    System.out.println(data + " stored success.");
+                } else {
+                    System.out.println(data + " storing failed");
+                }
             }
 
         } catch (TException ex) {
@@ -123,7 +127,7 @@ public class ThriftClient {
         }
 
     }
-   
+
     /**
      * the method retrieve data which maps to the given key
      * @param key datakey to be retrieved
@@ -131,6 +135,11 @@ public class ThriftClient {
     public void retrieveData(String key) {
         try {
             response = client.getData(ByteBuffer.wrap(key.getBytes()));
+            if (response.data != null) {
+                System.out.println(key + ":- " + new String(response.data.array()));
+            } else {
+                System.out.println(key + " is not found");
+            }
         } catch (TException ex) {
             Logger.getLogger(ThriftClient.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -143,12 +152,14 @@ public class ThriftClient {
     public void removeData(String key) {
         try {
             response = client.removeData(ByteBuffer.wrap(key.getBytes()));
-            if(response.success){
-                System.out.println("data removed success");
+            if (response != null) {
+                if (response.success) {
+                    System.out.println("data removed success");
+                }
+
             }
         } catch (TException ex) {
             Logger.getLogger(ThriftClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }
