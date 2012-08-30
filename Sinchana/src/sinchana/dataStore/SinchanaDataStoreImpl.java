@@ -45,44 +45,48 @@ public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 	private final ConcurrentHashMap<String, byte[]> dataMap = new ConcurrentHashMap<String, byte[]>();
 	private final SinchanaServer server;
 
-    /**
-     * 
-     * @param ss Sinchana server which has this data store
-     */
-    public SinchanaDataStoreImpl(SinchanaServer ss) {
+	/**
+	 * 
+	 * @param ss Sinchana server which has this data store
+	 */
+	public SinchanaDataStoreImpl(SinchanaServer ss) {
 		this.server = ss;
 	}
 
-    /**
-     * the method stores a key, value pair in the concurrent hash map
-     * @param key the data key with the data needs to be stored
-     * @param data the data to be stored 
-     * @return
-     */
-    @Override
+	/**
+	 * the method stores a key, value pair in the concurrent hash map
+	 * @param key the data key with the data needs to be stored
+	 * @param data the data to be stored 
+	 * @return
+	 */
+	@Override
 	public boolean store(byte[] key, byte[] data) {
 		dataMap.put(new String(key), data);
+		System.out.println(server.getServerIdAsString() + ": store\t"
+				+ new String(key) + "-" + (data != null ? new String(data) : "null"));
 		return true;
 	}
 
-    /**
-     * the method returns the data for the given key
-     * @param key the key which the data to be retrieved
-     * @return
-     */
-    @Override
+	/**
+	 * the method returns the data for the given key
+	 * @param key the key which the data to be retrieved
+	 * @return
+	 */
+	@Override
 	public byte[] get(byte[] key) {
 		return dataMap.get(new String(key));
 	}
 
-    /**
-     * the method removes the data for the given key
-     * @param key the key which the data to be removed 
-     * @return
-     */
-    @Override
+	/**
+	 * the method removes the data for the given key
+	 * @param key the key which the data to be removed 
+	 * @return
+	 */
+	@Override
 	public boolean remove(byte[] key) {
-		dataMap.remove(new String(key));
+		byte[] data = dataMap.remove(new String(key));
+		System.out.println(server.getServerIdAsString() + ": remove\t"
+				+ new String(key) + "-" + (data != null ? new String(data) : "null"));
 		return true;
 	}
 }

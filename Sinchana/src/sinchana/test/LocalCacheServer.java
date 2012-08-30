@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import sinchana.SinchanaDHT;
 
 /**
  *
@@ -50,7 +49,7 @@ public class LocalCacheServer {
 	}
 
 	public static void clear() {
-		if (TesterController.USE_REMOTE_CACHE_SERVER) {
+		if (true) {
 			try {
 				URL yahoo = new URL("http://cseanremo.appspot.com/remoteip?clear=true");
 				URLConnection yc = yahoo.openConnection();
@@ -67,7 +66,7 @@ public class LocalCacheServer {
 	}
 
 	public static String getRemoteNode(String address, int portId) {
-		if (TesterController.USE_REMOTE_CACHE_SERVER) {
+		if (true) {
 			try {
 				URL url = new URL("http://cseanremo.appspot.com/remoteip?"
 						+ "sid=" + address + "@" + portId

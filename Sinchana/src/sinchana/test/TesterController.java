@@ -1,7 +1,36 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+/************************************************************************************
+
+ * Sinchana Distributed Hash table 
+
+ * Copyright (C) 2012 Sinchana DHT - Department of Computer Science &               
+ * Engineering, University of Moratuwa, Sri Lanka. Permission is hereby 
+ * granted, free of charge, to any person obtaining a copy of this 
+ * software and associated documentation files of Sinchana DHT, to deal 
+ * in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+
+ * Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+
+ * Neither the name of University of Moratuwa, Department of Computer Science 
+ * & Engineering nor the names of its contributors may be used to endorse or 
+ * promote products derived from this software without specific prior written 
+ * permission.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ * SOFTWARE.                                                                    
+ ************************************************************************************/
 package sinchana.test;
 
 import java.math.BigInteger;
@@ -23,48 +52,30 @@ import sinchana.test.examples.service.HelloService;
 import sinchana.util.tools.Hash;
 
 /**
- *
- * @author Hiru
+ *This class creates given number of testers and controls them.
+ * @author Hirantha Subasinghe
  */
 public class TesterController {
 
-    /**
-     * 
-     */
-    public static final boolean USE_REMOTE_CACHE_SERVER = false;
-    /**
-     * 
-     */
-    public static final boolean CLEAR_CACHE_SERVER = true;
-    /**
-     * 
-     */
-    public static final int ROUND_TRIP_TIME = 0;
-    /**
-     * 
-     */
-    public static final boolean DO_LOG = false;
-    /**
-     * 
-     */
-    public static final long WATCH_TIME_OUT = 5 * 1000; //milliseconds.
+	/**
+	 * The round trip time in milliseconds. This will induce an arbitry round trip time
+	 * to the system. Keeping is to zero will have no effect.
+	 */
+	public static final int ROUND_TRIP_TIME = 0;
+	/**
+	 * <code>true</code> if the logging should be done. <code>false</code> otherwise.
+	 */
+	public static final boolean DO_LOG = false;
 	private final Map<Integer, Tester> testServers = new HashMap<Integer, Tester>();
 	private final ControllerUI cui = new ControllerUI(this);
 	private final Timer timer = new Timer();
 
-	/**
-	 * 
-	 * @param args
-	 */
 	public static void main(String[] args) {
 //        Uncomment when you have a proxy network and you need to connect to internet
 
 //		Properties props = System.getProperties();
-//        props.put("http.proxyHost", "cache.mrt.ac.lk");
-//        props.put("http.proxyPort", "3128");
-		if (CLEAR_CACHE_SERVER) {
-			LocalCacheServer.clear();
-		}
+//      props.put("http.proxyHost", "cache.mrt.ac.lk");
+//      props.put("http.proxyPort", "3128");
 		TesterController testerController = new TesterController();
 	}
 
@@ -158,8 +169,8 @@ public class TesterController {
 
 	/**
 	 * 
-     * @param portRange 
-     * @param numOfTesters
+	 * @param portRange 
+	 * @param numOfTesters
 	 */
 	public void startNodeSet(int portRange, int numOfTesters) {
 		Tester tester;
@@ -196,11 +207,11 @@ public class TesterController {
 		}
 	}
 
-    /**
-     * 
-     * @param idText
-     */
-    public void printTableInfo(String idText) {
+	/**
+	 * 
+	 * @param idText
+	 */
+	public void printTableInfo(String idText) {
 		BigInteger id = new BigInteger(idText, 16);
 		Collection<Tester> testers = testServers.values();
 		for (Tester tester : testers) {
@@ -226,8 +237,8 @@ public class TesterController {
 	 * @param nodeIdsString
 	 * @param typesString
 	 * @param classIdsString
-     * @param locationsString
-     * @param containTextString  
+	 * @param locationsString
+	 * @param containTextString  
 	 */
 	public void printLogs(String nodeIdsString, String typesString, String classIdsString,
 			String locationsString, String containTextString) {
@@ -267,22 +278,22 @@ public class TesterController {
 		sendContinuously = false;
 		testCaseSelection = selection;
 	}
-    /**
-     * 
-     */
-    public static final int MESSAGE_TESTING = 1;
-    /**
-     * 
-     */
-    public static final int DATA_STORE_TESTING = 2;
-    /**
-     * 
-     */
-    public static final int SERVICE_TESTING = 3;
-    /**
-     * 
-     */
-    public int testCaseSelection = 1;
+	/**
+	 * Test case messages 
+	 */
+	public static final int MESSAGE_TESTING = 1;
+	/**
+	 * Test case data store
+	 */
+	public static final int DATA_STORE_TESTING = 2;
+	/**
+	 * Test case services
+	 */
+	public static final int SERVICE_TESTING = 3;
+	/**
+	 * Current test case
+	 */
+	public int testCaseSelection = 1;
 
 	void publishService() {
 		try {
@@ -294,7 +305,7 @@ public class TesterController {
 		}
 	}
 	private byte[] serviceKey = "HelloService".getBytes();
-	private byte[] serviceData = "Hi, Sinchana".getBytes();
+	private byte[] serviceData = "Sinchana".getBytes();
 	private HelloService helloService = new HelloService();
 
 	void removeService() {
@@ -394,11 +405,7 @@ public class TesterController {
 	private static int totalCount = 0;
 	private static int errorCount = 0;
 
-    /**
-     * 
-     * @param numOfMsgs
-     */
-    public void testMessages(int numOfMsgs) {
+	public void testMessages(int numOfMsgs) {
 		int numOfTestServers = testServers.size();
 		while (numOfMsgs > 0) {
 			String val = new BigInteger(160, random).toString(16);
@@ -430,12 +437,11 @@ public class TesterController {
 		}
 	};
 
-    
-    /**
-     * the test method to store a no of data from a randomly picked node
-     * @param noOfData No of data to be stored
-     */
-    public void storeData(int noOfData) {
+	/**
+	 * the test method to store a no of data from a randomly picked node
+	 * @param noOfData No of data to be stored
+	 */
+	public void storeData(int noOfData) {
 		totalCount = 0;
 		errorCount = 0;
 		dataArray = new String[noOfData];
@@ -458,11 +464,11 @@ public class TesterController {
 		}
 	}
 
-    /**
-     * the test method to remove no of data 
-     * @param numOfDataToRemove no of data to be removed
-     */
-    public void removeData(int numOfDataToRemove) {
+	/**
+	 * the test method to remove no of data 
+	 * @param numOfDataToRemove no of data to be removed
+	 */
+	public void removeData(int numOfDataToRemove) {
 		totalCount = 0;
 		errorCount = 0;
 		if (dataArray == null || datakeyArray == null) {
@@ -482,11 +488,11 @@ public class TesterController {
 		}
 	}
 
-    /**
-     * the method retrieves no of data from the sinchana dht
-     * @param numOfDataToRetrieve
-     */
-    public void getData(int numOfDataToRetrieve) {
+	/**
+	 * the method retrieves no of data from the sinchana dht
+	 * @param numOfDataToRetrieve
+	 */
+	public void getData(int numOfDataToRetrieve) {
 		if (dataArray == null || datakeyArray == null) {
 			return;
 		}
