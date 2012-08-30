@@ -88,10 +88,14 @@ public class PastryTable implements RoutingHandler {
 
 	@Override
 	public void init() {
-		this.initFingerTable();
+		this.initRoutingTable();
 	}
-
-	private void initFingerTable() {
+    
+    /**
+	 * Build routing table and successor and predecessor list.
+	 * Each routing table entry contains one primary link and two backup links.
+	 */
+	private void initRoutingTable() {
 		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
 				for (int j = 0; j < TABLE_WIDTH; j++) {
@@ -164,7 +168,8 @@ public class PastryTable implements RoutingHandler {
 			return thisNode;
 		}
 		int column = getColumn(destination, row);
-
+        
+        /* if routing table has an entry matching dgreatest common prefix with the destination returns it.*/
 		synchronized (routingTable) {
 			for (Node node : routingTable[row][column]) {
 				if (node != null) {
@@ -181,6 +186,8 @@ public class PastryTable implements RoutingHandler {
 			if (row == 0) {
 				traverseDown = false;
 			}
+            
+            /* travels down if server node id is stored in a larger column number */
 			if (row == TABLE_SIZE - 1) {
 				traverseDown = true;
 			}
@@ -203,7 +210,8 @@ public class PastryTable implements RoutingHandler {
 					traverseDown = row >= TABLE_SIZE - 1;
 					column = getColumn(this.serverId, row);
 				}
-
+                
+                /* case where node responsible for the destination is this node.*/
 				column = (column + 1) % TABLE_WIDTH;
 				if (iRow == row && iColumn == column) {
 					return thisNode;
@@ -217,6 +225,8 @@ public class PastryTable implements RoutingHandler {
 		byte[] id = nodeToCkeck.serverId.array();
 		int row = getRow(this.serverId, id);
 		int column = getColumn(id, row);
+        
+        /* check whether the node is within predessesors. */
 		for (int i = 0; i < NUMBER_OF_TABLE_ENTRIES; i++) {
 			if (routingTable[row][column][i] == null) {
 				break;
@@ -225,6 +235,8 @@ public class PastryTable implements RoutingHandler {
 				return true;
 			}
 		}
+        
+        /* check whether the node is within predessesors. */
 		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 			if (predecessors[i] == null) {
 				break;
@@ -233,6 +245,8 @@ public class PastryTable implements RoutingHandler {
 				return true;
 			}
 		}
+        
+        /* check whether the node is within successors. */
 		for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 			if (successors[i] == null) {
 				break;
@@ -246,7 +260,8 @@ public class PastryTable implements RoutingHandler {
 
 	@Override
 	public Set<Node> getNeighbourSet() {
-		//initializes an empty thisNode set.
+        
+		/*initializes an empty thisNode set.*/
 		Set<Node> neighbourSet = new HashSet<Node>();
 		synchronized (routingTable) {
 			for (int i = 0; i < TABLE_SIZE; i++) {
@@ -259,7 +274,8 @@ public class PastryTable implements RoutingHandler {
 				}
 			}
 		}
-		//adds the predecessors & the successors.
+        
+		/*adds the predecessors & the successors. */
 		synchronized (predecessors) {
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (predecessors[i] != null) {
@@ -267,6 +283,7 @@ public class PastryTable implements RoutingHandler {
 				}
 			}
 		}
+        
 		synchronized (successors) {
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
 				if (successors[i] != null) {
@@ -274,7 +291,7 @@ public class PastryTable implements RoutingHandler {
 				}
 			}
 		}
-		//returns the thisNode set.
+		
 		return neighbourSet;
 	}
 
@@ -294,7 +311,15 @@ public class PastryTable implements RoutingHandler {
 		}
 		return updated;
 	}
-
+    
+     /**
+	 * Add new node to the routing table and to predecessors or successors.
+     * Returns whether the node is added into the routing table or to the to predecessors or successors or not.
+     * @param node	Node that to added to from routing table and successors and predecessors.
+	 * @return <code>true</code> the node is added into the routing table or to the to 
+     * predecessors or successors. <code>false</code> otherwise.
+	 * 
+	 */
 	private boolean addNode(Node node) {
 		boolean updatedSuccessors = false, updatedPredecessors = false, updatedTable = false;
 		BigInteger successorOffset, pointerOffset, tempNodeOffset, newNodeOffset = getOffset(node.serverId.array());
@@ -303,6 +328,7 @@ public class PastryTable implements RoutingHandler {
 			pointerOffset = ZERO;
 			tempNodeToUpdate = node;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+                
 				/**
 				 * Checks whether the new thisNode should be set as the successors or not. 
 				 * if successors is the server itself (successorOffset == 0) or if the new thisNode 
@@ -331,10 +357,11 @@ public class PastryTable implements RoutingHandler {
 			pointerOffset = SinchanaServer.GRID_SIZE;
 			tempNodeToUpdate = node;
 			for (int i = 0; i < SUCCESSOR_LEVELS; i++) {
+                
 				/**
 				 * Checks whether the new thisNode should be set as the predecessors or not. 
 				 * if predecessors is the server itself (predecessorOffset == 0) or if the new thisNode 
-				 * is not the server it self (newNodeOffset != 0) and it predecesses 
+				 * is not the server it self (newNodeOffset != 0) and it predecessors 
 				 * the server than the existing predecessors (predecessorOffset < newNodeOffset), 
 				 * the new thisNode will be set as the predecessors.
 				 * 0-----existing.predecessors.id------new.server.id-------this.server.id----------End.of.Grid
@@ -370,13 +397,20 @@ public class PastryTable implements RoutingHandler {
 		}
 		return updatedPredecessors || updatedSuccessors || updatedTable;
 	}
-
+    
+     /**
+	 * Remove a node from the routing table and neighbor set
+     * Returns whether the node is removed from the routing table and neighbor set.
+     * @param nodeToRemove	Node that to be removed from routing table and successors and predecessors.
+	 * @return <code>true</code> node is removed from the routing table and neighbor set. <code>false</code> otherwise.
+	 */
 	private boolean removeNode(Node nodeToRemove) {
 		Set<Node> neighbourSet = getNeighbourSet();
 		if (neighbourSet.contains(nodeToRemove)) {
 			neighbourSet.remove(nodeToRemove);
-			//reset the predecessors, successors and finger table entries.
-			initFingerTable();
+            
+			/*reset the predecessors, successors and finger table entries.*/
+			initRoutingTable();
 			for (Node node : neighbourSet) {
 				addNode(node);
 			}
@@ -405,12 +439,22 @@ public class PastryTable implements RoutingHandler {
 		}
 		return ZERO;
 	}
-
+    
+    /**
+	 * Match two Id to find the largest common prefix and calculate row number 
+     * where the new node must be inserted in the routing table.
+	 * 
+	 * @param id	Id of this node.
+     * @param id	Id of the new node.
+	 * @return		row number of the routing table.
+	 */
 	private int getRow(byte[] id, byte[] newId) {
 		int x1, x2;
 		for (int i = 0; i < 20; i++) {
 			x1 = id[i];
 			x2 = newId[i];
+            
+             /* check every bit for in every byte in the byte array to get the greatest common prefix match. */
 			for (int j = 7; j >= 0; j--) {
 				if ((x1 & (1 << j)) != (x2 & (1 << j))) {
 					return ((8 / BASE_POWER) * (20 - i) - ((8 / BASE_POWER) - (int) (j / BASE_POWER)));
@@ -419,9 +463,18 @@ public class PastryTable implements RoutingHandler {
 		}
 		return -1;
 	}
-
+    
+    /**
+	 *Returns the column number for a given row number and Server Id.
+	 * 
+	 * @param id	Id of this node.
+     * @param row	row number of the routing table.
+	 * @return		column number of the routing table.
+	 */
 	private int getColumn(byte[] id, int row) {
 		int val = (id[20 - (row * BASE_POWER / 8) - 1] + 256) % 256;
+        
+        /* find the next digit of the destination address that need to be match. */
 		val = (int) (val / Math.pow(TABLE_WIDTH, row % (8 / BASE_POWER)));
 		return val % TABLE_WIDTH;
 	}
