@@ -41,7 +41,12 @@ public class HelloService implements sinchana.service.SinchanaServiceInterface {
 
 	@Override
 	public byte[] process(byte[] serviceKey, byte[] data) {
-		return ("Hi " + new String(data) + ", Greetings from " + new String(serviceKey)).getBytes();
+		String res = (data != null ? "Hi " + new String(data) + ", " : "")
+				+ "Greetings from " + new String(serviceKey);
+		System.out.println(new String(serviceKey)
+				+ ":\treq: " + (data != null ? new String(data) : "null")
+				+ "\tres: " + res);
+		return res.getBytes();
 	}
 
 	@Override
