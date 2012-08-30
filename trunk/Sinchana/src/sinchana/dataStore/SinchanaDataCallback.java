@@ -37,26 +37,26 @@ import sinchana.SinchanaCallBack;
 
 /**
  *
- * @author Hiru
+ * @author Tharindu Jayasinghe
  */
 public interface SinchanaDataCallback extends SinchanaCallBack {
 
     /**
-     * 
+     * the callback method to be called at the request node when a data is stored in the relevant node
      * @param key the key of the particular data value
      * @param success boolean value of whether the data stored in a relevant node
      */
     public abstract void isStored(byte[] key, boolean success);
 
     /**
-     * 
+     * the callback method to be called at the request node when a data is removed from the stored node
      * @param key which the data to be removed 
      * @param success boolean value of whether the data has removed from the stored place
      */
     public abstract void isRemoved(byte[] key, boolean success);
 
     /**
-     * 
+     * the callback method to be called at the request node when a data is retrieved
      * @param key the key of the particular retrieved data value
      * @param data the retrieved data value
      */
