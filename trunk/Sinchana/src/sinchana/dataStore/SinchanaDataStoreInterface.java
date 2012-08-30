@@ -5,7 +5,8 @@
 package sinchana.dataStore;
 
 /**
- * 
+ * The class gives call back  methods to be
+ * called at the root node
  * @author Tharindu Jayasinghe
  */
 public interface SinchanaDataStoreInterface {
