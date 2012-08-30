@@ -60,7 +60,7 @@ public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 	 * @return
 	 */
 	@Override
-	public boolean store(byte[] key, byte[] data) {
+	public synchronized boolean store(byte[] key, byte[] data) {
 		dataMap.put(new String(key), data);
 		System.out.println(server.getServerIdAsString() + ": store\t"
 				+ new String(key) + "-" + (data != null ? new String(data) : "null"));
@@ -73,7 +73,7 @@ public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 	 * @return
 	 */
 	@Override
-	public byte[] get(byte[] key) {
+	public synchronized byte[] get(byte[] key) {
 		return dataMap.get(new String(key));
 	}
 
@@ -83,10 +83,12 @@ public class SinchanaDataStoreImpl implements SinchanaDataStoreInterface {
 	 * @return
 	 */
 	@Override
-	public boolean remove(byte[] key) {
+	public synchronized boolean remove(byte[] key) {
 		byte[] data = dataMap.remove(new String(key));
-		System.out.println(server.getServerIdAsString() + ": remove\t"
-				+ new String(key) + "-" + (data != null ? new String(data) : "null"));
+		if (data != null) {
+			System.out.println(server.getServerIdAsString() + ": remove\t"
+					+ new String(key) + "-" + new String(data));
+		}
 		return true;
 	}
 }

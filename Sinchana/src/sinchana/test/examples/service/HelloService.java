@@ -40,7 +40,7 @@ package sinchana.test.examples.service;
 public class HelloService implements sinchana.service.SinchanaServiceInterface {
 
 	@Override
-	public byte[] process(byte[] serviceKey, byte[] data) {
+	public synchronized byte[] process(byte[] serviceKey, byte[] data) {
 		String res = (data != null ? "Hi " + new String(data) + ", " : "")
 				+ "Greetings from " + new String(serviceKey);
 		System.out.println(new String(serviceKey)
@@ -50,17 +50,17 @@ public class HelloService implements sinchana.service.SinchanaServiceInterface {
 	}
 
 	@Override
-	public void isPublished(byte[] serviceKey, Boolean success) {
+	public synchronized void isPublished(byte[] serviceKey, Boolean success) {
 		System.out.println(new String(serviceKey) + " is published");
 	}
 
 	@Override
-	public void isRemoved(byte[] serviceKey, Boolean success) {
+	public synchronized void isRemoved(byte[] serviceKey, Boolean success) {
 		System.out.println(new String(serviceKey) + " is removed");
 	}
 
 	@Override
-	public void error(byte[] error) {
+	public synchronized void error(byte[] error) {
 		System.out.println("Error with Hello Service: " + new String(error));
 	}
 }
