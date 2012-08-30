@@ -49,7 +49,8 @@ import sinchana.thrift.Response;
 import sinchana.util.tools.Hash;
 
 /**
- *This class use by the thrift client in order to process client operations
+ *This class use by the thrift client UI in order to process client operations. Thrift client doesn't need to be 
+ * part of the ring. But the client can store,retrieve data, discover, invoke services
  * @author Tharindu Jayasinghe
  */
 public class ThriftClient {
@@ -63,11 +64,8 @@ public class ThriftClient {
     DHTServer.Client client;
     Response response;
 
-    /*opening Thrift connection to the Sinchana node
-     * for a given machine ip address and a port id
-     */
     /**
-     * 
+     * opens a Thrift connection to a sinchana node which is in the machine of the given ip address and the given port id
      * @param address
      * @param port
      */
@@ -83,14 +81,11 @@ public class ThriftClient {
         protocol = new TBinaryProtocol(transport);
         client = new DHTServer.Client(protocol);
         System.out.println("connected....");
-//        sendRequest();
     }
 
-    /*destination to send the message. It should be exactly 20byte length
-     *message to send to the destination
-     */
-    /**
-     * 
+    
+    /** the method send a message to a random picked node id
+     * @param messageText the message content to be sent to a random destination
      */
     public void sendRequest(String messageText) {
         Random random = new Random();
@@ -108,7 +103,7 @@ public class ThriftClient {
     }
 
     /**
-     * 
+     * the method stores the key, data in a node in the ring
      * @param key data key to be stored
      * @param data dataValue to be stored
      */
@@ -118,9 +113,9 @@ public class ThriftClient {
         try {
             response = client.publishData(ByteBuffer.wrap(dataKey), ByteBuffer.wrap(dataValue));
             if (response.success) {
-                System.out.println(data + " published successfully");
+                System.out.println(data + " stored success.");
             } else {
-                System.out.println(data + " publishing failed");
+                System.out.println(data + " storing failed");
             }
 
         } catch (TException ex) {
@@ -128,10 +123,9 @@ public class ThriftClient {
         }
 
     }
-
-    
+   
     /**
-     * 
+     * the method retrieve data which maps to the given key
      * @param key datakey to be retrieved
      */
     public void retrieveData(String key) {
@@ -143,45 +137,18 @@ public class ThriftClient {
     }
 
     /**
-     * 
+     * the method remove data which maps to the given key
      * @param key datakey to be removed
      */
     public void removeData(String key) {
         try {
             response = client.removeData(ByteBuffer.wrap(key.getBytes()));
-        } catch (TException ex) {
-            Logger.getLogger(ThriftClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
-
-    /**
-     * 
-     */
-    public void discoverService() {       
-
-        byte[] serviceKey = "Hello Service".getBytes();
-        /*data to be processed by the service*/
-        byte[] serviceData = "Data to precess".getBytes();
-        try {
-            /*discover 'Hello Service'*/
-            response = client.discoverService(ByteBuffer.wrap(serviceKey));
-        } catch (TException ex) {
-            Logger.getLogger(ThriftClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (response.success && response.isSetData()) {
-            try {
-                /*invoke 'Hello Service'*/
-                response = client.invokeService(response.data, ByteBuffer.wrap(serviceData));
-            } catch (TException ex) {
-                Logger.getLogger(ThriftClient.class.getName()).log(Level.SEVERE, null, ex);
+            if(response.success){
+                System.out.println("data removed success");
             }
-            /*printing response*/
-            System.out.println("Response: " + new String(response.getData()));
-        } else {
-            System.out.println("Hello Service is not found");
+        } catch (TException ex) {
+            Logger.getLogger(ThriftClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-
     }
+
 }
