@@ -267,10 +267,22 @@ public class TesterController {
 		sendContinuously = false;
 		testCaseSelection = selection;
 	}
-	public static final int MESSAGE_TESTING = 1;
-	public static final int DATA_STORE_TESTING = 2;
-	public static final int SERVICE_TESTING = 3;
-	public int testCaseSelection = 1;
+    /**
+     * 
+     */
+    public static final int MESSAGE_TESTING = 1;
+    /**
+     * 
+     */
+    public static final int DATA_STORE_TESTING = 2;
+    /**
+     * 
+     */
+    public static final int SERVICE_TESTING = 3;
+    /**
+     * 
+     */
+    public int testCaseSelection = 1;
 
 	void publishService() {
 		try {
@@ -382,7 +394,11 @@ public class TesterController {
 	private static int totalCount = 0;
 	private static int errorCount = 0;
 
-	public void testMessages(int numOfMsgs) {
+    /**
+     * 
+     * @param numOfMsgs
+     */
+    public void testMessages(int numOfMsgs) {
 		int numOfTestServers = testServers.size();
 		while (numOfMsgs > 0) {
 			String val = new BigInteger(160, random).toString(16);
@@ -414,7 +430,12 @@ public class TesterController {
 		}
 	};
 
-	public void storeData(int noOfData) {
+    
+    /**
+     * the test method to store a no of data from a randomly picked node
+     * @param noOfData No of data to be stored
+     */
+    public void storeData(int noOfData) {
 		totalCount = 0;
 		errorCount = 0;
 		dataArray = new String[noOfData];
@@ -437,7 +458,11 @@ public class TesterController {
 		}
 	}
 
-	public void removeData(int numOfDataToRemove) {
+    /**
+     * the test method to remove no of data 
+     * @param numOfDataToRemove no of data to be removed
+     */
+    public void removeData(int numOfDataToRemove) {
 		totalCount = 0;
 		errorCount = 0;
 		if (dataArray == null || datakeyArray == null) {
@@ -457,7 +482,11 @@ public class TesterController {
 		}
 	}
 
-	public void getData(int numOfDataToRetrieve) {
+    /**
+     * the method retrieves no of data from the sinchana dht
+     * @param numOfDataToRetrieve
+     */
+    public void getData(int numOfDataToRetrieve) {
 		if (dataArray == null || datakeyArray == null) {
 			return;
 		}
