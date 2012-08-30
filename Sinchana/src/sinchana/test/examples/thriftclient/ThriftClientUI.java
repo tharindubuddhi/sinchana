@@ -69,7 +69,7 @@ public class ThriftClientUI extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         messageText = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        sendMessage = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         dataKeyInsert = new javax.swing.JTextField();
         dataValueInsert = new javax.swing.JTextField();
@@ -79,6 +79,7 @@ public class ThriftClientUI extends javax.swing.JFrame {
         removeDataButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Thrift Client");
 
         connectNetwork.setText("Connect Network");
         connectNetwork.addActionListener(new java.awt.event.ActionListener() {
@@ -93,26 +94,26 @@ public class ThriftClientUI extends javax.swing.JFrame {
         portID.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         portID.setText("8000");
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("Tahoma", 0, 12));
         jLabel1.setText("IP Address: ");
 
-        jLabel2.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Tahoma", 0, 12));
         jLabel2.setText("Port No: ");
 
-        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 12));
         jLabel3.setText("Message: ");
 
         messageText.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         messageText.setText("Hey");
 
-        jButton1.setText("Send Message");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        sendMessage.setText("Send Message");
+        sendMessage.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                sendMessageActionPerformed(evt);
             }
         });
 
-        jLabel4.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jLabel4.setFont(new java.awt.Font("Tahoma", 0, 12));
         jLabel4.setText("Key: ");
 
         dataKeyInsert.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
@@ -128,7 +129,7 @@ public class ThriftClientUI extends javax.swing.JFrame {
             }
         });
 
-        jLabel5.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jLabel5.setFont(new java.awt.Font("Tahoma", 0, 12));
         jLabel5.setText("Key: ");
 
         removeDataKey.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
@@ -170,7 +171,7 @@ public class ThriftClientUI extends javax.swing.JFrame {
                         .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(portID, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(sendMessage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(removeDataButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(dataValueInsert, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
@@ -193,7 +194,7 @@ public class ThriftClientUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(messageText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
+                    .addComponent(sendMessage))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
@@ -208,7 +209,8 @@ public class ThriftClientUI extends javax.swing.JFrame {
                 .addContainerGap(113, Short.MAX_VALUE))
         );
 
-        pack();
+        java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        setBounds((screenSize.width-521)/2, (screenSize.height-338)/2, 521, 338);
     }// </editor-fold>//GEN-END:initComponents
 
 private void connectNetworkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectNetworkActionPerformed
@@ -225,9 +227,9 @@ private void removeDataButtonActionPerformed(java.awt.event.ActionEvent evt) {//
 thriftClient.removeData(removeDataKey.getText());
 }//GEN-LAST:event_removeDataButtonActionPerformed
 
-private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+private void sendMessageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendMessageActionPerformed
 thriftClient.sendRequest(messageText.getText());
-}//GEN-LAST:event_jButton1ActionPerformed
+}//GEN-LAST:event_sendMessageActionPerformed
 
     /**
      * @param args the command line arguments
@@ -269,7 +271,6 @@ thriftClient.sendRequest(messageText.getText());
     private javax.swing.JTextField dataKeyInsert;
     private javax.swing.JTextField dataValueInsert;
     private javax.swing.JTextField ipAddress;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -279,6 +280,7 @@ thriftClient.sendRequest(messageText.getText());
     private javax.swing.JTextField portID;
     private javax.swing.JButton removeDataButton;
     private javax.swing.JTextField removeDataKey;
+    private javax.swing.JButton sendMessage;
     private javax.swing.JButton storeDataButton;
     // End of variables declaration//GEN-END:variables
 }
