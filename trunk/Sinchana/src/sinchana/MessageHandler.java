@@ -47,18 +47,26 @@ import sinchana.util.logging.Logger;
 import sinchana.util.tools.ByteArrays;
 
 /**
- *
+ *This class is responsible for all the message handling stuffs. All the incoming 
+ * messages are queued in the incomingMessageQueue and one thread takes messages 
+ * one by one and process them according to their type.
  * @author Hiru
  */
 public class MessageHandler {
 
+	/*A collection used to keep a set of nodes temporaly*/
 	private final Set<Node> nodes = new HashSet<Node>();
+	/*Sinchana server instance*/
 	private final SinchanaServer server;
+	/*Node info*/
 	private final Node thisNode;
+	/*Server id*/
 	private final byte[] serverId;
+	/*The server id as a big integer value*/
 	private final BigInteger serverIdAsBigInt;
-	private final BigInteger ZERO = new BigInteger("0", 16);
+	/*A semaphore which is used to control incoming request flow*/
 	private final Semaphore messageQueueLock = new Semaphore(0);
+	/*A support variable for the messageQueueLock*/
 	private boolean waitOnMessageQueueLock = false;
 	/**
 	 * Message queue to buffer incoming messages. The size of the queue is 
@@ -83,20 +91,33 @@ public class MessageHandler {
 		@Override
 		public void run() {
 			while (true) {
+
+				/*Update test interface*/
 				if (server.getSinchanaTestInterface() != null) {
 					server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
 				}
 				try {
+
+					/*Take the first message from the queue. If the queue is empty, wait*/
 					Message message = incomingMessageQueue.take();
 					if (joined) {
+
+						/*If the join process has completed, process messages normally*/
 						processMessage(message);
 						if (waitOnMessageQueueLock) {
+
+							/*Release if any thread is waiting on the semaphore*/
 							messageQueueLock.release();
 						}
 					} else {
+						/*If the joining process has not completed, follow special procedure*/
 						switch (message.type) {
 							case JOIN:
+
+								/*If the message type is JOIN and it's originated by this node*/
 								if (Arrays.equals(message.source.serverId.array(), serverId)) {
+
+									/*join status is checked and updated*/
 									joined = message.isSuccess();
 									server.setJoined(joined, message.getError());
 									if (server.getSinchanaTestInterface() != null) {
@@ -104,6 +125,9 @@ public class MessageHandler {
 									}
 								}
 							case DISCOVER_NEIGHBORS:
+
+								/*DISCOVER_NEIGHBORS messages are processed normally, 
+								 * since they are not supposed to route again*/
 								processMessage(message);
 								if (waitOnMessageQueueLock) {
 									messageQueueLock.release();
@@ -122,6 +146,9 @@ public class MessageHandler {
 							case ACKNOWLEDGE_DATA_STORE:
 							case ACKNOWLEDGE_DATA_REMOVE:
 							default:
+
+								/*All the other messages which need routing are 
+								 * added back to the queue until the join is completed*/
 								incomingMessageQueue.put(message);
 						}
 					}
@@ -144,7 +171,12 @@ public class MessageHandler {
 		incomingMessageQueueThread.start();
 	}
 
+	/*
+	 * Adds a message to the incoming message queue.
+	 */
 	boolean queueMessage(Message message) {
+
+		/*Updates the test interface*/
 		if (server.getSinchanaTestInterface() != null) {
 			server.getSinchanaTestInterface().incIncomingMessageCount();
 			server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
@@ -154,7 +186,13 @@ public class MessageHandler {
 		}
 	}
 
+	/*
+	 * Adds a request to the incoming message queue. If the queue is not empty,
+	 * the thread is kept waiting.
+	 */
 	void addRequest(Message message) throws InterruptedException {
+
+		/*Updates the test interface*/
 		if (server.getSinchanaTestInterface() != null) {
 			server.getSinchanaTestInterface().incIncomingMessageCount();
 			server.getSinchanaTestInterface().setMessageQueueSize(incomingMessageQueue.size());
@@ -172,11 +210,18 @@ public class MessageHandler {
 		}
 	}
 
+	/*
+	 * Process a message from the incoming message queue. 
+	 */
 	private synchronized void processMessage(Message message) {
 
+		/*Update the routing table with the message*/
 		this.updateTableWithMessage(message);
 
+		/*Categorize the message according to the message size and direct them to the relavent methods*/
 		switch (message.type) {
+
+			/*These messages are required rouint, so they are directed to the routing method*/
 			case REQUEST:
 			case STORE_DATA:
 			case DELETE_DATA:
@@ -184,6 +229,7 @@ public class MessageHandler {
 			case GET_SERVICE:
 				this.processRouting(message);
 				break;
+
 			case JOIN:
 				this.processJoin(message);
 				break;
@@ -193,21 +239,30 @@ public class MessageHandler {
 			case TEST_RING:
 				this.processTestRing(message);
 				break;
+
 			case ERROR:
 			case RESPONSE:
 			case RESPONSE_DATA:
 			case RESPONSE_SERVICE:
 			case ACKNOWLEDGE_DATA_STORE:
 			case ACKNOWLEDGE_DATA_REMOVE:
+				
+				/*these messages are the responses which are destinated to this node, so the are directed to set response*/
 				this.server.getClientHandler().setResponse(message);
 				break;
-
 		}
 	}
 
+	/*
+	 * Updates the table with the message content.
+	 */
 	private void updateTableWithMessage(Message message) {
+		
+		/*Empty the temporary node set*/
 		nodes.clear();
 		boolean updated = false;
+		
+		/*If failed node infomations are available, they are removed from the routing table*/
 		if (message.isSetFailedNodeSet()) {
 			Set<Node> failedNodeSet = message.getFailedNodeSet();
 			for (Node node : failedNodeSet) {
@@ -220,11 +275,17 @@ public class MessageHandler {
 				}
 			}
 		}
+		
+		/*Adds source and the station (last hop) to the set*/
 		nodes.add(message.source);
 		nodes.add(message.station);
+		
+		/*If the neighbor set information are available, add them too to the node set*/
 		if (message.isSetNeighbourSet()) {
 			nodes.addAll(message.getNeighbourSet());
 		}
+		
+		/*Updates the table with the nodes in the tempory node set*/
 		if (!nodes.isEmpty()) {
 			long time = System.currentTimeMillis();
 			for (Node node : nodes) {
@@ -245,21 +306,32 @@ public class MessageHandler {
 				}
 			}
 		}
+		
+		/*If the table has changed, triggers table optimize*/
 		if (updated) {
 			this.server.getRoutingHandler().triggerOptimize();
 		}
 	}
 
+	/*
+	 * This method routes the message to the destination according to their destination id
+	 * and to the routing table.
+	 */
 	private void processRouting(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
+		
+		/*calculates offsets*/
 		BigInteger targetKeyOffset = getOffset(message.getDestinationId());
-		BigInteger predecessorOffset = (predecessor == null ? ZERO : getOffset(predecessor.serverId.array()));
+		BigInteger predecessorOffset = (predecessor == null ? BigInteger.ZERO : getOffset(predecessor.serverId.array()));
 		BigInteger prevStationOffset = getOffset(message.station.serverId.array());
 
-		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(ZERO)) {
+		/*If the destination id lies in between the predecessor and this node it self, 
+		 * the message is considered to be belong to this node, so they are delivered. 
+		 * otherwise, they are routed.*/
+		if (predecessorOffset.compareTo(targetKeyOffset) == -1 || targetKeyOffset.equals(BigInteger.ZERO)) {
 			deliverMessage(message);
 		} else {
-			if (!prevStationOffset.equals(ZERO)
+			if (!prevStationOffset.equals(BigInteger.ZERO)
 					&& prevStationOffset.compareTo(targetKeyOffset) == -1) {
 				/*
 				 * This should be an errornous receive. Sending to the predecessor.
@@ -274,6 +346,9 @@ public class MessageHandler {
 		}
 	}
 
+	/*
+	 * Processes node joining.
+	 */
 	private void processJoin(Message message) {
 		if (!Arrays.equals(message.source.serverId.array(), serverId)) {
 			if (this.server.getConnectionPool().hasReportFailed(message.source)) {
@@ -303,13 +378,13 @@ public class MessageHandler {
 
 				if (newServerIdOffset.compareTo(prevStationIdOffset) != 1
 						&& (nextSuccessorOffset.compareTo(tempNodeOffset) == -1
-						|| nextSuccessorOffset.equals(ZERO))
+						|| nextSuccessorOffset.equals(BigInteger.ZERO))
 						&& tempNodeOffset.compareTo(newServerIdOffset) == -1) {
 					nextSuccessor = node;
 				}
 				if (prevStationIdOffset.compareTo(newServerIdOffset) != 1
 						&& (tempNodeOffset.compareTo(nextPredecessorOffset) == -1
-						|| nextPredecessorOffset.equals(ZERO))
+						|| nextPredecessorOffset.equals(BigInteger.ZERO))
 						&& newServerIdOffset.compareTo(tempNodeOffset) == -1) {
 					nextPredecessor = node;
 				}
@@ -327,6 +402,9 @@ public class MessageHandler {
 		}
 	}
 
+	/*
+	 * Responses to the DISCOVER_NEIGHBORS messages.
+	 */
 	private void processDiscoverNeighbours(Message message) {
 		if (!Arrays.equals(message.source.serverId.array(), serverId)) {
 			message.setNeighbourSet(this.server.getRoutingHandler().getNeighbourSet());
@@ -335,6 +413,9 @@ public class MessageHandler {
 		}
 	}
 
+	/*
+	 * Routes TEST_RING messages.
+	 */
 	private void processTestRing(Message message) {
 		Node predecessor = this.server.getRoutingHandler().getPredecessors()[0];
 		Node successor = this.server.getRoutingHandler().getSuccessors()[0];
@@ -383,7 +464,7 @@ public class MessageHandler {
 				return new BigInteger(1, id).subtract(serverIdAsBigInt);
 			}
 		}
-		return ZERO;
+		return BigInteger.ZERO;
 	}
 
 	/**	 
