@@ -341,12 +341,19 @@ public class TesterController {
 
 		@Override
 		public void serviceFound(byte[] key, boolean success, byte[] data) {
-//			System.out.println("");
+			if (!sendContinuously && numOfRequest < printLimit) {
+				System.out.println(new String(key) + ":\tFound: " + success + "\t@ "
+						+ (data == null ? "n/a" : new String(data)));
+			}
 		}
 
 		@Override
 		public void serviceResponse(byte[] key, boolean success, byte[] data) {
 			totalCount++;
+			if (!sendContinuously && numOfRequest < printLimit) {
+				System.out.println(new String(key) + ":\tSuccess: " + success + "\tResp: "
+						+ (data == null ? "null" : new String(data)));
+			}
 		}
 
 		@Override
@@ -358,7 +365,7 @@ public class TesterController {
 
 	void sendMsgs(int numOfMsgs) {
 		this.sendContinuously = false;
-		this.numOfRequest = 0;
+		this.numOfRequest = numOfMsgs;
 		totalCount = 0;
 		errorCount = 0;
 		testMessages(numOfMsgs);
@@ -428,12 +435,18 @@ public class TesterController {
 		@Override
 		public synchronized void response(byte[] message) {
 			totalCount++;
+			if (!sendContinuously && numOfRequest < printLimit) {
+				System.out.println("Response\t" + (message == null ? "null" : new String(message)));
+			}
 		}
 
 		@Override
 		public synchronized void error(byte[] error) {
 			totalCount++;
 			errorCount++;
+			if (!sendContinuously && numOfRequest < printLimit) {
+				System.out.println("Error\t" + (error == null ? "null" : new String(error)));
+			}
 		}
 	};
 
@@ -441,20 +454,18 @@ public class TesterController {
 	 * the test method to store a no of data from a randomly picked node
 	 * @param noOfData No of data to be stored
 	 */
-	public void storeData(int noOfData) {
+	public void storeData(int noOfDataToStore) {
 		totalCount = 0;
 		errorCount = 0;
-		dataArray = new String[noOfData];
-		datakeyArray = new String[noOfData];
+		dataArray = new String[noOfDataToStore];
+		datakeyArray = new String[noOfDataToStore];
 		int numOfTestServers = testServers.size();
 
-		dataID = 0;
-		for (int i = 0; i < noOfData; i++) {
-			dataArray[i] = DATA_TAG + dataID;
-			datakeyArray[i] = KEY_TAG + dataID;
-			dataID++;
+		for (int i = 0; i < noOfDataToStore; i++) {
+			dataArray[i] = DATA_TAG + i;
+			datakeyArray[i] = KEY_TAG + i;
 		}
-		for (int i = 0; i < dataArray.length; i++) {
+		for (int i = 0; i < noOfDataToStore; i++) {
 			try {
 				int tid = (int) (Math.random() * numOfTestServers);
 				testServers.get(tid).getServer().storeData(datakeyArray[i].getBytes(), dataArray[i].getBytes(), sdc);
@@ -472,20 +483,21 @@ public class TesterController {
 	public void removeData(int numOfDataToRemove) {
 		totalCount = 0;
 		errorCount = 0;
-		if (dataArray == null || datakeyArray == null) {
-			return;
+		if (dataArray == null || datakeyArray == null || datakeyArray.length < numOfDataToRemove) {
+			datakeyArray = new String[numOfDataToRemove];
+			for (int i = 0; i < numOfDataToRemove; i++) {
+				datakeyArray[i] = KEY_TAG + i;
+			}
 		}
-		int numOfTotalData = dataArray.length;
 		int numOfTestServers = testServers.size();
-		while (numOfDataToRemove > 0) {
-			int randomDataId = (int) (Math.random() * numOfTotalData);
-			int tid = (int) (Math.random() * numOfTestServers);
+		for (int i = 0; i < numOfDataToRemove; i++) {
 			try {
-				testServers.get(tid).getServer().deleteData(datakeyArray[randomDataId].getBytes(), sdc);
+				int tid = (int) (Math.random() * numOfTestServers);
+				testServers.get(tid).getServer().deleteData(datakeyArray[i].getBytes(), sdc);
 			} catch (InterruptedException ex) {
 				Logger.getLogger(TesterController.class.getName()).log(Level.SEVERE, null, ex);
 			}
-			numOfDataToRemove--;
+
 		}
 	}
 
@@ -494,10 +506,13 @@ public class TesterController {
 	 * @param numOfDataToRetrieve
 	 */
 	public void getData(int numOfDataToRetrieve) {
-		if (dataArray == null || datakeyArray == null) {
-			return;
+		if (dataArray == null || datakeyArray == null || datakeyArray.length < numOfDataToRetrieve) {
+			datakeyArray = new String[numOfDataToRetrieve];
+			for (int i = 0; i < numOfDataToRetrieve; i++) {
+				datakeyArray[i] = KEY_TAG + i;
+			}
 		}
-		int numOfTotalData = dataArray.length;
+		int numOfTotalData = datakeyArray.length;
 		int numOfTestServers = testServers.size();
 		while (numOfDataToRetrieve > 0) {
 			int randomDataId = (int) (Math.random() * numOfTotalData);
@@ -512,7 +527,6 @@ public class TesterController {
 	}
 	private String[] dataArray = null;
 	private String[] datakeyArray = null;
-	private int dataID = 0;
 	private static final String DATA_TAG = "data ";
 	private static final String KEY_TAG = "key ";
 	private SinchanaDataCallback sdc = new SinchanaDataCallback() {
@@ -530,12 +544,19 @@ public class TesterController {
 		@Override
 		public synchronized void response(byte[] key, byte[] data) {
 			totalCount++;
+			if (!sendContinuously && numOfRequest < printLimit) {
+				System.out.println(new String(key) + "\t\t" + (data == null ? "null" : new String(data)));
+			}
 		}
 
 		@Override
 		public synchronized void error(byte[] error) {
 			totalCount++;
 			errorCount++;
+			if (!sendContinuously && numOfRequest < printLimit) {
+				System.out.println("Error\t" + (error == null ? "null" : new String(error)));
+			}
 		}
 	};
+	private int printLimit = 1001;
 }
