@@ -168,7 +168,7 @@ public class Tester implements SinchanaTestInterface, Runnable {
 	@Override
 	public void setStable(boolean isStable) {
 		if (isStable) {
-			Logger.log(this.server.getNode(), Logger.LEVEL_INFO, Logger.CLASS_TESTER, 4,
+			Logger.log(this.server.getNode(), Logger.LogLevel.LEVEL_INFO, Logger.LogClass.CLASS_TESTER, 4,
 					this.server.getServerIdAsString() + " is now stable!");
 			testerController.incrementCompletedCount(this.testId);
 		}

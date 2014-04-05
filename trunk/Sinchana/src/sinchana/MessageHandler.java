@@ -443,7 +443,7 @@ public class MessageHandler {
 				message.setData((new String(message.getData()) + SinchanaDHT.TEST_RING_SEPARATOR + this.server.getServerIdAsString()).getBytes());
 				this.server.getIOHandler().send(message, predecessor);
 			} else {
-				Logger.log(thisNode, Logger.LEVEL_WARNING, Logger.CLASS_MESSAGE_HANDLER, 5,
+				Logger.log(thisNode, Logger.LogLevel.LEVEL_WARNING, Logger.LogClass.CLASS_MESSAGE_HANDLER, 5,
 						"Message Terminated! Received from " + ByteArrays.idToReadableString(message.station)
 						+ " which is neither predecessor or successor.");
 			}
