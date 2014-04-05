@@ -15,49 +15,67 @@ import sinchana.util.tools.ByteArrays;
 
 /**
  * 
- * @author Hiru
+ * @author Hiru & Hatim.
  */
 public final class Logger {
 
+    public static enum LogLevel {
+        LEVEL_FINE,
+        LEVEL_INFO,
+        LEVEL_WARNING,
+        LEVEL_SEVERE        
+    }
+    
+    public static enum LogClass {
+        CLASS_MESSAGE_HANDLER,
+        CLASS_ROUTING_TABLE,
+        CLASS_TESTER,
+        CLASS_THRIFT_SERVER,
+        CLASS_CONNECTION_POOL,
+        CLASS_CLIENT_HANDLER,
+        CLASS_SINCHANA_SERVER,
+        CLASS_IO_HANDLER
+    }
+    
 	/**
 	 * 
 	 */
-	public static final int LEVEL_FINE = 0;
+//	public static final int LEVEL_FINE = 0;
+//	/**
+//	 * 
+//	 */
+//	public static final int LEVEL_INFO = 1;
+//	/**
+//	 * 
+//	 */
+//	public static final int LEVEL_WARNING = 2;
+//	/**
+//	 * 
+//	 */
+//	public static final int LEVEL_SEVERE = 3;
 	/**
 	 * 
 	 */
-	public static final int LEVEL_INFO = 1;
-	/**
-	 * 
-	 */
-	public static final int LEVEL_WARNING = 2;
-	/**
-	 * 
-	 */
-	public static final int LEVEL_SEVERE = 3;
-	/**
-	 * 
-	 */
-	public static final int CLASS_MESSAGE_HANDLER = 0;
-	/**
-	 * 
-	 */
-	public static final int CLASS_ROUTING_TABLE = 1;
-	/**
-	 * 
-	 */
-	public static final int CLASS_TESTER = 2;
-	/**
-	 * 
-	 */
-	public static final int CLASS_THRIFT_SERVER = 3;
-	/**
-	 * 
-	 */
-	public static final int CLASS_CONNECTION_POOL = 4;
-	public static final int CLASS_CLIENT_HANDLER = 5;
-	public static final int CLASS_SINCHANA_SERVER = 6;
-	public static final int CLASS_IO_HANDLER = 7;
+//	public static final int CLASS_MESSAGE_HANDLER = 0;
+//	/**
+//	 * 
+//	 */
+//	public static final int CLASS_ROUTING_TABLE = 1;
+//	/**
+//	 * 
+//	 */
+//	public static final int CLASS_TESTER = 2;
+//	/**
+//	 * 
+//	 */
+//	public static final int CLASS_THRIFT_SERVER = 3;
+//	/**
+//	 * 
+//	 */
+//	public static final int CLASS_CONNECTION_POOL = 4;
+//	public static final int CLASS_CLIENT_HANDLER = 5;
+//	public static final int CLASS_SINCHANA_SERVER = 6;
+//	public static final int CLASS_IO_HANDLER = 7;
 	/**
 	 * 
 	 */
@@ -70,80 +88,149 @@ public final class Logger {
 	}
 	private static final Map<String, String> stats = new HashMap<String, String>();
 
-	public static void log(Node node, int type, int classId, int locId, String logData) {
-		if (CURRENT_LOG_LEVEL > type) {
-			return;
-		}
-		if (TesterController.DO_LOG) {
-			Log nl = new Log();
-			nl.node = node;
-			nl.level = type;
-			nl.classId = classId;
-			nl.locId = (byte) locId;
-			nl.logData = logData;
-			logDB[pointer] = nl;
-			pointer = (pointer + 1) % SIZE;
-			if (classId == CLASS_IO_HANDLER && locId == 0) {
-				stats.put(ByteArrays.idToReadableString(node), logData);
-			}
-
-		}
-
-//				System.out.println(nl.toString());
-		Level logLevel;
-		switch (type) {
-			case LEVEL_FINE:
-				logLevel = Level.FINE;
-				break;
-			case LEVEL_INFO:
-				logLevel = Level.INFO;
-				break;
-			case LEVEL_WARNING:
-				logLevel = Level.WARNING;
-				break;
-			case LEVEL_SEVERE:
-				logLevel = Level.SEVERE;
-				break;
-			default:
-				logLevel = Level.SEVERE;
-				break;
-		}
-		String className;
-		switch (classId) {
-			case CLASS_MESSAGE_HANDLER:
-				className = "MESSAGE_HANDLER";
-				break;
-			case CLASS_ROUTING_TABLE:
-				className = "ROUTING_TABLE";
-				break;
-			case CLASS_TESTER:
-				className = "TESTER";
-				break;
-			case CLASS_THRIFT_SERVER:
-				className = "THRIFT_SERVER";
-				break;
-			case CLASS_CONNECTION_POOL:
-				className = "CONNECTION_POOL";
-				break;
-			case CLASS_SINCHANA_SERVER:
-				className = "SINCHANA_SERVER";
-				break;
-			case CLASS_CLIENT_HANDLER:
-				className = "CLIENT_HANDLER";
-				break;
-			case CLASS_IO_HANDLER:
-				className = "IO_HANDLER";
-				break;
-			default:
-				className = "LOGGER";
-				break;
-		}
-		java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
-				className, "Server " + ByteArrays.idToReadableString(node)
-				+ " @ " + node.address, logData);
-
-
-	}
+        public static void log(Node node, LogLevel logLevel, LogClass classId, int locId, String logData) {
+            if (CURRENT_LOG_LEVEL > logLevel.ordinal()) {
+                return;
+            }
+            if (TesterController.DO_LOG) {
+                Log nl = new Log();
+                nl.node = node;
+                nl.logLevel = logLevel;
+                nl.classId = classId;
+                nl.locId = (byte) locId;
+                nl.logData = logData;
+                logDB[pointer] = nl;
+                pointer = (pointer + 1) % SIZE;
+                if (classId == LogClass.CLASS_IO_HANDLER && locId == 0) {
+                    stats.put(ByteArrays.idToReadableString(node), logData);
+                }
+            }
+            //System.out.println(nl.toString());
+            Level loggerLevel;
+            switch (logLevel) {
+                case LEVEL_FINE:
+                    loggerLevel = Level.FINE;
+                    break;
+                case LEVEL_INFO:
+                    loggerLevel = Level.INFO;
+                    break;
+                case LEVEL_WARNING:
+                    loggerLevel = Level.WARNING;
+                    break;
+                case LEVEL_SEVERE:
+                    loggerLevel = Level.SEVERE;
+                    break;
+                default:
+                    loggerLevel = Level.SEVERE;
+                    break;
+            }
+            String className;
+            switch (classId) {
+                case CLASS_MESSAGE_HANDLER:
+                    className = "MESSAGE_HANDLER";
+                    break;
+                case CLASS_ROUTING_TABLE:
+                    className = "ROUTING_TABLE";
+                    break;
+                case CLASS_TESTER:
+                    className = "TESTER";
+                    break;
+                case CLASS_THRIFT_SERVER:
+                    className = "THRIFT_SERVER";
+                    break;
+                case CLASS_CONNECTION_POOL:
+                    className = "CONNECTION_POOL";
+                    break;
+                case CLASS_SINCHANA_SERVER:
+                    className = "SINCHANA_SERVER";
+                    break;
+                case CLASS_CLIENT_HANDLER:
+                    className = "CLIENT_HANDLER";
+                    break;
+                case CLASS_IO_HANDLER:
+                    className = "IO_HANDLER";
+                    break;
+                default:
+                    className = "LOGGER";
+                    break;
+            }
+            java.util.logging.Logger.getLogger(Logger.class.getName()).logp(loggerLevel,
+                    className, "Server " + ByteArrays.idToReadableString(node)
+                    + " @ " + node.address, logData);            
+        }
+        
+//	public static void log(Node node, int type, int classId, int locId, String logData) {
+//		if (CURRENT_LOG_LEVEL > type) {
+//			return;
+//		}
+//		if (TesterController.DO_LOG) {
+//			Log nl = new Log();
+//			nl.node = node;
+//			nl.level = type;
+//			nl.classId = classId;
+//			nl.locId = (byte) locId;
+//			nl.logData = logData;
+//			logDB[pointer] = nl;
+//			pointer = (pointer + 1) % SIZE;
+//			if (classId == LogClass.CLASS_IO_HANDLER.ordinal() && locId == 0) {
+//				stats.put(ByteArrays.idToReadableString(node), logData);
+//			}
+//
+//		}
+//
+////				System.out.println(nl.toString());
+//		Level logLevel;
+//		switch (type) {
+//			case LogLevel.LEVEL_FINE.ordinal():
+//				logLevel = Level.FINE;
+//				break;
+//			case LogLevel.LEVEL_INFO.ordinal():
+//				logLevel = Level.INFO;
+//				break;
+//			case LEVEL_WARNING:
+//				logLevel = Level.WARNING;
+//				break;
+//			case LEVEL_SEVERE:
+//				logLevel = Level.SEVERE;
+//				break;
+//			default:
+//				logLevel = Level.SEVERE;
+//				break;
+//		}
+//		String className;
+//		switch (classId) {
+//			case CLASS_MESSAGE_HANDLER:
+//				className = "MESSAGE_HANDLER";
+//				break;
+//			case CLASS_ROUTING_TABLE:
+//				className = "ROUTING_TABLE";
+//				break;
+//			case CLASS_TESTER:
+//				className = "TESTER";
+//				break;
+//			case CLASS_THRIFT_SERVER:
+//				className = "THRIFT_SERVER";
+//				break;
+//			case CLASS_CONNECTION_POOL:
+//				className = "CONNECTION_POOL";
+//				break;
+//			case CLASS_SINCHANA_SERVER:
+//				className = "SINCHANA_SERVER";
+//				break;
+//			case CLASS_CLIENT_HANDLER:
+//				className = "CLIENT_HANDLER";
+//				break;
+//			case CLASS_IO_HANDLER:
+//				className = "IO_HANDLER";
+//				break;
+//			default:
+//				className = "LOGGER";
+//				break;
+//		}
+//		java.util.logging.Logger.getLogger(Logger.class.getName()).logp(logLevel,
+//				className, "Server " + ByteArrays.idToReadableString(node)
+//				+ " @ " + node.address, logData);
+//	}
 
 	/**
 	 * 
@@ -162,147 +249,148 @@ public final class Logger {
 	 * @param classIds
 	 * @param locations
 	 */
-	public static synchronized void print(String[] nodeIds, int[] levels,
-			int[] classIds, int[] locations, String containTextString) {
-		System.out.println("processing quaries... " + SIZE);
-		int x = pointer, s = logDB.length;
-		boolean filterByNodeId = nodeIds != null && nodeIds.length != 0;
-		boolean filterBylevel = levels != null && levels.length != 0;
-		boolean filterByClass = classIds != null && classIds.length != 0;
-		boolean filterByLocation = locations != null && locations.length != 0;
-		boolean filterByText = containTextString.length() > 0;
-		boolean validToPrint;
-		int recordCount = 0;
-		Log log;
-		for (x = pointer; x < SIZE; x++) {
-			if (logDB[x] == null) {
-				continue;
-			}
-			log = logDB[x];
-			x++;
+	public static synchronized void print(String[] nodeIds, int[] levels, int[] classIds, int[] locations,
+                String containTextString) {
+            
+            System.out.println("processing quaries... " + SIZE);
+            int x = pointer, s = logDB.length;
+            boolean filterByNodeId = nodeIds != null && nodeIds.length != 0;
+            boolean filterBylevel = levels != null && levels.length != 0;
+            boolean filterByClass = classIds != null && classIds.length != 0;
+            boolean filterByLocation = locations != null && locations.length != 0;
+            boolean filterByText = containTextString.length() > 0;
+            boolean validToPrint;
+            int recordCount = 0;
+            Log log;
+            for (x = pointer; x < SIZE; x++) {
+                if (logDB[x] == null) {
+                    continue;
+                }
+                log = logDB[x];
+                x++;
 
-			validToPrint = !filterByText || log.logData.indexOf(containTextString) != -1;
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterByNodeId) {
-				validToPrint = false;
-				for (String id : nodeIds) {
-					if (id.equals(ByteArrays.idToReadableString(log.node))) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterBylevel) {
-				validToPrint = false;
-				for (int i : levels) {
-					if (log.level == i) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterByClass) {
-				validToPrint = false;
-				for (int i : classIds) {
-					if (log.classId == i) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterByLocation) {
-				validToPrint = false;
-				for (int i : locations) {
-					if (log.locId == i) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			recordCount++;
+                validToPrint = !filterByText || log.logData.indexOf(containTextString) != -1;
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterByNodeId) {
+                    validToPrint = false;
+                    for (String id : nodeIds) {
+                        if (id.equals(ByteArrays.idToReadableString(log.node))) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterBylevel) {
+                    validToPrint = false;
+                    for (int i : levels) {
+                        if (log.logLevel.ordinal() == i) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterByClass) {
+                    validToPrint = false;
+                    for (int i : classIds) {
+                        if (log.classId.ordinal() == i) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterByLocation) {
+                    validToPrint = false;
+                    for (int i : locations) {
+                        if (log.locId == i) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                recordCount++;
 //			System.out.println(log.toString());
-		}
-		for (x = 0; x < pointer; x++) {
-			if (logDB[x] == null) {
-				continue;
-			}
-			log = logDB[x];
-			x++;
+            }
+            for (x = 0; x < pointer; x++) {
+                if (logDB[x] == null) {
+                    continue;
+                }
+                log = logDB[x];
+                x++;
 
-			validToPrint = !filterByText || log.logData.indexOf(containTextString) != -1;
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterByNodeId) {
-				validToPrint = false;
-				for (String id : nodeIds) {
-					if (id.equals(ByteArrays.idToReadableString(log.node))) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterBylevel) {
-				validToPrint = false;
-				for (int i : levels) {
-					if (log.level == i) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterByClass) {
-				validToPrint = false;
-				for (int i : classIds) {
-					if (log.classId == i) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			if (filterByLocation) {
-				validToPrint = false;
-				for (int i : locations) {
-					if (log.locId == i) {
-						validToPrint = true;
-						break;
-					}
-				}
-			}
-			if (!validToPrint) {
-				continue;
-			}
-			recordCount++;
-//			System.out.println(log.toString());
-		}
+                validToPrint = !filterByText || log.logData.indexOf(containTextString) != -1;
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterByNodeId) {
+                    validToPrint = false;
+                    for (String id : nodeIds) {
+                        if (id.equals(ByteArrays.idToReadableString(log.node))) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterBylevel) {
+                    validToPrint = false;
+                    for (int i : levels) {
+                        if (log.logLevel.ordinal() == i) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterByClass) {
+                    validToPrint = false;
+                    for (int i : classIds) {
+                        if (log.classId.ordinal() == i) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                if (filterByLocation) {
+                    validToPrint = false;
+                    for (int i : locations) {
+                        if (log.locId == i) {
+                            validToPrint = true;
+                            break;
+                        }
+                    }
+                }
+                if (!validToPrint) {
+                    continue;
+                }
+                recordCount++;
+                //System.out.println(log.toString());
+            }
 
-		System.out.println(SIZE + " records processed. " + recordCount + " matching records found.");
-		Set<String> keySet = stats.keySet();
-		for (String key : keySet) {
-			System.out.println(key + ": " + stats.get(key));
-		}
+            System.out.println(SIZE + " records processed. " + recordCount + " matching records found.");
+            Set<String> keySet = stats.keySet();
+            for (String key : keySet) {
+                System.out.println(key + ": " + stats.get(key));
+            }
 	}
 }

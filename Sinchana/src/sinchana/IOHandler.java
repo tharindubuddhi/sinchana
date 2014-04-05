@@ -203,10 +203,10 @@ public class IOHandler {
 						TServerTransport serverTransport = new TServerSocket(localPortId);
 						tServer = new TThreadPoolServer(
 								new TThreadPoolServer.Args(serverTransport).processor(processor));
-						Logger.log(thisNode, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
+						Logger.log(thisNode, Logger.LogLevel.LEVEL_INFO, Logger.LogClass.CLASS_THRIFT_SERVER, 1,
 								"Starting the server on port " + localPortId);
 						tServer.serve();
-						Logger.log(thisNode, Logger.LEVEL_INFO, Logger.CLASS_THRIFT_SERVER, 1,
+						Logger.log(thisNode, Logger.LogLevel.LEVEL_INFO, Logger.LogClass.CLASS_THRIFT_SERVER, 1,
 								"Server is shutting down...");
 					} catch (TTransportException ex) {
 						tTransportException = ex;

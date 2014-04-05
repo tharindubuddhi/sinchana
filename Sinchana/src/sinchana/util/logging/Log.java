@@ -8,55 +8,57 @@ import sinchana.thrift.Node;
 
 /**
  *
- * @author Hiru
+ * @author Hiru & Hatim.
  */
 public class Log {
 
 	Node node;
-	int level;
-	int classId;
 	int locId;
 	String logData;
+        Logger.LogLevel logLevel;
+        Logger.LogClass classId;
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(node).append(":");
-		switch (level) {
-			case Logger.LEVEL_FINE:
+                //Logger.LogLevel level = Logger.LogLevel.LEVEL_FINE;
+                //Logger.LogClass classId = Logger.LogClass.CLASS_MESSAGE_HANDLER;
+		switch (logLevel) {
+			case LEVEL_FINE:
 				sb.append("\tFINE");
 				break;
-			case Logger.LEVEL_INFO:
+			case LEVEL_INFO:
 				sb.append("\tINFO");
 				break;
-			case Logger.LEVEL_WARNING:
+			case LEVEL_WARNING:
 				sb.append("\tWARNING");
 				break;
-			case Logger.LEVEL_SEVERE:
+			case LEVEL_SEVERE:
 				sb.append("\tSEVERE");
 				break;
 
 		}
 		switch (classId) {
-			case Logger.CLASS_MESSAGE_HANDLER:
+			case CLASS_MESSAGE_HANDLER:
 				sb.append("\tMESSAGE_HANDLER");
 				break;
-			case Logger.CLASS_ROUTING_TABLE:
+			case CLASS_ROUTING_TABLE:
 				sb.append("\tROUTING_TABLE");
 				break;
-			case Logger.CLASS_TESTER:
+			case CLASS_TESTER:
 				sb.append("\tTESTER");
 				break;
-			case Logger.CLASS_THRIFT_SERVER:
+			case CLASS_THRIFT_SERVER:
 				sb.append("\tTHRIFT_SERVER");
 				break;
-			case Logger.CLASS_CONNECTION_POOL:
+			case CLASS_CONNECTION_POOL:
 				sb.append("\tCONNECTION_POOL");
 				break;
-			case Logger.CLASS_IO_HANDLER:
+			case CLASS_IO_HANDLER:
 				sb.append("\tIO_HANDLER");
 				break;
-			case Logger.CLASS_CLIENT_HANDLER:
+			case CLASS_CLIENT_HANDLER:
 				sb.append("\tCLIENT_HANDLER");
 				break;
 			default:
